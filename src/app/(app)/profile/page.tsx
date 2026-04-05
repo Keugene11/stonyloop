@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Camera, Loader2, LogOut, X } from 'lucide-react'
-import { SBU_MAJORS, SBU_MINORS, searchCourses } from '@/lib/sbu-data'
+import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN } from '@/lib/constants'
 import type { Profile } from '@/types'
@@ -17,8 +17,7 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [courseInput, setCourseInput] = useState('')
-  const [courseResults, setCourseResults] = useState<string[]>([])
+  const [courseFilter, setCourseFilter] = useState('')
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -86,19 +85,22 @@ export default function ProfilePage() {
   // Course helpers
   const courses = profile?.courses ? profile.courses.split(', ').filter(Boolean) : []
 
-  function handleCourseInput(val: string) {
-    setCourseInput(val)
-    if (val.length >= 2) {
-      setCourseResults(searchCourses(val).filter(c => !courses.includes(c)).slice(0, 10))
-    } else {
-      setCourseResults([])
-    }
-  }
+  // Build flat list of all courses, grouped by dept
+  const allCoursesByDept = Object.entries(SBU_COURSES)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([code, dept]) => ({
+      code,
+      name: dept.name,
+      courses: dept.courses
+        .map(n => `${code} ${n}`)
+        .filter(c => !courses.includes(c))
+        .filter(c => !courseFilter || c.toLowerCase().includes(courseFilter.toLowerCase()) || dept.name.toLowerCase().includes(courseFilter.toLowerCase()))
+    }))
+    .filter(d => d.courses.length > 0)
 
   function addCourse(course: string) {
     updateField('courses', [...courses, course].join(', '))
-    setCourseInput('')
-    setCourseResults([])
+    setCourseFilter('')
   }
 
   function removeCourse(course: string) {
@@ -229,7 +231,7 @@ export default function ProfilePage() {
           </select>
         </div>
 
-        {/* Courses — type to search */}
+        {/* Courses — dropdown with search filter */}
         <div>
           <label className={labelClass}>Courses</label>
           {courses.length > 0 && (
@@ -246,25 +248,25 @@ export default function ProfilePage() {
           )}
           <input
             type="text"
-            value={courseInput}
-            onChange={(e) => handleCourseInput(e.target.value)}
+            value={courseFilter}
+            onChange={(e) => setCourseFilter(e.target.value)}
             className={inputClass}
-            placeholder="Type a course (e.g. CSE 114, Bio, Econ...)"
+            placeholder="Filter courses (e.g. CSE, Biology...)"
           />
-          {courseResults.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {courseResults.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => addCourse(c)}
-                  className="bg-bg-card border border-border text-[12px] font-medium px-2.5 py-1 rounded-full press hover:bg-bg-card-hover"
-                >
-                  + {c}
-                </button>
-              ))}
-            </div>
-          )}
+          <select
+            value=""
+            onChange={(e) => { if (e.target.value) addCourse(e.target.value) }}
+            className={`${selectClass} mt-2`}
+            size={6}
+          >
+            {allCoursesByDept.map(dept => (
+              <optgroup key={dept.code} label={`${dept.code} — ${dept.name}`}>
+                {dept.courses.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </div>
 
         {/* Residence Hall */}
