@@ -3,12 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Camera, Loader2, LogOut } from 'lucide-react'
-import { SBU_MAJORS, SBU_MINORS } from '@/lib/sbu-data'
+import { Camera, Loader2, LogOut, X } from 'lucide-react'
+import { SBU_MAJORS, SBU_MINORS, searchCourses } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES } from '@/lib/constants'
-import StyledSelect from '@/components/StyledSelect'
-import CourseSelect from '@/components/CourseSelect'
 import type { Profile } from '@/types'
 
 export default function ProfilePage() {
@@ -19,6 +17,8 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [courseInput, setCourseInput] = useState('')
+  const [courseResults, setCourseResults] = useState<string[]>([])
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -81,6 +81,30 @@ export default function ProfilePage() {
     router.refresh()
   }
 
+  // Course helpers
+  const courses = profile?.courses ? profile.courses.split(', ').filter(Boolean) : []
+
+  function handleCourseInput(val: string) {
+    setCourseInput(val)
+    if (val.length >= 2) {
+      setCourseResults(searchCourses(val).filter(c => !courses.includes(c)).slice(0, 8))
+    } else {
+      setCourseResults([])
+    }
+  }
+
+  function addCourse(course: string) {
+    const updated = [...courses, course].join(', ')
+    updateField('courses', updated)
+    setCourseInput('')
+    setCourseResults([])
+  }
+
+  function removeCourse(course: string) {
+    const updated = courses.filter(c => c !== course).join(', ')
+    updateField('courses', updated)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -91,10 +115,20 @@ export default function ProfilePage() {
 
   if (!profile) return null
 
-  const inputClass = 'w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[14px] outline-none focus:border-text-muted transition-colors'
+  const inputClass = 'w-full bg-bg-card border border-border rounded-xl px-3 py-2.5 text-[14px] outline-none focus:border-text-muted transition-colors appearance-none'
+  const selectClass = 'w-full bg-bg-card border border-border rounded-xl px-3 py-2.5 text-[14px] outline-none focus:border-text-muted transition-colors appearance-none'
+  const labelClass = 'text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block'
+
+  // Group residence halls for optgroups
+  const hallGroups: Record<string, typeof RESIDENCE_HALLS> = {}
+  for (const h of RESIDENCE_HALLS) {
+    const g = h.group || 'Other'
+    if (!hallGroups[g]) hallGroups[g] = []
+    hallGroups[g].push(h)
+  }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-8 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-[24px] font-bold tracking-tight">Your Profile</h1>
         <div className="flex items-center gap-2">
@@ -123,9 +157,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="space-y-4">
-        {/* Basic Info */}
+        {/* Full Name */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Full Name</label>
+          <label className={labelClass}>Full Name</label>
           <input
             type="text"
             value={profile.full_name}
@@ -135,93 +169,142 @@ export default function ProfilePage() {
           />
         </div>
 
+        {/* Class Year + Gender */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Class Year</label>
-            <StyledSelect
+            <label className={labelClass}>Class Year</label>
+            <select
               value={profile.class_year?.toString() || ''}
-              onChange={(v) => updateField('class_year', v ? parseInt(v) : null)}
-              placeholder="Year"
-              options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))}
-            />
+              onChange={(e) => updateField('class_year', e.target.value ? parseInt(e.target.value) : null)}
+              className={selectClass}
+            >
+              <option value="">Select year</option>
+              {CLASS_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
           <div>
-            <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Gender</label>
-            <StyledSelect
+            <label className={labelClass}>Gender</label>
+            <select
               value={profile.gender}
-              onChange={(v) => updateField('gender', v)}
-              placeholder="Gender"
-              options={GENDERS.map(g => ({ value: g, label: g }))}
-            />
+              onChange={(e) => updateField('gender', e.target.value)}
+              className={selectClass}
+            >
+              <option value="">Select</option>
+              {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
           </div>
         </div>
 
+        {/* Major */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Major</label>
-          <StyledSelect
+          <label className={labelClass}>Major</label>
+          <select
             value={profile.major}
-            onChange={(v) => updateField('major', v)}
-            placeholder="Select major"
-            searchable
-            options={SBU_MAJORS.map(m => ({ value: m, label: m }))}
-          />
+            onChange={(e) => updateField('major', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select major</option>
+            {SBU_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
         </div>
 
+        {/* Second Major */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Second Major</label>
-          <StyledSelect
+          <label className={labelClass}>Second Major</label>
+          <select
             value={profile.second_major}
-            onChange={(v) => updateField('second_major', v)}
-            placeholder="Select second major (optional)"
-            searchable
-            options={SBU_MAJORS.map(m => ({ value: m, label: m }))}
-          />
+            onChange={(e) => updateField('second_major', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">None</option>
+            {SBU_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
         </div>
 
+        {/* Minor */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Minor</label>
-          <StyledSelect
+          <label className={labelClass}>Minor</label>
+          <select
             value={profile.minor}
-            onChange={(v) => updateField('minor', v)}
-            placeholder="Select minor (optional)"
-            searchable
-            options={SBU_MINORS.map(m => ({ value: m, label: m }))}
-          />
+            onChange={(e) => updateField('minor', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">None</option>
+            {SBU_MINORS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
         </div>
 
+        {/* Courses — inline, no overlay */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Courses</label>
-          <CourseSelect
-            value={profile.courses}
-            onChange={(v) => updateField('courses', v)}
+          <label className={labelClass}>Courses</label>
+          {courses.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {courses.map(c => (
+                <span key={c} className="inline-flex items-center gap-1 bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">
+                  {c}
+                  <button type="button" onClick={() => removeCourse(c)} className="text-text-muted hover:text-text">
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <input
+            type="text"
+            value={courseInput}
+            onChange={(e) => handleCourseInput(e.target.value)}
             className={inputClass}
+            placeholder="Type a course (e.g. CSE 114)"
           />
+          {courseResults.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {courseResults.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => addCourse(c)}
+                  className="bg-bg-card border border-border text-[12px] font-medium px-2.5 py-1 rounded-full press hover:bg-bg-card-hover"
+                >
+                  + {c}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Residence Hall */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Residence Hall</label>
-          <StyledSelect
+          <label className={labelClass}>Residence Hall</label>
+          <select
             value={profile.residence_hall}
-            onChange={(v) => updateField('residence_hall', v)}
-            placeholder="Select residence hall"
-            searchable
-            options={RESIDENCE_HALLS}
-          />
+            onChange={(e) => updateField('residence_hall', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select residence hall</option>
+            {Object.entries(hallGroups).map(([group, halls]) => (
+              <optgroup key={group} label={group}>
+                {halls.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
         </div>
 
-        {/* The Facebook-era fields */}
+        {/* Relationship Status */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Relationship Status</label>
-          <StyledSelect
+          <label className={labelClass}>Relationship Status</label>
+          <select
             value={profile.relationship_status}
-            onChange={(v) => updateField('relationship_status', v)}
-            placeholder="Select status"
-            options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))}
-          />
+            onChange={(e) => updateField('relationship_status', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select</option>
+            {RELATIONSHIP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
 
+        {/* Interests */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Interests</label>
+          <label className={labelClass}>Interests</label>
           <textarea
             value={profile.interests}
             onChange={(e) => updateField('interests', e.target.value)}
@@ -230,8 +313,9 @@ export default function ProfilePage() {
           />
         </div>
 
+        {/* About Me */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">About Me</label>
+          <label className={labelClass}>About Me</label>
           <textarea
             value={profile.about_me}
             onChange={(e) => updateField('about_me', e.target.value)}
@@ -240,8 +324,9 @@ export default function ProfilePage() {
           />
         </div>
 
+        {/* Favorite Quotes */}
         <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Favorite Quotes</label>
+          <label className={labelClass}>Favorite Quotes</label>
           <textarea
             value={profile.favorite_quotes}
             onChange={(e) => updateField('favorite_quotes', e.target.value)}
