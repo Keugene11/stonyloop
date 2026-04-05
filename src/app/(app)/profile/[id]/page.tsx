@@ -184,15 +184,23 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
         {profile.favorite_music && (
           <div>
-            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Music</p>
-            <p className="text-[13px]">{profile.favorite_music}</p>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p>
+            <div className="flex flex-wrap gap-1.5">
+              {profile.favorite_music.split(', ').filter(Boolean).map(t => (
+                <span key={t} className="bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">{t}</span>
+              ))}
+            </div>
           </div>
         )}
 
         {profile.favorite_movies && (
           <div>
-            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Movies</p>
-            <p className="text-[13px]">{profile.favorite_movies}</p>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p>
+            <div className="flex flex-wrap gap-1.5">
+              {profile.favorite_movies.split(', ').filter(Boolean).map(t => (
+                <span key={t} className="bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">{t}</span>
+              ))}
+            </div>
           </div>
         )}
 

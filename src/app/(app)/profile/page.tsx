@@ -19,6 +19,8 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('')
   const [courseInput, setCourseInput] = useState('')
   const [courseResults, setCourseResults] = useState<string[]>([])
+  const [musicInput, setMusicInput] = useState('')
+  const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -103,6 +105,21 @@ export default function ProfilePage() {
   function removeCourse(course: string) {
     const updated = courses.filter(c => c !== course).join(', ')
     updateField('courses', updated)
+  }
+
+  // Tag helpers for music & movies (comma-separated in DB)
+  const musicTags = profile?.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
+  const movieTags = profile?.favorite_movies ? profile.favorite_movies.split(', ').filter(Boolean) : []
+
+  function addTag(field: string, input: string, existing: string[], clearFn: (v: string) => void) {
+    const val = input.trim()
+    if (!val || existing.includes(val)) return
+    updateField(field, [...existing, val].join(', '))
+    clearFn('')
+  }
+
+  function removeTag(field: string, tag: string, existing: string[]) {
+    updateField(field, existing.filter(t => t !== tag).join(', '))
   }
 
   if (loading) {
@@ -353,22 +370,46 @@ export default function ProfilePage() {
         {/* Favorite Music */}
         <div>
           <label className={labelClass}>Favorite Music</label>
-          <textarea
-            value={profile.favorite_music}
-            onChange={(e) => updateField('favorite_music', e.target.value)}
-            className={`${inputClass} resize-none h-20`}
-            placeholder="Artists, bands, genres..."
+          {musicTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {musicTags.map(t => (
+                <span key={t} className="inline-flex items-center gap-1 bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">
+                  {t}
+                  <button type="button" onClick={() => removeTag('favorite_music', t, musicTags)} className="text-text-muted hover:text-text"><X size={12} /></button>
+                </span>
+              ))}
+            </div>
+          )}
+          <input
+            type="text"
+            value={musicInput}
+            onChange={(e) => setMusicInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag('favorite_music', musicInput, musicTags, setMusicInput) } }}
+            className={inputClass}
+            placeholder="Type an artist or band, press Enter"
           />
         </div>
 
         {/* Favorite Movies */}
         <div>
           <label className={labelClass}>Favorite Movies</label>
-          <textarea
-            value={profile.favorite_movies}
-            onChange={(e) => updateField('favorite_movies', e.target.value)}
-            className={`${inputClass} resize-none h-20`}
-            placeholder="Movies, shows, directors..."
+          {movieTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {movieTags.map(t => (
+                <span key={t} className="inline-flex items-center gap-1 bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">
+                  {t}
+                  <button type="button" onClick={() => removeTag('favorite_movies', t, movieTags)} className="text-text-muted hover:text-text"><X size={12} /></button>
+                </span>
+              ))}
+            </div>
+          )}
+          <input
+            type="text"
+            value={movieInput}
+            onChange={(e) => setMovieInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag('favorite_movies', movieInput, movieTags, setMovieInput) } }}
+            className={inputClass}
+            placeholder="Type a movie or show, press Enter"
           />
         </div>
 
