@@ -33,8 +33,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Enforce @stonybrook.edu email restriction
-  if (user && !user.email?.endsWith('@stonybrook.edu')) {
+  // Enforce @stonybrook.edu email restriction (allow whitelisted emails)
+  const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+  if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
     await supabase.auth.signOut()
     const url = request.nextUrl.clone()
     url.pathname = '/login'

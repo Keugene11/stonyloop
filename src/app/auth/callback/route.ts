@@ -11,7 +11,8 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user && !user.email?.endsWith('@stonybrook.edu')) {
+      const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+      if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
         await supabase.auth.signOut()
         return NextResponse.redirect(
           `${origin}/login?error=You must use a @stonybrook.edu email address`

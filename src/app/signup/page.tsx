@@ -19,7 +19,8 @@ export default function SignupPage() {
     setError('')
     setLoading(true)
 
-    if (!email.endsWith('@stonybrook.edu')) {
+    const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+    if (!email.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(email)) {
       setError('You must use a @stonybrook.edu email address')
       setLoading(false)
       return
