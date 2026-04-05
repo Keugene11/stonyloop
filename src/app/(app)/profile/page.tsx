@@ -94,7 +94,16 @@ export default function ProfilePage() {
       courses: dept.courses
         .map(n => `${code} ${n}`)
         .filter(c => !courses.includes(c))
-        .filter(c => !courseFilter || c.toLowerCase().includes(courseFilter.toLowerCase()) || dept.name.toLowerCase().includes(courseFilter.toLowerCase()))
+        .filter(c => {
+          if (!courseFilter) return true
+          const q = courseFilter.trim().toUpperCase()
+          // If it looks like a prefix (2-4 letters), only match prefix exactly
+          if (/^[A-Z]{2,4}$/.test(q)) return code === q
+          // If it has a space like "CSE 1", match course code start
+          if (/^[A-Z]{2,4}\s/.test(q)) return c.toUpperCase().startsWith(q)
+          // Otherwise match department name
+          return dept.name.toLowerCase().includes(courseFilter.toLowerCase())
+        })
     }))
     .filter(d => d.courses.length > 0)
 
