@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Search, Users, MessageCircle, User } from 'lucide-react'
+import { Search, Users, UsersRound, MessageCircle, User } from 'lucide-react'
 
 const navItems = [
   { href: '/directory', icon: Search, label: 'Directory' },
   { href: '/friends', icon: Users, label: 'Friends' },
+  { href: '/groups', icon: UsersRound, label: 'Groups' },
   { href: '/messages', icon: MessageCircle, label: 'Messages' },
   { href: '/profile', icon: User, label: 'Profile' },
 ]

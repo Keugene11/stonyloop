@@ -4,7 +4,8 @@ import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import type { Profile, WallPost } from '@/types'
+import Link from 'next/link'
+import type { Profile, WallPost, Group } from '@/types'
 import FriendButton from '@/components/FriendButton'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
@@ -18,6 +19,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [currentUserId, setCurrentUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [isFriend, setIsFriend] = useState(false)
+  const [userGroups, setUserGroups] = useState<Group[]>([])
 
   useEffect(() => {
     loadData()
@@ -57,6 +59,22 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       .limit(50)
 
     if (posts) setWallPosts(posts as WallPost[])
+
+    // Load user's groups
+    const { data: memberships } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', id)
+
+    if (memberships && memberships.length > 0) {
+      const groupIds = memberships.map(m => m.group_id)
+      const { data: groups } = await supabase
+        .from('groups')
+        .select('*')
+        .in('id', groupIds)
+
+      if (groups) setUserGroups(groups as Group[])
+    }
 
     setLoading(false)
   }
@@ -231,6 +249,17 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               <div>
                 <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Gender</p>
                 <p className="text-[13px]">{profile.gender}</p>
+              </div>
+            )}
+
+            {userGroups.length > 0 && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Groups</p>
+                <div className="space-y-1.5">
+                  {userGroups.map(g => (
+                    <Link key={g.id} href={`/groups/${g.id}`} className="press block text-[13px] text-accent hover:underline">{g.name}</Link>
+                  ))}
+                </div>
               </div>
             )}
 
