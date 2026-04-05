@@ -21,7 +21,7 @@ export default function StyledSelect({ value, onChange, options, placeholder, se
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const selectedLabel = options.find((o) => o.value === value)?.label
 
@@ -31,20 +31,14 @@ export default function StyledSelect({ value, onChange, options, placeholder, se
 
   useEffect(() => {
     if (!open) return
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    function handlePointerDown(e: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
         setSearch('')
       }
     }
-    // Use setTimeout so the opening click doesn't immediately close it
-    const timer = setTimeout(() => {
-      window.addEventListener('click', handleClick)
-    }, 0)
-    return () => {
-      clearTimeout(timer)
-      window.removeEventListener('click', handleClick)
-    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [open])
 
   const filtered = search
@@ -72,7 +66,7 @@ export default function StyledSelect({ value, onChange, options, placeholder, se
   }
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen(!open)}
