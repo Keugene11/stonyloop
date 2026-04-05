@@ -31,3 +31,14 @@ export const INTERESTED_IN = [
   'Both',
   'Prefer not to say',
 ]
+
+export const POLITICAL_VIEWS = [
+  'Very Liberal',
+  'Liberal',
+  'Moderate',
+  'Conservative',
+  'Very Conservative',
+  'Libertarian',
+  'Apathetic',
+  'Other',
+]

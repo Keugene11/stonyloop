@@ -98,7 +98,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-5xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
       {/* Two-column layout: info left, wall right */}
       <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
 
@@ -249,6 +249,48 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               <div>
                 <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Gender</p>
                 <p className="text-[13px]">{profile.gender}</p>
+              </div>
+            )}
+
+            {profile.political_views && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Political Views</p>
+                <p className="text-[13px]">{profile.political_views}</p>
+              </div>
+            )}
+
+            {profile.hometown && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Hometown</p>
+                <p className="text-[13px]">{profile.hometown}</p>
+              </div>
+            )}
+
+            {profile.high_school && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">High School</p>
+                <p className="text-[13px]">{profile.high_school}</p>
+              </div>
+            )}
+
+            {profile.birthday && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Birthday</p>
+                <p className="text-[13px]">{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
+              </div>
+            )}
+
+            {profile.phone && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Phone</p>
+                <p className="text-[13px]">{profile.phone}</p>
+              </div>
+            )}
+
+            {profile.websites && (
+              <div>
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Website</p>
+                <p className="text-[13px] text-accent break-all">{profile.websites}</p>
               </div>
             )}
 

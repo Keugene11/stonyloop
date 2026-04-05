@@ -19,6 +19,11 @@ export interface Profile {
   favorite_music: string
   favorite_movies: string
   favorite_quotes: string
+  phone: string
+  hometown: string
+  high_school: string
+  websites: string
+  birthday: string
   last_seen: string | null
   created_at: string
   updated_at: string
