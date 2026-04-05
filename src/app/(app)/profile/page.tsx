@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Camera, Loader2, LogOut, X, ChevronDown } from 'lucide-react'
+import { Camera, Loader2, LogOut, X } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, searchCourses } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN } from '@/lib/constants'
@@ -133,29 +133,8 @@ export default function ProfilePage() {
   if (!profile) return null
 
   const inputClass = 'w-full bg-bg-card border border-border rounded-xl px-3 py-2.5 text-[14px] outline-none focus:border-text-muted transition-colors'
-  const selectClass = 'w-full bg-bg-card border border-border rounded-xl pl-3 pr-9 py-2.5 text-[14px] outline-none focus:border-text-muted transition-colors appearance-none cursor-pointer'
-  const labelClass = 'text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block'
-
-  function Select({ value, onChange, placeholder, children }: {
-    value: string
-    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
-    placeholder: string
-    children: React.ReactNode
-  }) {
-    return (
-      <div className="relative">
-        <select
-          value={value}
-          onChange={onChange}
-          className={`${selectClass} ${!value ? 'text-text-muted/50' : 'text-text'}`}
-        >
-          <option value="">{placeholder}</option>
-          {children}
-        </select>
-        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-      </div>
-    )
-  }
+  const selectClass = 'w-full bg-bg-card border border-border rounded-xl px-3 py-2.5 text-[14px] outline-none focus:border-text-muted transition-colors cursor-pointer'
+  const labelClass = 'text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block'
 
   // Group residence halls for optgroups
   const hallGroups: Record<string, typeof RESIDENCE_HALLS> = {}
@@ -211,40 +190,45 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Class Year</label>
-            <Select value={profile.class_year?.toString() || ''} onChange={(e) => updateField('class_year', e.target.value ? parseInt(e.target.value) : null)} placeholder="Select year">
+            <select value={profile.class_year?.toString() || ''} onChange={(e) => updateField('class_year', e.target.value ? parseInt(e.target.value) : null)} className={selectClass}>
+              <option value="">Select year</option>
               {CLASS_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-            </Select>
+            </select>
           </div>
           <div>
             <label className={labelClass}>Gender</label>
-            <Select value={profile.gender} onChange={(e) => updateField('gender', e.target.value)} placeholder="Select">
+            <select value={profile.gender} onChange={(e) => updateField('gender', e.target.value)} className={selectClass}>
+              <option value="">Select</option>
               {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
-            </Select>
+            </select>
           </div>
         </div>
 
         {/* Major */}
         <div>
           <label className={labelClass}>Major</label>
-          <Select value={profile.major} onChange={(e) => updateField('major', e.target.value)} placeholder="Select major">
+          <select value={profile.major} onChange={(e) => updateField('major', e.target.value)} className={selectClass}>
+            <option value="">Select major</option>
             {SBU_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
-          </Select>
+          </select>
         </div>
 
         {/* Second Major */}
         <div>
           <label className={labelClass}>Second Major</label>
-          <Select value={profile.second_major} onChange={(e) => updateField('second_major', e.target.value)} placeholder="None">
+          <select value={profile.second_major} onChange={(e) => updateField('second_major', e.target.value)} className={selectClass}>
+            <option value="">None</option>
             {SBU_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
-          </Select>
+          </select>
         </div>
 
         {/* Minor */}
         <div>
           <label className={labelClass}>Minor</label>
-          <Select value={profile.minor} onChange={(e) => updateField('minor', e.target.value)} placeholder="None">
+          <select value={profile.minor} onChange={(e) => updateField('minor', e.target.value)} className={selectClass}>
+            <option value="">None</option>
             {SBU_MINORS.map(m => <option key={m} value={m}>{m}</option>)}
-          </Select>
+          </select>
         </div>
 
         {/* Courses — inline, no overlay */}
@@ -288,45 +272,41 @@ export default function ProfilePage() {
         {/* Residence Hall */}
         <div>
           <label className={labelClass}>Residence Hall</label>
-          <div className="relative">
-            <select
-              value={profile.residence_hall}
-              onChange={(e) => updateField('residence_hall', e.target.value)}
-              className={`${selectClass} ${!profile.residence_hall ? 'text-text-muted/50' : 'text-text'}`}
-            >
-              <option value="">Select residence hall</option>
-              {Object.entries(hallGroups).map(([group, halls]) => (
-                <optgroup key={group} label={group}>
-                  {halls.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
-                </optgroup>
-              ))}
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-          </div>
+          <select value={profile.residence_hall} onChange={(e) => updateField('residence_hall', e.target.value)} className={selectClass}>
+            <option value="">Select residence hall</option>
+            {Object.entries(hallGroups).map(([group, halls]) => (
+              <optgroup key={group} label={group}>
+                {halls.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
         </div>
 
         {/* Relationship Status */}
         <div>
           <label className={labelClass}>Relationship Status</label>
-          <Select value={profile.relationship_status} onChange={(e) => updateField('relationship_status', e.target.value)} placeholder="Select">
+          <select value={profile.relationship_status} onChange={(e) => updateField('relationship_status', e.target.value)} className={selectClass}>
+            <option value="">Select</option>
             {RELATIONSHIP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-          </Select>
+          </select>
         </div>
 
         {/* Interested In */}
         <div>
           <label className={labelClass}>Interested In</label>
-          <Select value={profile.interested_in} onChange={(e) => updateField('interested_in', e.target.value)} placeholder="Select">
+          <select value={profile.interested_in} onChange={(e) => updateField('interested_in', e.target.value)} className={selectClass}>
+            <option value="">Select</option>
             {INTERESTED_IN.map(s => <option key={s} value={s}>{s}</option>)}
-          </Select>
+          </select>
         </div>
 
         {/* Looking For */}
         <div>
           <label className={labelClass}>Looking For</label>
-          <Select value={profile.looking_for} onChange={(e) => updateField('looking_for', e.target.value)} placeholder="Select">
+          <select value={profile.looking_for} onChange={(e) => updateField('looking_for', e.target.value)} className={selectClass}>
+            <option value="">Select</option>
             {LOOKING_FOR.map(s => <option key={s} value={s}>{s}</option>)}
-          </Select>
+          </select>
         </div>
 
         {/* Interests */}

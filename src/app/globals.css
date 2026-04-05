@@ -48,3 +48,26 @@ body {
 
 .press { transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1); }
 .press:active { transform: scale(0.975); }
+
+/* Styled native selects */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 32px !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+select option {
+  background: white;
+  color: #1a1a1a;
+  padding: 8px;
+}
+
+select optgroup {
+  font-weight: 600;
+  color: #666;
+}
