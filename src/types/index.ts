@@ -15,6 +15,7 @@ export interface Profile {
   about_me: string
   political_views: string
   favorite_quotes: string
+  last_seen: string | null
   created_at: string
   updated_at: string
 }

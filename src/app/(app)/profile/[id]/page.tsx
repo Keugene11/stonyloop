@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle } from 'lucide-react'
+import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type { Profile, WallPost } from '@/types'
 import FriendButton from '@/components/FriendButton'
@@ -99,6 +99,11 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             {profile.residence_hall && (
               <p className="flex items-center gap-1">
                 <MapPin size={12} /> {profile.residence_hall}
+              </p>
+            )}
+            {profile.last_seen && (
+              <p className="flex items-center gap-1">
+                <Clock size={12} /> {getLastSeen(profile.last_seen)}
               </p>
             )}
           </div>
@@ -225,4 +230,18 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       </div>
     </div>
   )
+}
+
+function getLastSeen(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (seconds < 60) return 'Online now'
+  if (seconds < 120) return 'Last seen 1 minute ago'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `Last seen ${minutes} minutes ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Last seen ${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days === 1) return 'Last seen yesterday'
+  if (days < 7) return `Last seen ${days} days ago`
+  return `Last seen ${new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 }
