@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import type { WallPost, Profile } from '@/types'
 
@@ -18,8 +18,6 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
   const [userName, setUserName] = useState('')
-  const [pokeCount, setPokeCount] = useState(0)
-
   useEffect(() => {
     loadFeed()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,14 +59,6 @@ export default function FeedPage() {
       }
     }
 
-    // Check poke count
-    const { count } = await supabase
-      .from('pokes')
-      .select('*', { count: 'exact', head: true })
-      .eq('poked_id', user.id)
-      .eq('seen', false)
-
-    setPokeCount(count || 0)
     setLoading(false)
   }
 
@@ -86,18 +76,6 @@ export default function FeedPage() {
       <p className="text-text-muted text-[14px] mb-4">
         Welcome{userName ? `, ${userName}` : ''}.
       </p>
-
-      {/* Poke notification */}
-      {pokeCount > 0 && (
-        <Link href="/pokes" className="press block mb-4">
-          <div className="bg-accent/10 border border-accent/20 rounded-2xl p-3 flex items-center gap-3">
-            <Hand size={20} className="text-accent" />
-            <span className="text-[14px] font-medium">
-              You have {pokeCount} new poke{pokeCount !== 1 ? 's' : ''}!
-            </span>
-          </div>
-        </Link>
-      )}
 
       {items.length === 0 ? (
         <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">

@@ -43,7 +43,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/feed')
+    router.push('/directory')
     router.refresh()
   }
 

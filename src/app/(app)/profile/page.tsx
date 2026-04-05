@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Camera, Loader2, LogOut } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
-import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, POLITICAL_VIEWS } from '@/lib/constants'
+import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES } from '@/lib/constants'
 import StyledSelect from '@/components/StyledSelect'
 import CourseSelect from '@/components/CourseSelect'
 import type { Profile } from '@/types'
@@ -217,16 +217,6 @@ export default function ProfilePage() {
             onChange={(v) => updateField('relationship_status', v)}
             placeholder="Select status"
             options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))}
-          />
-        </div>
-
-        <div>
-          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block">Political Views</label>
-          <StyledSelect
-            value={profile.political_views}
-            onChange={(v) => updateField('political_views', v)}
-            placeholder="Select (optional)"
-            options={POLITICAL_VIEWS.map(p => ({ value: p, label: p }))}
           />
         </div>
 

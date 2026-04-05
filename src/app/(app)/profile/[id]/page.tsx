@@ -6,7 +6,6 @@ import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle } from '
 import { useRouter } from 'next/navigation'
 import type { Profile, WallPost } from '@/types'
 import FriendButton from '@/components/FriendButton'
-import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 
@@ -110,7 +109,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       {currentUserId && currentUserId !== id && (
         <div className="flex gap-2 mb-6">
           <FriendButton targetUserId={id} currentUserId={currentUserId} />
-          <PokeButton targetUserId={id} currentUserId={currentUserId} />
           <button
             onClick={async () => {
               const res = await fetch('/api/conversations', {
@@ -155,13 +153,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           <div className="flex items-center gap-2 text-[13px]">
             <Heart size={14} className="text-text-muted" />
             <span>{profile.relationship_status}</span>
-          </div>
-        )}
-
-        {profile.political_views && (
-          <div>
-            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Political Views</p>
-            <p className="text-[13px]">{profile.political_views}</p>
           </div>
         )}
 
