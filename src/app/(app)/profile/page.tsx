@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Camera, Loader2, LogOut, X } from 'lucide-react'
-import { SBU_MAJORS, SBU_MINORS, searchCourses } from '@/lib/sbu-data'
+import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN } from '@/lib/constants'
 import type { Profile } from '@/types'
@@ -17,8 +17,7 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [courseInput, setCourseInput] = useState('')
-  const [courseResults, setCourseResults] = useState<string[]>([])
+  const [selectedDept, setSelectedDept] = useState('')
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -85,26 +84,17 @@ export default function ProfilePage() {
 
   // Course helpers
   const courses = profile?.courses ? profile.courses.split(', ').filter(Boolean) : []
-
-  function handleCourseInput(val: string) {
-    setCourseInput(val)
-    if (val.length >= 2) {
-      setCourseResults(searchCourses(val).filter(c => !courses.includes(c)).slice(0, 8))
-    } else {
-      setCourseResults([])
-    }
-  }
+  const sortedDepts = Object.entries(SBU_COURSES).sort((a, b) => a[0].localeCompare(b[0]))
+  const deptCourses = selectedDept && SBU_COURSES[selectedDept]
+    ? SBU_COURSES[selectedDept].courses.map(n => `${selectedDept} ${n}`).filter(c => !courses.includes(c))
+    : []
 
   function addCourse(course: string) {
-    const updated = [...courses, course].join(', ')
-    updateField('courses', updated)
-    setCourseInput('')
-    setCourseResults([])
+    updateField('courses', [...courses, course].join(', '))
   }
 
   function removeCourse(course: string) {
-    const updated = courses.filter(c => c !== course).join(', ')
-    updateField('courses', updated)
+    updateField('courses', courses.filter(c => c !== course).join(', '))
   }
 
   // Tag helpers for music & movies (comma-separated in DB)
@@ -231,7 +221,7 @@ export default function ProfilePage() {
           </select>
         </div>
 
-        {/* Courses — inline, no overlay */}
+        {/* Courses — two-step dropdown */}
         <div>
           <label className={labelClass}>Courses</label>
           {courses.length > 0 && (
@@ -246,27 +236,29 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
-          <input
-            type="text"
-            value={courseInput}
-            onChange={(e) => handleCourseInput(e.target.value)}
-            className={inputClass}
-            placeholder="Type a course (e.g. CSE 114)"
-          />
-          {courseResults.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {courseResults.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => addCourse(c)}
-                  className="bg-bg-card border border-border text-[12px] font-medium px-2.5 py-1 rounded-full press hover:bg-bg-card-hover"
-                >
-                  + {c}
-                </button>
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">Department</option>
+              {sortedDepts.map(([code, dept]) => (
+                <option key={code} value={code}>{code} — {dept.name}</option>
               ))}
-            </div>
-          )}
+            </select>
+            <select
+              value=""
+              onChange={(e) => { if (e.target.value) addCourse(e.target.value) }}
+              className={selectClass}
+              disabled={!selectedDept}
+            >
+              <option value="">{selectedDept ? 'Select course' : 'Pick dept first'}</option>
+              {deptCourses.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Residence Hall */}
