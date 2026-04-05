@@ -52,7 +52,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm animate-slide-up">
         <div className="text-center mb-8">
           <h1 className="text-[32px] font-extrabold tracking-tight text-text">
-            [ stonyloop ]
+            [ Stonyloop ]
           </h1>
           <p className="text-[14px] text-text-muted mt-1">
             A Stony Brook University social network
