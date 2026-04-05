@@ -17,13 +17,17 @@ export const RELATIONSHIP_STATUSES = [
   'Prefer not to say',
 ]
 
-export const POLITICAL_VIEWS = [
-  'Very Liberal',
-  'Liberal',
-  'Moderate',
-  'Conservative',
-  'Very Conservative',
-  'Libertarian',
-  'Apathetic',
-  'Other',
+export const LOOKING_FOR = [
+  'Friendship',
+  'Dating',
+  'A Relationship',
+  'Networking',
+  'Whatever I can get',
+]
+
+export const INTERESTED_IN = [
+  'Men',
+  'Women',
+  'Both',
+  'Prefer not to say',
 ]

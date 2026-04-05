@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Camera, Loader2, LogOut, X } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, searchCourses } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
-import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES } from '@/lib/constants'
+import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN } from '@/lib/constants'
 import type { Profile } from '@/types'
 
 export default function ProfilePage() {
@@ -302,6 +302,32 @@ export default function ProfilePage() {
           </select>
         </div>
 
+        {/* Interested In */}
+        <div>
+          <label className={labelClass}>Interested In</label>
+          <select
+            value={profile.interested_in}
+            onChange={(e) => updateField('interested_in', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select</option>
+            {INTERESTED_IN.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        {/* Looking For */}
+        <div>
+          <label className={labelClass}>Looking For</label>
+          <select
+            value={profile.looking_for}
+            onChange={(e) => updateField('looking_for', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select</option>
+            {LOOKING_FOR.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
         {/* Interests */}
         <div>
           <label className={labelClass}>Interests</label>
@@ -321,6 +347,28 @@ export default function ProfilePage() {
             onChange={(e) => updateField('about_me', e.target.value)}
             className={`${inputClass} resize-none h-20`}
             placeholder="Tell people a little about yourself..."
+          />
+        </div>
+
+        {/* Favorite Music */}
+        <div>
+          <label className={labelClass}>Favorite Music</label>
+          <textarea
+            value={profile.favorite_music}
+            onChange={(e) => updateField('favorite_music', e.target.value)}
+            className={`${inputClass} resize-none h-20`}
+            placeholder="Artists, bands, genres..."
+          />
+        </div>
+
+        {/* Favorite Movies */}
+        <div>
+          <label className={labelClass}>Favorite Movies</label>
+          <textarea
+            value={profile.favorite_movies}
+            onChange={(e) => updateField('favorite_movies', e.target.value)}
+            className={`${inputClass} resize-none h-20`}
+            placeholder="Movies, shows, directors..."
           />
         </div>
 

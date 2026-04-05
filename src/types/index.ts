@@ -11,9 +11,13 @@ export interface Profile {
   courses: string
   gender: string
   relationship_status: string
+  looking_for: string
+  interested_in: string
   interests: string
   about_me: string
   political_views: string
+  favorite_music: string
+  favorite_movies: string
   favorite_quotes: string
   last_seen: string | null
   created_at: string

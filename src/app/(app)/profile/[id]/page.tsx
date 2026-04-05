@@ -161,10 +161,38 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           </div>
         )}
 
+        {profile.interested_in && profile.interested_in !== 'Prefer not to say' && (
+          <div>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interested In</p>
+            <p className="text-[13px]">{profile.interested_in}</p>
+          </div>
+        )}
+
+        {profile.looking_for && (
+          <div>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Looking For</p>
+            <p className="text-[13px]">{profile.looking_for}</p>
+          </div>
+        )}
+
         {profile.interests && (
           <div>
             <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p>
             <p className="text-[13px]">{profile.interests}</p>
+          </div>
+        )}
+
+        {profile.favorite_music && (
+          <div>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Music</p>
+            <p className="text-[13px]">{profile.favorite_music}</p>
+          </div>
+        )}
+
+        {profile.favorite_movies && (
+          <div>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Movies</p>
+            <p className="text-[13px]">{profile.favorite_movies}</p>
           </div>
         )}
 
