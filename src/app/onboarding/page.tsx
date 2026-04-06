@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowRight, ArrowLeft, Camera, Check } from 'lucide-react'
+import AvatarCropper from '@/components/AvatarCropper'
 import { SBU_MAJORS } from '@/lib/sbu-data'
 import { CLASS_YEARS } from '@/lib/constants'
 
@@ -26,6 +27,7 @@ export default function OnboardingPage() {
   const [classYear, setClassYear] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -53,14 +55,20 @@ export default function OnboardingPage() {
     return false
   }
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !userId) return
+    if (!file) return
     if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
-    setAvatarPreview(URL.createObjectURL(file))
-    const ext = file.name.split('.').pop()
-    const path = `${userId}/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from('avatars').upload(path, file)
+    setCropFile(file)
+    e.target.value = ''
+  }
+
+  async function handleAvatarSave(blob: Blob) {
+    setCropFile(null)
+    if (!userId) return
+    setAvatarPreview(URL.createObjectURL(blob))
+    const path = `${userId}/${Date.now()}.jpg`
+    const { error } = await supabase.storage.from('avatars').upload(path, blob)
     if (error) return
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     setAvatarUrl(publicUrl)
@@ -209,7 +217,7 @@ export default function OnboardingPage() {
                   </div>
                 )}
               </div>
-              <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+              <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
             </label>
             <p className="text-[12px] text-text-muted mt-4">Tap to upload a photo</p>
           </div>
@@ -251,6 +259,14 @@ export default function OnboardingPage() {
           Step {step + 1} of {STEPS.length}
         </p>
       </div>
+
+      {cropFile && (
+        <AvatarCropper
+          file={cropFile}
+          onSave={handleAvatarSave}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
     </div>
   )
 }

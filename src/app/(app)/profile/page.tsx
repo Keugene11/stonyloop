@@ -11,6 +11,7 @@ import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN
 import { SBU_GREEK_LIFE, SBU_CLUBS } from '@/lib/sbu-groups'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
+import AvatarCropper from '@/components/AvatarCropper'
 import type { Profile, WallPost, Group } from '@/types'
 
 export default function ProfilePage() {
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   const [friends, setFriends] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
+  const [cropFile, setCropFile] = useState<File | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -79,18 +81,27 @@ export default function ProfilePage() {
     }, 800)
   }, [userId, supabase])
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !userId) return
+    if (!file) return
     if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
+    setCropFile(file)
+    e.target.value = ''
+  }
+
+  async function handleAvatarSave(blob: Blob) {
+    setCropFile(null)
+    if (!userId) return
+    // Show instant preview
+    const previewUrl = URL.createObjectURL(blob)
+    setProfile(prev => prev ? { ...prev, avatar_url: previewUrl } : prev)
     // Delete old avatar
     if (profile?.avatar_url && profile.avatar_url.includes('/avatars/')) {
       const oldPath = profile.avatar_url.split('/avatars/')[1]
       if (oldPath) await supabase.storage.from('avatars').remove([decodeURIComponent(oldPath)])
     }
-    const ext = file.name.split('.').pop()
-    const path = `${userId}/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from('avatars').upload(path, file)
+    const path = `${userId}/${Date.now()}.jpg`
+    const { error } = await supabase.storage.from('avatars').upload(path, blob)
     if (error) return
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId)
@@ -244,11 +255,11 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-5">
         <label className="relative cursor-pointer press">
-          <div className="w-20 h-20 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
-            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[24px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
+          <div className="w-24 h-24 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[28px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
           </div>
-          <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1"><Camera size={10} /></div>
-          <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+          <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1.5"><Camera size={12} /></div>
+          <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
         </label>
         <div className="flex-1 min-w-0">
           {editing === 'full_name' ? (
@@ -501,6 +512,13 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {cropFile && (
+        <AvatarCropper
+          file={cropFile}
+          onSave={handleAvatarSave}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
     </div>
   )
 }
