@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [courseOpen, setCourseOpen] = useState(false)
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
+  const [friends, setFriends] = useState<Profile[]>([])
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -37,6 +38,16 @@ export default function ProfilePage() {
     if (data) setProfile(data as Profile)
     const { data: posts } = await supabase.from('wall_posts').select('*, author:profiles!wall_posts_author_id_fkey(*)').eq('wall_owner_id', user.id).order('created_at', { ascending: false }).limit(50)
     if (posts) setWallPosts(posts as WallPost[])
+    // Load friends
+    const { data: friendships } = await supabase
+      .from('friendships')
+      .select('*, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+      .eq('status', 'accepted')
+    if (friendships) {
+      setFriends(friendships.map(f => (f.requester_id === user.id ? f.addressee : f.requester) as Profile))
+    }
+
     const { data: memberships } = await supabase.from('group_members').select('group_id').eq('user_id', user.id)
     if (memberships && memberships.length > 0) {
       const { data: groups } = await supabase.from('groups').select('*').in('id', memberships.map(m => m.group_id))
@@ -284,6 +295,25 @@ export default function ProfilePage() {
                 <p className={`text-[13px] cursor-pointer ${profile.favorite_quotes ? 'italic hover:underline' : empty}`} onClick={() => setEditing('favorite_quotes')}>{profile.favorite_quotes ? `\u201c${profile.favorite_quotes}\u201d` : 'Click to add...'}</p>
               )}
             </div>
+          </div>
+
+          {/* Friends */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-2">Friends ({friends.length})</p>
+            {friends.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {friends.map(f => (
+                  <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1 w-[60px]">
+                    <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
+                      {f.avatar_url ? <img src={f.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[13px] font-bold text-text-muted">{f.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
+                    </div>
+                    <span className="text-[10px] text-center truncate w-full">{f.full_name?.split(' ')[0]}</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <Link href="/directory" className="text-[13px] text-accent press">Find people</Link>
+            )}
           </div>
 
           {/* Groups */}

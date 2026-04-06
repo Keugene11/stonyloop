@@ -16,11 +16,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const messagesRef = useRef<Message[]>([])
-
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
 
   useEffect(() => {
     loadChat()
@@ -36,7 +31,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     if (!user) return
     setCurrentUserId(user.id)
 
-    // Load conversation with users
     const { data: conv } = await supabase
       .from('conversations')
       .select('*, user1:profiles!conversations_user1_id_fkey(*), user2:profiles!conversations_user2_id_fkey(*)')
@@ -44,11 +38,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       .single()
 
     if (conv) {
-      const other = (conv.user1_id === user.id ? conv.user2 : conv.user1) as Profile
-      setOtherUser(other)
+      setOtherUser((conv.user1_id === user.id ? conv.user2 : conv.user1) as Profile)
     }
 
-    // Load messages
     const { data: msgs } = await supabase
       .from('messages')
       .select('*')
@@ -56,12 +48,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       .order('created_at', { ascending: true })
 
     if (msgs) setMessages(msgs as Message[])
-
     setLoading(false)
 
-    // Subscribe to realtime
+    // Realtime
     const channel = supabase
-      .channel(`messages:${conversationId}`)
+      .channel(`chat-${conversationId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -69,16 +60,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         filter: `conversation_id=eq.${conversationId}`,
       }, (payload) => {
         const newMsg = payload.new as Message
-        // Avoid duplicates
-        if (!messagesRef.current.find(m => m.id === newMsg.id)) {
-          setMessages(prev => [...prev, newMsg])
-        }
+        setMessages(prev => {
+          if (prev.find(m => m.id === newMsg.id)) return prev
+          return [...prev, newMsg]
+        })
       })
       .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => { supabase.removeChannel(channel) }
   }
 
   async function handleSend(e: React.FormEvent) {
@@ -89,28 +78,24 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     const text = content.trim()
     setContent('')
 
-    // Optimistic add
-    const optimistic: Message = {
-      id: `temp-${Date.now()}`,
+    const { data, error } = await supabase.from('messages').insert({
       conversation_id: conversationId,
       sender_id: currentUserId,
       content: text,
-      created_at: new Date().toISOString(),
-    }
-    setMessages(prev => [...prev, optimistic])
+    }).select().single()
 
-    await supabase.from('messages').insert({
-      conversation_id: conversationId,
-      sender_id: currentUserId,
-      content: text,
-    })
+    if (!error && data) {
+      // Add directly if realtime hasn't already
+      setMessages(prev => {
+        if (prev.find(m => m.id === data.id)) return prev
+        return [...prev, data as Message]
+      })
+    }
 
     await supabase.from('conversations').update({
       last_message_at: new Date().toISOString(),
     }).eq('id', conversationId)
 
-    // Remove optimistic message (realtime will add the real one)
-    setMessages(prev => prev.filter(m => m.id !== optimistic.id))
     setSending(false)
   }
 
@@ -123,7 +108,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)]">
+    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-56px)]">
       {/* Header */}
       <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3">
         <Link href="/messages" className="press">
@@ -147,6 +132,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+        {messages.length === 0 && (
+          <p className="text-center text-text-muted text-[13px] py-8">No messages yet. Say hi!</p>
+        )}
         {messages.map(msg => (
           <div
             key={msg.id}
@@ -159,7 +147,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   : 'bg-bg-card border border-border rounded-bl-sm'
               }`}
             >
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+              <p className="whitespace-pre-wrap break-words">{msg.content}</p>
               <p className={`text-[10px] mt-0.5 ${
                 msg.sender_id === currentUserId ? 'text-white/60' : 'text-text-muted'
               }`}>
@@ -183,9 +171,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         <button
           type="submit"
           disabled={!content.trim() || sending}
-          className="bg-accent text-white rounded-full p-2.5 press disabled:opacity-50"
+          className="bg-accent text-white rounded-full p-2.5 press disabled:opacity-50 flex-shrink-0"
         >
-          <Send size={16} />
+          {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </button>
       </form>
     </div>
