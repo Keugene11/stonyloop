@@ -1,0 +1,37 @@
+import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+
+export async function DELETE() {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+
+  // Delete user data from all tables
+  const userId = user.id
+  await supabase.from('comments').delete().eq('author_id', userId)
+  await supabase.from('wall_posts').delete().or(`author_id.eq.${userId},wall_owner_id.eq.${userId}`)
+  await supabase.from('messages').delete().eq('sender_id', userId)
+  await supabase.from('conversations').delete().or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+  await supabase.from('pokes').delete().or(`poker_id.eq.${userId},poked_id.eq.${userId}`)
+  await supabase.from('friendships').delete().or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+  await supabase.from('group_posts').delete().eq('author_id', userId)
+  await supabase.from('group_members').delete().eq('user_id', userId)
+  await supabase.from('profiles').delete().eq('id', userId)
+
+  // Delete auth user with service role
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { error } = await adminClient.auth.admin.deleteUser(userId)
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
+}

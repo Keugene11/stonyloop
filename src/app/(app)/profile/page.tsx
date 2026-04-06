@@ -190,7 +190,7 @@ export default function ProfilePage() {
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Link href="/settings/privacy" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
+          <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
           <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
         </div>
       </div>
