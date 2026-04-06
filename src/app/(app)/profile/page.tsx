@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings } from 'lucide-react'
+import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
@@ -26,6 +26,8 @@ export default function ProfilePage() {
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const [friends, setFriends] = useState<Profile[]>([])
+  const [profileViews, setProfileViews] = useState<Profile[]>([])
+  const [showViewers, setShowViewers] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -53,6 +55,16 @@ export default function ProfilePage() {
       const { data: groups } = await supabase.from('groups').select('*').in('id', memberships.map(m => m.group_id))
       if (groups) setUserGroups(groups as Group[])
     }
+
+    // Load profile viewers
+    const { data: views } = await supabase
+      .from('profile_views')
+      .select('*, viewer:profiles!profile_views_viewer_id_fkey(*)')
+      .eq('profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    if (views) setProfileViews(views.map((v: { viewer: Profile }) => v.viewer))
+
     setLoading(false)
   }
 
@@ -198,6 +210,37 @@ export default function ProfilePage() {
       <div className="flex flex-col md:flex-row md:gap-5 md:items-start">
         {/* LEFT */}
         <div className="md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3">
+
+          {/* Profile Views */}
+          {profileViews.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+              <button
+                onClick={() => setShowViewers(!showViewers)}
+                className="press flex items-center gap-2 w-full"
+              >
+                <Eye size={14} className="text-text-muted" />
+                <span className="text-[13px] font-medium">{profileViews.length} profile view{profileViews.length !== 1 ? 's' : ''}</span>
+              </button>
+              {showViewers && (
+                <div className="mt-3 space-y-2">
+                  {profileViews.map(v => (
+                    <Link key={v.id} href={`/profile/${v.id}`} className="press flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
+                        {v.avatar_url ? (
+                          <img src={v.avatar_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-text-muted">
+                            {v.full_name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[13px] font-medium hover:underline">{v.full_name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* About */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">

@@ -9,10 +9,11 @@ import type { Comment } from '@/types'
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
   postId: string
+  postAuthorId?: string
   canComment?: boolean
 }
 
-export default function Comments({ postType, postId, canComment = true }: CommentsProps) {
+export default function Comments({ postType, postId, postAuthorId, canComment = true }: CommentsProps) {
   const supabase = createClient()
   const [comments, setComments] = useState<Comment[]>([])
   const [input, setInput] = useState('')
@@ -62,13 +63,37 @@ export default function Comments({ postType, postId, canComment = true }: Commen
     const text = parentId ? replyInput.trim() : input.trim()
     if (!text || !userId) return
 
-    await supabase.from('comments').insert({
+    const { data: newComment } = await supabase.from('comments').insert({
       post_type: postType,
       post_id: postId,
       parent_id: parentId,
       author_id: userId,
       content: text,
-    })
+    }).select('id').single()
+
+    // Notify: if replying, notify the parent comment author; otherwise notify the post author
+    if (parentId) {
+      const parent = comments.find(c => c.id === parentId) || comments.flatMap(c => c.replies || []).find(c => c.id === parentId)
+      if (parent && parent.author_id !== userId) {
+        await supabase.from('notifications').insert({
+          user_id: parent.author_id,
+          actor_id: userId,
+          type: 'reply',
+          post_type: postType,
+          post_id: postId,
+          comment_id: newComment?.id,
+        })
+      }
+    } else if (postAuthorId && postAuthorId !== userId) {
+      await supabase.from('notifications').insert({
+        user_id: postAuthorId,
+        actor_id: userId,
+        type: 'comment',
+        post_type: postType,
+        post_id: postId,
+        comment_id: newComment?.id,
+      })
+    }
 
     if (parentId) {
       setReplyInput('')

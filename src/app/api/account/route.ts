@@ -12,6 +12,9 @@ export async function DELETE() {
 
   // Delete user data from all tables
   const userId = user.id
+  await supabase.from('notifications').delete().or(`user_id.eq.${userId},actor_id.eq.${userId}`)
+  await supabase.from('post_likes').delete().eq('user_id', userId)
+  await supabase.from('profile_views').delete().or(`profile_id.eq.${userId},viewer_id.eq.${userId}`)
   await supabase.from('comments').delete().eq('author_id', userId)
   await supabase.from('wall_posts').delete().or(`author_id.eq.${userId},wall_owner_id.eq.${userId}`)
   await supabase.from('messages').delete().eq('sender_id', userId)

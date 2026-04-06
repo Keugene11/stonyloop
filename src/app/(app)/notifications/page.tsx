@@ -2,14 +2,28 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand, UserPlus } from 'lucide-react'
+import { Loader2, Hand, UserPlus, Heart, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import type { Poke, Friendship, Profile } from '@/types'
+
+interface Notification {
+  id: string
+  user_id: string
+  actor_id: string
+  type: string
+  post_type: string | null
+  post_id: string | null
+  comment_id: string | null
+  seen: boolean
+  created_at: string
+  actor?: Profile
+}
 
 export default function NotificationsPage() {
   const supabase = createClient()
   const [pokes, setPokes] = useState<(Poke & { poker: Profile })[]>([])
   const [requests, setRequests] = useState<(Friendship & { requester: Profile })[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
 
@@ -40,11 +54,28 @@ export default function NotificationsPage() {
 
     if (pending) setRequests(pending as (Friendship & { requester: Profile })[])
 
+    // Load like/comment/reply notifications
+    const { data: notifData } = await supabase
+      .from('notifications')
+      .select('*, actor:profiles!notifications_actor_id_fkey(*)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (notifData) setNotifications(notifData as Notification[])
+
     // Mark pokes as seen
     await supabase
       .from('pokes')
       .update({ seen: true })
       .eq('poked_id', user.id)
+      .eq('seen', false)
+
+    // Mark notifications as seen
+    await supabase
+      .from('notifications')
+      .update({ seen: true })
+      .eq('user_id', user.id)
       .eq('seen', false)
 
     setLoading(false)
@@ -73,6 +104,11 @@ export default function NotificationsPage() {
     setRequests(requests.filter(r => r.id !== friendshipId))
   }
 
+  async function dismissNotification(notifId: string) {
+    await supabase.from('notifications').delete().eq('id', notifId)
+    setNotifications(notifications.filter(n => n.id !== notifId))
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -81,7 +117,21 @@ export default function NotificationsPage() {
     )
   }
 
-  const empty = pokes.length === 0 && requests.length === 0
+  const empty = pokes.length === 0 && requests.length === 0 && notifications.length === 0
+
+  function getNotifIcon(type: string) {
+    if (type === 'like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
+    if (type === 'comment') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
+    if (type === 'reply') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
+    return null
+  }
+
+  function getNotifText(type: string) {
+    if (type === 'like') return 'liked your post'
+    if (type === 'comment') return 'commented on your post'
+    if (type === 'reply') return 'replied to your comment'
+    return ''
+  }
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
@@ -172,8 +222,53 @@ export default function NotificationsPage() {
               </div>
             </div>
           ))}
+
+          {/* Like / Comment / Reply notifications */}
+          {notifications.map(n => (
+            <div key={n.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+              <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
+                  {n.actor?.avatar_url ? (
+                    <img src={n.actor.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[14px] font-bold text-text-muted">
+                      {n.actor?.full_name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+              </Link>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  {getNotifIcon(n.type)}
+                  <span className="text-[13px]">
+                    <Link href={`/profile/${n.actor_id}`} className="font-semibold hover:underline">{n.actor?.full_name}</Link>
+                    <span className="text-text-muted"> {getNotifText(n.type)}</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted mt-0.5 pl-[18px]">{getTimeAgo(new Date(n.created_at))}</p>
+              </div>
+              <button
+                onClick={() => dismissNotification(n.id)}
+                className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press flex-shrink-0"
+              >
+                Dismiss
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
   )
+}
+
+function getTimeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }

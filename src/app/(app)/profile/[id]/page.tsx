@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail } from 'lucide-react'
+import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail, Eye } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
@@ -22,6 +22,8 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [isFriend, setIsFriend] = useState(false)
   const [userGroups, setUserGroups] = useState<Group[]>([])
   const [friends, setFriends] = useState<Profile[]>([])
+  const [profileViews, setProfileViews] = useState<Profile[]>([])
+  const [showViewers, setShowViewers] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -89,6 +91,25 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       if (groups) setUserGroups(groups as Group[])
     }
 
+    // Track profile view (if viewing someone else)
+    if (user && user.id !== id) {
+      await supabase.from('profile_views').upsert(
+        { profile_id: id, viewer_id: user.id, created_at: new Date().toISOString() },
+        { onConflict: 'profile_id,viewer_id' }
+      )
+    }
+
+    // Load profile viewers (for own profile)
+    if (user && user.id === id) {
+      const { data: views } = await supabase
+        .from('profile_views')
+        .select('*, viewer:profiles!profile_views_viewer_id_fkey(*)')
+        .eq('profile_id', id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (views) setProfileViews(views.map((v: { viewer: Profile }) => v.viewer))
+    }
+
     setLoading(false)
   }
 
@@ -148,6 +169,37 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
           </div>
+
+          {/* Profile views (own profile only) */}
+          {isOwn && profileViews.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-4">
+              <button
+                onClick={() => setShowViewers(!showViewers)}
+                className="press flex items-center gap-2 w-full"
+              >
+                <Eye size={14} className="text-text-muted" />
+                <span className="text-[13px] font-medium">{profileViews.length} profile view{profileViews.length !== 1 ? 's' : ''}</span>
+              </button>
+              {showViewers && (
+                <div className="mt-3 space-y-2">
+                  {profileViews.map(v => (
+                    <Link key={v.id} href={`/profile/${v.id}`} className="press flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
+                        {v.avatar_url ? (
+                          <img src={v.avatar_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-text-muted">
+                            {v.full_name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[13px] font-medium hover:underline">{v.full_name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Action buttons */}
           {currentUserId && currentUserId !== id && (

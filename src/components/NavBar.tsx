@@ -37,7 +37,13 @@ export default function NavBar() {
         .eq('addressee_id', user.id)
         .eq('status', 'pending')
 
-      setBadgeCount((pokeCount || 0) + (requestCount || 0))
+      const { count: notifCount } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('seen', false)
+
+      setBadgeCount((pokeCount || 0) + (requestCount || 0) + (notifCount || 0))
     }
     loadCount()
     const interval = setInterval(loadCount, 15000)

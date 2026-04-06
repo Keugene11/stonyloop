@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react'
 import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
+import Likes from '@/components/Likes'
 
 interface WallPostItemProps {
   post: WallPost
@@ -48,6 +49,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Likes postType="wall_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
           <Impressions postType="wall_post" postId={post.id} userId={currentUserId} />
           {canDelete && (
             <button onClick={handleDelete} className="press text-text-muted hover:text-red-500 p-1">
@@ -57,7 +59,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
         </div>
       </div>
       <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
-      <Comments postType="wall_post" postId={post.id} canComment={canComment} />
+      <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Group, GroupMember, GroupPost, Profile } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
+import Likes from '@/components/Likes'
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -255,6 +256,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Likes postType="group_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
                       <Impressions postType="group_post" postId={post.id} userId={currentUserId} />
                       {(currentUserId === post.author_id || isAdmin) && (
                         <button onClick={() => handleDeletePost(post.id)} className="press text-text-muted hover:text-red-500 p-1">
@@ -264,7 +266,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                   </div>
                   <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
-                  <Comments postType="group_post" postId={post.id} />
+                  <Comments postType="group_post" postId={post.id} postAuthorId={post.author_id} />
                 </div>
               ))}
             </div>
