@@ -103,66 +103,13 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       }
     })
 
+    // Set all scales to 1 immediately
+    nodes.forEach(n => { n.scale = 1 })
     nodesRef.current = nodes
     frameRef.current = 0
 
     function tick() {
-      frameRef.current++
-      const nodes = nodesRef.current
-      const { w, h } = sizeRef.current
-      const cx = w / 2
-      const cy = h / 2
-      const centerNode = nodes[0]
-      const pad = 60
-
-      // Animate scale in
-      for (let i = 0; i < nodes.length; i++) {
-        const delay = i === 0 ? 0 : 8 + i * 4
-        if (frameRef.current > delay) {
-          nodes[i].scale += (1 - nodes[i].scale) * 0.1
-        }
-      }
-
-      // Repulsion
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx = nodes[j].x - nodes[i].x
-          const dy = nodes[j].y - nodes[i].y
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1
-          const repulse = 1500 / (dist * dist)
-          const fx = (dx / dist) * repulse
-          const fy = (dy / dist) * repulse
-          if (!dragRef.current || dragRef.current.node !== nodes[i]) { nodes[i].vx -= fx; nodes[i].vy -= fy }
-          if (!dragRef.current || dragRef.current.node !== nodes[j]) { nodes[j].vx += fx; nodes[j].vy += fy }
-        }
-      }
-
-      // Spring to center
-      const targetDist = Math.min(w, h) * 0.28
-      for (let i = 1; i < nodes.length; i++) {
-        const dx = centerNode.x - nodes[i].x
-        const dy = centerNode.y - nodes[i].y
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1
-        const force = (dist - targetDist) * 0.006
-        if (!dragRef.current || dragRef.current.node !== nodes[i]) {
-          nodes[i].vx += (dx / dist) * force
-          nodes[i].vy += (dy / dist) * force
-        }
-      }
-
-      // Gravity + damping + bounds
-      for (const n of nodes) {
-        if (dragRef.current && dragRef.current.node === n) continue
-        n.vx += (cx - n.x) * 0.002
-        n.vy += (cy - n.y) * 0.002
-        n.vx *= 0.82
-        n.vy *= 0.82
-        n.x += n.vx
-        n.y += n.vy
-        n.x = Math.max(pad, Math.min(w - pad, n.x))
-        n.y = Math.max(pad, Math.min(h - pad, n.y))
-      }
-
+      // Only redraw when dragging
       draw()
       animRef.current = requestAnimationFrame(tick)
     }
