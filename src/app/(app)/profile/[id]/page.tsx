@@ -174,7 +174,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   const privateFields = profile.private_fields ? profile.private_fields.split(',').filter(Boolean) : []
   const isOwn = currentUserId === id
-  const show = (field: string, value: string | null | undefined) => isOwn || (!privateFields.includes(field) && !!value)
+  const show = (field: string, value: string | null | undefined) => isOwn || (!privateFields.includes(field) && !!value && value !== 'None')
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
 
   return (

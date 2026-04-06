@@ -169,7 +169,7 @@ export default function ProfilePage() {
                 <div className="absolute left-0 right-0 top-full mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto z-30">
                   <button
                     type="button"
-                    onClick={() => { updateField(field, ''); setEditing(null); setSearch('') }}
+                    onClick={() => { updateField(field, 'None'); setEditing(null); setSearch('') }}
                     className="w-full text-left px-3 py-2 text-[13px] text-text-muted hover:bg-bg-input"
                   >
                     — None —
@@ -229,7 +229,7 @@ export default function ProfilePage() {
               />
             )
           ) : (
-            <span className={value ? 'cursor-pointer hover:underline' : empty} onClick={() => setEditing(field)}>
+            <span className={value ? (value === 'None' ? 'cursor-pointer hover:underline text-text-muted' : 'cursor-pointer hover:underline') : empty} onClick={() => setEditing(field)}>
               {field === 'birthday' && value ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
             </span>
           )}
