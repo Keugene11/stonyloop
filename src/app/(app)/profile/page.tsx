@@ -210,9 +210,9 @@ export default function ProfilePage() {
     }
 
     return (
-      <div className="fixed inset-0 bg-bg z-50 flex flex-col animate-slide-up">
+      <div className="fixed inset-0 bg-bg z-50 flex flex-col animate-slide-up overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
           <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">
             <ArrowLeft size={20} />
           </button>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className={`flex-1 px-4 py-6 ${type === 'select' ? 'overflow-y-auto' : 'overflow-hidden'}`}>
           {type === 'select' && options ? (
             <div>
               <input
