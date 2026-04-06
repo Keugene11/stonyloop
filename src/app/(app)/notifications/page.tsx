@@ -17,6 +17,8 @@ interface Notification {
   seen: boolean
   created_at: string
   actor?: Profile
+  comment?: { content: string } | null
+  wall_owner_id?: string
 }
 
 export default function NotificationsPage() {
@@ -54,15 +56,33 @@ export default function NotificationsPage() {
 
     if (pending) setRequests(pending as (Friendship & { requester: Profile })[])
 
-    // Load like/comment/reply notifications
+    // Load like/comment/reply notifications with comment content
     const { data: notifData } = await supabase
       .from('notifications')
-      .select('*, actor:profiles!notifications_actor_id_fkey(*)')
+      .select('*, actor:profiles!notifications_actor_id_fkey(*), comment:comments(content)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50)
 
-    if (notifData) setNotifications(notifData as Notification[])
+    if (notifData) {
+      const notifs = notifData as Notification[]
+      // Fetch wall_owner_id for wall_post notifications so we can link to the right profile
+      const wallPostIds = [...new Set(notifs.filter(n => n.post_type === 'wall_post' && n.post_id).map(n => n.post_id!))]
+      if (wallPostIds.length > 0) {
+        const { data: wallPosts } = await supabase
+          .from('wall_posts')
+          .select('id, wall_owner_id')
+          .in('id', wallPostIds)
+        const ownerMap: Record<string, string> = {}
+        wallPosts?.forEach(wp => { ownerMap[wp.id] = wp.wall_owner_id })
+        notifs.forEach(n => {
+          if (n.post_type === 'wall_post' && n.post_id) {
+            n.wall_owner_id = ownerMap[n.post_id]
+          }
+        })
+      }
+      setNotifications(notifs)
+    }
 
     // Mark pokes as seen
     await supabase
@@ -224,37 +244,55 @@ export default function NotificationsPage() {
           ))}
 
           {/* Like / Comment / Reply notifications */}
-          {notifications.map(n => (
-            <div key={n.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
-              <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
-                  {n.actor?.avatar_url ? (
-                    <img src={n.actor.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[14px] font-bold text-text-muted">
-                      {n.actor?.full_name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+          {notifications.map(n => {
+            const postLink = n.post_type === 'wall_post' && n.wall_owner_id
+              ? `/profile/${n.wall_owner_id}`
+              : null
+
+            return (
+              <div key={n.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+                <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
+                    {n.actor?.avatar_url ? (
+                      <img src={n.actor.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[14px] font-bold text-text-muted">
+                        {n.actor?.full_name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    {getNotifIcon(n.type)}
+                    <span className="text-[13px]">
+                      <Link href={`/profile/${n.actor_id}`} className="font-semibold hover:underline">{n.actor?.full_name}</Link>
+                      <span className="text-text-muted"> {getNotifText(n.type)}</span>
+                    </span>
+                  </div>
+                  {n.comment?.content && (n.type === 'comment' || n.type === 'reply') && (
+                    <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
+                      &ldquo;{n.comment.content}&rdquo;
+                    </p>
                   )}
+                  <div className="flex items-center gap-2 mt-0.5 pl-[18px]">
+                    <span className="text-[11px] text-text-muted">{getTimeAgo(new Date(n.created_at))}</span>
+                    {postLink && (
+                      <Link href={postLink} className="text-[11px] text-accent font-medium press">
+                        View post
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </Link>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  {getNotifIcon(n.type)}
-                  <span className="text-[13px]">
-                    <Link href={`/profile/${n.actor_id}`} className="font-semibold hover:underline">{n.actor?.full_name}</Link>
-                    <span className="text-text-muted"> {getNotifText(n.type)}</span>
-                  </span>
-                </div>
-                <p className="text-[11px] text-text-muted mt-0.5 pl-[18px]">{getTimeAgo(new Date(n.created_at))}</p>
+                <button
+                  onClick={() => dismissNotification(n.id)}
+                  className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press flex-shrink-0"
+                >
+                  Dismiss
+                </button>
               </div>
-              <button
-                onClick={() => dismissNotification(n.id)}
-                className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press flex-shrink-0"
-              >
-                Dismiss
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
