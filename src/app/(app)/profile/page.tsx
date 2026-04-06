@@ -253,28 +253,28 @@ export default function ProfilePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 pt-10 pb-28 animate-slide-up">
       {/* Header */}
-      <div className="flex flex-col items-center mb-6">
-        <label className="relative cursor-pointer press mb-3">
-          <div className="w-44 h-44 rounded-full bg-bg-input border-2 border-border overflow-hidden">
-            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[48px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
+      <div className="flex items-center gap-5 mb-5">
+        <label className="relative cursor-pointer press">
+          <div className="w-36 h-36 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[40px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
           </div>
-          <div className="absolute bottom-2 right-2 bg-accent text-white rounded-full p-2"><Camera size={16} /></div>
+          <div className="absolute bottom-1 right-1 bg-accent text-white rounded-full p-1.5"><Camera size={14} /></div>
           <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
         </label>
-        <div className="text-center">
+        <div className="flex-1 min-w-0">
           {editing === 'full_name' ? (
-            <input type="text" value={profile.full_name} onChange={(e) => updateField('full_name', e.target.value)} onBlur={() => setEditing(null)} onKeyDown={(e) => { if (e.key === 'Enter') setEditing(null) }} className="text-[22px] font-bold tracking-tight bg-bg-input rounded-lg px-2 py-0.5 outline-none border border-border w-full text-center" autoFocus />
+            <input type="text" value={profile.full_name} onChange={(e) => updateField('full_name', e.target.value)} onBlur={() => setEditing(null)} onKeyDown={(e) => { if (e.key === 'Enter') setEditing(null) }} className="text-[22px] font-bold tracking-tight bg-bg-input rounded-lg px-2 py-0.5 outline-none border border-border w-full" autoFocus />
           ) : (
-            <h1 className="text-[22px] font-bold tracking-tight cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
+            <h1 className="text-[22px] font-bold tracking-tight truncate cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
           )}
-          <p className="text-[13px] text-text-muted mt-0.5">
+          <p className="text-[13px] text-text-muted">
             {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
             {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
           </p>
-        </div>
-        <div className="flex items-center gap-2 mt-3">
-          <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
-          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
+          <div className="flex items-center gap-1 mt-2">
+            <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
+          </div>
         </div>
       </div>
 
