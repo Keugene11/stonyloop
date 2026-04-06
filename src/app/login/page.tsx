@@ -128,7 +128,7 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <p className="text-center text-[11px] text-text-muted/60 mt-4">
+        <p className="text-center text-[15px] font-medium text-text-muted/70 mt-5">
           You must have a @stonybrook.edu email to join.
         </p>
 

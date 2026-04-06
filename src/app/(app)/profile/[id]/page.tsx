@@ -178,13 +178,86 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
+      {/* Profile header — always on top */}
+      <div className="md:hidden mb-4">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-32 h-32 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-text-muted text-[24px] font-bold">
+                {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[22px] font-bold tracking-tight truncate">{profile.full_name}</h1>
+            <div className="text-[13px] text-text-muted space-y-0.5 mt-1">
+              {profile.major && <p>{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>}
+              {profile.residence_hall && (
+                <p className="flex items-center gap-1">
+                  <MapPin size={12} /> {profile.residence_hall}
+                </p>
+              )}
+              {profile.last_seen && (
+                <p className="flex items-center gap-1">
+                  <Clock size={12} /> {getLastSeen(profile.last_seen)}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons (mobile) */}
+        {currentUserId && currentUserId !== id && !isBlocked && (
+          <div className="flex gap-2 mb-4">
+            <FriendButton targetUserId={id} currentUserId={currentUserId} />
+            <PokeButton targetUserId={id} currentUserId={currentUserId} />
+            <button
+              onClick={async () => {
+                const res = await fetch('/api/conversations', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ targetUserId: id }),
+                })
+                const conv = await res.json()
+                if (conv.id) router.push(`/messages/${conv.id}`)
+              }}
+              className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 hover:bg-bg-card-hover"
+            >
+              <MessageCircle size={14} /> Message
+            </button>
+          </div>
+        )}
+
+        {/* Block / Report (mobile) */}
+        {currentUserId && currentUserId !== id && (
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={toggleBlock}
+              className={`press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border ${isBlocked ? 'border-red-500/30 text-red-500' : 'border-border text-text-muted hover:text-text'}`}
+            >
+              <Ban size={13} />
+              {isBlocked ? 'Unblock' : 'Block'}
+            </button>
+            <button
+              onClick={() => setShowReport(true)}
+              className="press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border border-border text-text-muted hover:text-text"
+            >
+              <Flag size={13} />
+              Report
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Two-column layout: info left, wall right */}
       <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
 
-        {/* LEFT COLUMN — Profile info (sticky on desktop) */}
-        <div className="md:w-[340px] md:flex-shrink-0 md:sticky md:top-4">
-          {/* Avatar + name */}
-          <div className="flex items-start gap-4 mb-4">
+        {/* LEFT COLUMN — Profile info (sticky on desktop, hidden header on mobile since it's above) */}
+        <div className="md:w-[340px] md:flex-shrink-0 md:sticky md:top-4 order-2 md:order-1">
+          {/* Avatar + name (desktop only) */}
+          <div className="hidden md:flex items-start gap-4 mb-4">
             <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
@@ -243,9 +316,9 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* Action buttons (desktop only — mobile version is above) */}
           {currentUserId && currentUserId !== id && !isBlocked && (
-            <div className="flex gap-2 mb-4">
+            <div className="hidden md:flex gap-2 mb-4">
               <FriendButton targetUserId={id} currentUserId={currentUserId} />
               <PokeButton targetUserId={id} currentUserId={currentUserId} />
               <button
@@ -265,9 +338,9 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Block / Report */}
+          {/* Block / Report (desktop only — mobile version is above) */}
           {currentUserId && currentUserId !== id && (
-            <div className="flex gap-2 mb-4">
+            <div className="hidden md:flex gap-2 mb-4">
               <button
                 onClick={toggleBlock}
                 className={`press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border ${isBlocked ? 'border-red-500/30 text-red-500' : 'border-border text-text-muted hover:text-text'}`}
@@ -443,8 +516,8 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           <p className="text-[11px] text-text-muted px-1">Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
         </div>
 
-        {/* RIGHT COLUMN — The Wall */}
-        <div className="flex-1 min-w-0">
+        {/* RIGHT COLUMN — The Wall (shows first on mobile) */}
+        <div className="flex-1 min-w-0 order-1 md:order-2">
           <h2 className="text-[18px] font-bold mb-3">The Wall</h2>
 
         {(isFriend || currentUserId === id) ? (
