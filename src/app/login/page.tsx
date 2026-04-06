@@ -131,6 +131,10 @@ export default function LoginPage() {
         <p className="text-center text-[11px] text-text-muted/60 mt-4">
           You must have a @stonybrook.edu email to join.
         </p>
+
+        <p className="text-center text-[12px] text-text-muted mt-2">
+          <Link href="/about" className="text-accent press">Learn more about Stonyloop</Link>
+        </p>
       </div>
     </div>
   )
