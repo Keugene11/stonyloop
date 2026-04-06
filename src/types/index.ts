@@ -24,6 +24,7 @@ export interface Profile {
   high_school: string
   websites: string
   birthday: string
+  private_fields: string
   last_seen: string | null
   created_at: string
   updated_at: string
