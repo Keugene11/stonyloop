@@ -10,7 +10,6 @@ import FriendButton from '@/components/FriendButton'
 import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
-import FriendGraph from '@/components/FriendGraph'
 
 export default function ProfileViewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -30,7 +29,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [reportReason, setReportReason] = useState('')
   const [reportDetails, setReportDetails] = useState('')
   const [reportSent, setReportSent] = useState(false)
-  const [showGraph, setShowGraph] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -351,12 +349,12 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
-                <button
-                  onClick={() => setShowGraph(true)}
+                <Link
+                  href={`/profile/${id}/network`}
                   className="press flex items-center gap-1.5 text-[11px] font-semibold text-accent bg-accent/10 rounded-full px-3 py-1"
                 >
                   <Share2 size={12} /> Visualize
-                </button>
+                </Link>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {friends.map(f => (
@@ -462,14 +460,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {showGraph && profile && (
-        <FriendGraph
-          center={profile}
-          friends={friends}
-          onClose={() => setShowGraph(false)}
-          onNavigate={(navId) => { setShowGraph(false); router.push(`/profile/${navId}`) }}
-        />
-      )}
     </div>
   )
 }
