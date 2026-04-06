@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Lock, Unlock } from 'lucide-react'
+import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
@@ -86,14 +86,6 @@ export default function ProfilePage() {
   const inputClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none w-full border border-border focus:border-text-muted'
   const selectClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border focus:border-text-muted cursor-pointer'
 
-  // Privacy helpers
-  const privateFields = profile.private_fields ? profile.private_fields.split(',').filter(Boolean) : []
-  function isPrivate(field: string) { return privateFields.includes(field) }
-  function togglePrivacy(field: string) {
-    const updated = isPrivate(field) ? privateFields.filter(f => f !== field) : [...privateFields, field]
-    updateField('private_fields', updated.join(','))
-  }
-
   // Hall groups for select
   const hallGroups: Record<string, typeof RESIDENCE_HALLS> = {}
   for (const h of RESIDENCE_HALLS) { const g = h.group || 'Other'; if (!hallGroups[g]) hallGroups[g] = []; hallGroups[g].push(h) }
@@ -117,9 +109,8 @@ export default function ProfilePage() {
     options?: { value: string; label: string; group?: string }[]
   }) {
     const isEditing = editing === field
-    const priv = isPrivate(field)
     return (
-      <div className="flex items-center gap-2 text-[13px] py-[3px] group/row">
+      <div className="flex items-center gap-2 text-[13px] py-[3px]">
         <Icon size={13} className="text-text-muted flex-shrink-0" />
         <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
         <div className="flex-1 min-w-0">
@@ -159,13 +150,6 @@ export default function ProfilePage() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => togglePrivacy(field)}
-          className={`flex-shrink-0 p-0.5 press opacity-0 group-hover/row:opacity-100 transition-opacity ${priv ? '!opacity-100' : ''}`}
-          title={priv ? 'Private — click to make public' : 'Public — click to make private'}
-        >
-          {priv ? <Lock size={11} className="text-accent" /> : <Unlock size={11} className="text-text-muted/30" />}
-        </button>
       </div>
     )
   }
@@ -205,7 +189,10 @@ export default function ProfilePage() {
             {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
           </p>
         </div>
-        <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
+        <div className="flex items-center gap-1">
+          <Link href="/settings/privacy" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
+          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:gap-5 md:items-start">
