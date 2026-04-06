@@ -185,7 +185,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         <div className="md:w-[340px] md:flex-shrink-0 md:sticky md:top-4">
           {/* Avatar + name */}
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+            <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
               ) : (
