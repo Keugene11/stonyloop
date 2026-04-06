@@ -57,7 +57,7 @@ export default function LoginPage() {
           <p className="text-[14px] text-text-muted mt-2">
             The social network for Stony Brook University.
           </p>
-          <p className="text-[13px] text-text-muted mt-3 leading-relaxed max-w-xs mx-auto">
+          <p className="text-[15px] text-text mt-4 leading-relaxed max-w-sm mx-auto">
             Connect with friends, write on walls, see who&apos;s in your classes, find people in your dorm, and join clubs and groups — all at SBU.
           </p>
         </div>

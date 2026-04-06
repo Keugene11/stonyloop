@@ -83,7 +83,7 @@ export default function SignupPage() {
         <div className="text-center mb-8">
           <h1 className="text-[32px] font-extrabold tracking-tight text-text">Join StonyLoop</h1>
           <p className="text-[14px] text-text-muted mt-2">Connect with Stony Brook students</p>
-          <p className="text-[13px] text-text-muted mt-3 leading-relaxed max-w-xs mx-auto">
+          <p className="text-[15px] text-text mt-4 leading-relaxed max-w-sm mx-auto">
             Connect with friends, write on walls, see who&apos;s in your classes, find people in your dorm, and join clubs and groups — all at SBU.
           </p>
         </div>
