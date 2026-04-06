@@ -3,15 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Search, Users, UsersRound, MessageCircle, User, Bell } from 'lucide-react'
+import { Search, UsersRound, MessageCircle, User, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
   { href: '/directory', icon: Search, label: 'Directory' },
-  { href: '/friends', icon: Users, label: 'Friends' },
   { href: '/groups', icon: UsersRound, label: 'Groups' },
   { href: '/messages', icon: MessageCircle, label: 'Messages' },
-  { href: '/notifications', icon: Bell, label: 'Notifications', hasBadge: true },
+  { href: '/notifications', icon: Inbox, label: 'Inbox', hasBadge: true },
   { href: '/profile', icon: User, label: 'Profile' },
 ]
 

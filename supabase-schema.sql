@@ -19,6 +19,12 @@ create table public.profiles (
   about_me text default '',
   political_views text default '',
   favorite_quotes text default '',
+  notif_friend_requests boolean default true,
+  notif_pokes boolean default true,
+  notif_wall_posts boolean default true,
+  notif_likes boolean default true,
+  notif_comments boolean default true,
+  messages_from text default 'everyone',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

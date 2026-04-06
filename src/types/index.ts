@@ -29,6 +29,12 @@ export interface Profile {
   onboarding_complete: boolean
   private_fields: string
   last_seen: string | null
+  notif_friend_requests: boolean
+  notif_pokes: boolean
+  notif_wall_posts: boolean
+  notif_likes: boolean
+  notif_comments: boolean
+  messages_from: string
   created_at: string
   updated_at: string
 }

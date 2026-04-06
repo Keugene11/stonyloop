@@ -135,7 +135,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
-      <h1 className="text-[24px] font-bold tracking-tight mb-4">Notifications</h1>
+      <h1 className="text-[24px] font-bold tracking-tight mb-4">Inbox</h1>
 
       {empty ? (
         <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
