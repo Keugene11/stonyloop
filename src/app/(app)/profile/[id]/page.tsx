@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock } from 'lucide-react'
+import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
@@ -154,162 +154,64 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Info Card */}
-          <div className="bg-bg-card border border-border rounded-2xl p-4 mb-6 space-y-3">
-            {profile.about_me && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">About</p>
-                <p className="text-[14px]">{profile.about_me}</p>
-              </div>
-            )}
-
-            {profile.second_major && (
-              <div className="flex items-center gap-2 text-[13px]">
-                <GraduationCap size={14} className="text-text-muted" />
-                <span>Also studying {profile.second_major}</span>
-              </div>
-            )}
-
-            {profile.minor && (
-              <div className="flex items-center gap-2 text-[13px]">
-                <BookOpen size={14} className="text-text-muted" />
-                <span>Minor in {profile.minor}</span>
-              </div>
-            )}
-
-            {profile.relationship_status && profile.relationship_status !== 'Prefer not to say' && (
-              <div className="flex items-center gap-2 text-[13px]">
-                <Heart size={14} className="text-text-muted" />
-                <span>{profile.relationship_status}</span>
-              </div>
-            )}
-
-            {profile.interested_in && profile.interested_in !== 'Prefer not to say' && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interested In</p>
-                <p className="text-[13px]">{profile.interested_in}</p>
-              </div>
-            )}
-
-            {profile.looking_for && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Looking For</p>
-                <p className="text-[13px]">{profile.looking_for}</p>
-              </div>
-            )}
-
-            {profile.interests && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p>
-                <p className="text-[13px]">{profile.interests}</p>
-              </div>
-            )}
-
-            {profile.favorite_music && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {profile.favorite_music.split(', ').filter(Boolean).map(t => (
-                    <span key={t} className="bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.favorite_movies && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {profile.favorite_movies.split(', ').filter(Boolean).map(t => (
-                    <span key={t} className="bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.favorite_quotes && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Quotes</p>
-                <p className="text-[13px] italic">&ldquo;{profile.favorite_quotes}&rdquo;</p>
-              </div>
-            )}
-
-            {courses.length > 0 && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Courses</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {courses.map(c => (
-                    <span key={c} className="bg-bg-input text-[12px] font-medium px-2.5 py-1 rounded-full">{c}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.gender && profile.gender !== 'Prefer not to say' && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Gender</p>
-                <p className="text-[13px]">{profile.gender}</p>
-              </div>
-            )}
-
-            {profile.political_views && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Political Views</p>
-                <p className="text-[13px]">{profile.political_views}</p>
-              </div>
-            )}
-
-            {profile.hometown && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Hometown</p>
-                <p className="text-[13px]">{profile.hometown}</p>
-              </div>
-            )}
-
-            {profile.high_school && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">High School</p>
-                <p className="text-[13px]">{profile.high_school}</p>
-              </div>
-            )}
-
-            {profile.birthday && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Birthday</p>
-                <p className="text-[13px]">{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
-              </div>
-            )}
-
-            {profile.phone && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Phone</p>
-                <p className="text-[13px]">{profile.phone}</p>
-              </div>
-            )}
-
-            {profile.websites && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Website</p>
-                <p className="text-[13px] text-accent break-all">{profile.websites}</p>
-              </div>
-            )}
-
-            {userGroups.length > 0 && (
-              <div>
-                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Groups</p>
-                <div className="space-y-1.5">
-                  {userGroups.map(g => (
-                    <Link key={g.id} href={`/groups/${g.id}`} className="press block text-[13px] text-accent hover:underline">{g.name}</Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Member Since</p>
-              <p className="text-[13px]">{new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+          {/* About */}
+          {profile.about_me && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[14px]">{profile.about_me}</p>
             </div>
+          )}
+
+          {/* Details — compact icon rows */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
+            {profile.major && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span>{profile.major}</span></div>}
+            {profile.second_major && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span>{profile.second_major}</span></div>}
+            {profile.minor && <div className="flex items-center gap-2 text-[13px] py-0.5"><BookOpen size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Minor:</span> <span>{profile.minor}</span></div>}
+            {profile.residence_hall && <div className="flex items-center gap-2 text-[13px] py-0.5"><MapPin size={13} className="text-text-muted flex-shrink-0" /><span>{profile.residence_hall}</span></div>}
+            {profile.hometown && <div className="flex items-center gap-2 text-[13px] py-0.5"><Home size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">From:</span> <span>{profile.hometown}</span></div>}
+            {profile.high_school && <div className="flex items-center gap-2 text-[13px] py-0.5"><School size={13} className="text-text-muted flex-shrink-0" /><span>{profile.high_school}</span></div>}
+            {profile.birthday && <div className="flex items-center gap-2 text-[13px] py-0.5"><Cake size={13} className="text-text-muted flex-shrink-0" /><span>{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span></div>}
+            {profile.relationship_status && profile.relationship_status !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span>{profile.relationship_status}</span></div>}
+            {profile.interested_in && profile.interested_in !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Interested in:</span> <span>{profile.interested_in}</span></div>}
+            {profile.looking_for && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Looking for:</span> <span>{profile.looking_for}</span></div>}
+            {profile.political_views && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span>{profile.political_views}</span></div>}
           </div>
+
+          {/* Contact */}
+          {(profile.email || profile.phone || profile.websites) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
+              {profile.email && <div className="flex items-center gap-2 text-[13px] py-0.5"><Mail size={13} className="text-text-muted flex-shrink-0" /><span>{profile.email}</span></div>}
+              {profile.phone && <div className="flex items-center gap-2 text-[13px] py-0.5"><Phone size={13} className="text-text-muted flex-shrink-0" /><span>{profile.phone}</span></div>}
+              {profile.websites && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-accent break-all">{profile.websites}</span></div>}
+            </div>
+          )}
+
+          {/* Courses */}
+          {courses.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
+              <div className="flex flex-wrap gap-1">{courses.map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
+            </div>
+          )}
+
+          {/* Favorites */}
+          {(profile.favorite_music || profile.favorite_movies || profile.interests || profile.favorite_quotes) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-2">
+              {profile.interests && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p><p className="text-[13px]">{profile.interests}</p></div>}
+              {profile.favorite_music && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Music</p><div className="flex flex-wrap gap-1">{profile.favorite_music.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
+              {profile.favorite_movies && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Movies</p><div className="flex flex-wrap gap-1">{profile.favorite_movies.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
+              {profile.favorite_quotes && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p><p className="text-[13px] italic">&ldquo;{profile.favorite_quotes}&rdquo;</p></div>}
+            </div>
+          )}
+
+          {/* Groups */}
+          {userGroups.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Groups</p>
+              <div className="space-y-1">{userGroups.map(g => <Link key={g.id} href={`/groups/${g.id}`} className="press block text-[13px] text-accent hover:underline">{g.name}</Link>)}</div>
+            </div>
+          )}
+
+          <p className="text-[11px] text-text-muted px-1">Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
         </div>
 
         {/* RIGHT COLUMN — The Wall */}
