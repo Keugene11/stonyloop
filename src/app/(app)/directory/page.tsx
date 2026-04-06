@@ -31,7 +31,17 @@ export default function DirectoryPage() {
   const [results, setResults] = useState<Profile[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [blockedIds, setBlockedIds] = useState<string[]>([])
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id)
+      if (data) setBlockedIds(data.map(b => b.blocked_id))
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const search = useCallback(async (f: Filters) => {
     const hasAny = Object.values(f).some(v => v !== '')
@@ -54,7 +64,8 @@ export default function DirectoryPage() {
     }
 
     const { data } = await supabase.rpc('search_directory', params)
-    setResults((data || []) as Profile[])
+    const filtered = ((data || []) as Profile[]).filter(p => !blockedIds.includes(p.id))
+    setResults(filtered)
     setLoading(false)
   }, [supabase])
 

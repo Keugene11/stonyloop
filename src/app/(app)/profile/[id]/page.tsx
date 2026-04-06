@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail, Eye } from 'lucide-react'
+import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail, Eye, Ban, Flag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
@@ -24,6 +24,11 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [friends, setFriends] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportSent, setReportSent] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -91,6 +96,17 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       if (groups) setUserGroups(groups as Group[])
     }
 
+    // Check if blocked
+    if (user && user.id !== id) {
+      const { data: block } = await supabase
+        .from('blocks')
+        .select('id')
+        .eq('blocker_id', user.id)
+        .eq('blocked_id', id)
+        .maybeSingle()
+      setIsBlocked(!!block)
+    }
+
     // Track profile view (if viewing someone else)
     if (user && user.id !== id) {
       await supabase.from('profile_views').upsert(
@@ -111,6 +127,32 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
     }
 
     setLoading(false)
+  }
+
+  async function toggleBlock() {
+    if (isBlocked) {
+      await supabase.from('blocks').delete().eq('blocker_id', currentUserId).eq('blocked_id', id)
+      setIsBlocked(false)
+    } else {
+      await supabase.from('blocks').insert({ blocker_id: currentUserId, blocked_id: id })
+      // Also remove friendship
+      await supabase.from('friendships').delete()
+        .or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${id}),and(requester_id.eq.${id},addressee_id.eq.${currentUserId})`)
+      setIsBlocked(true)
+      setIsFriend(false)
+    }
+  }
+
+  async function submitReport() {
+    if (!reportReason) return
+    await supabase.from('reports').insert({
+      reporter_id: currentUserId,
+      reported_id: id,
+      reason: reportReason,
+      details: reportDetails.trim(),
+    })
+    setReportSent(true)
+    setTimeout(() => { setShowReport(false); setReportSent(false); setReportReason(''); setReportDetails('') }, 2000)
   }
 
   if (loading) {
@@ -202,7 +244,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           )}
 
           {/* Action buttons */}
-          {currentUserId && currentUserId !== id && (
+          {currentUserId && currentUserId !== id && !isBlocked && (
             <div className="flex gap-2 mb-4">
               <FriendButton targetUserId={id} currentUserId={currentUserId} />
               <PokeButton targetUserId={id} currentUserId={currentUserId} />
@@ -220,6 +262,78 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               >
                 <MessageCircle size={14} /> Message
               </button>
+            </div>
+          )}
+
+          {/* Block / Report */}
+          {currentUserId && currentUserId !== id && (
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={toggleBlock}
+                className={`press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border ${isBlocked ? 'border-red-500/30 text-red-500' : 'border-border text-text-muted hover:text-text'}`}
+              >
+                <Ban size={13} />
+                {isBlocked ? 'Unblock' : 'Block'}
+              </button>
+              <button
+                onClick={() => setShowReport(true)}
+                className="press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border border-border text-text-muted hover:text-text"
+              >
+                <Flag size={13} />
+                Report
+              </button>
+            </div>
+          )}
+
+          {/* Report modal */}
+          {showReport && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowReport(false)}>
+              <div className="bg-bg-card border border-border rounded-2xl p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                {reportSent ? (
+                  <p className="text-[14px] text-center py-4">Report submitted. Thank you.</p>
+                ) : (
+                  <>
+                    <h3 className="text-[16px] font-bold mb-3">Report {profile.full_name}</h3>
+                    <p className="text-[12px] text-text-muted mb-3">Select a reason for reporting this user.</p>
+                    <div className="space-y-1.5 mb-3">
+                      {['Harassment', 'Spam', 'Fake account', 'Inappropriate content', 'Other'].map(r => (
+                        <button
+                          key={r}
+                          onClick={() => setReportReason(r)}
+                          className={`press w-full text-left px-3 py-2 rounded-xl text-[13px] border ${reportReason === r ? 'border-accent text-accent' : 'border-border text-text-muted'}`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={reportDetails}
+                      onChange={e => setReportDetails(e.target.value)}
+                      placeholder="Additional details (optional)..."
+                      className="w-full bg-bg-input rounded-lg px-3 py-2 text-[13px] outline-none resize-none h-16 border border-border mb-3"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => setShowReport(false)} className="press flex-1 py-2 rounded-xl text-[13px] border border-border text-text-muted">
+                        Cancel
+                      </button>
+                      <button
+                        onClick={submitReport}
+                        disabled={!reportReason}
+                        className="press flex-1 py-2 rounded-xl text-[13px] font-medium bg-red-500 text-white disabled:opacity-40"
+                      >
+                        Submit Report
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Blocked state */}
+          {isBlocked && (
+            <div className="bg-bg-card border border-red-500/20 rounded-2xl px-4 py-3 mb-3 text-center">
+              <p className="text-[13px] text-text-muted">You have blocked this user.</p>
             </div>
           )}
 
