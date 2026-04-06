@@ -33,6 +33,7 @@ export default function ProfilePage() {
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
   const [cropFile, setCropFile] = useState<File | null>(null)
+  const [activeTab, setActiveTab] = useState<'wall' | 'info'>('wall')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -278,9 +279,25 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Mobile tabs */}
+      <div className="flex gap-0 mb-4 md:hidden border-b border-border">
+        <button
+          onClick={() => setActiveTab('wall')}
+          className={`press flex-1 py-2.5 text-[14px] font-semibold text-center border-b-2 transition-colors ${activeTab === 'wall' ? 'border-text text-text' : 'border-transparent text-text-muted'}`}
+        >
+          Wall
+        </button>
+        <button
+          onClick={() => setActiveTab('info')}
+          className={`press flex-1 py-2.5 text-[14px] font-semibold text-center border-b-2 transition-colors ${activeTab === 'info' ? 'border-text text-text' : 'border-transparent text-text-muted'}`}
+        >
+          Info
+        </button>
+      </div>
+
       <div className="flex flex-col md:flex-row md:gap-5 md:items-start">
-        {/* LEFT — details (below wall on mobile) */}
-        <div className="md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3 order-2 md:order-1">
+        {/* LEFT — details */}
+        <div className={`md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3 ${activeTab === 'info' ? 'block' : 'hidden'} md:block`}>
 
           {/* Profile Views */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
@@ -494,8 +511,8 @@ export default function ProfilePage() {
           <p className="text-[11px] text-text-muted px-1">Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
         </div>
 
-        {/* RIGHT — Wall (shows first on mobile) */}
-        <div className="flex-1 min-w-0 mt-5 md:mt-0 order-1 md:order-2">
+        {/* RIGHT — Wall */}
+        <div className={`flex-1 min-w-0 mt-5 md:mt-0 ${activeTab === 'wall' ? 'block' : 'hidden'} md:block`}>
           <h2 className="text-[18px] font-bold mb-3">The Wall</h2>
           <WallPostForm wallOwnerId={userId} onPost={(post) => setWallPosts([post, ...wallPosts])} />
           {wallPosts.length === 0 ? (
