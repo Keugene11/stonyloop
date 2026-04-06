@@ -151,71 +151,15 @@ export default function ProfilePage() {
     })
 
     return (
-      <div className="flex items-center gap-2 text-[13px] py-[3px]">
-        <Icon size={13} className="text-text-muted flex-shrink-0" />
-        <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
-        <div className="flex-1 min-w-0 relative">
-          {isEditing ? (
-            options ? (
-              <div>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search..."
-                  className={inputClass}
-                  autoFocus
-                />
-                <div className="absolute left-0 right-0 top-full mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto z-30">
-                  <button
-                    type="button"
-                    onClick={() => { updateField(field, 'None'); setEditing(null); setSearch('') }}
-                    className="w-full text-left px-3 py-2 text-[13px] text-text-muted hover:bg-bg-input"
-                  >
-                    — None —
-                  </button>
-                  {(() => {
-                    const grouped: Record<string, typeof options> = {}
-                    const ungrouped: typeof options = []
-                    filteredOptions?.forEach(o => {
-                      if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
-                      else ungrouped.push(o)
-                    })
-                    return (
-                      <>
-                        {ungrouped.map(o => (
-                          <button
-                            key={o.value}
-                            type="button"
-                            onClick={() => { updateField(field, o.value); setEditing(null); setSearch('') }}
-                            className={`w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input ${value === o.value ? 'text-accent font-medium' : ''}`}
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                        {Object.entries(grouped).map(([g, opts]) => (
-                          <div key={g}>
-                            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-text-muted font-semibold bg-bg-input/50">{g}</div>
-                            {opts.map(o => (
-                              <button
-                                key={o.value}
-                                type="button"
-                                onClick={() => { updateField(field, o.value); setEditing(null); setSearch('') }}
-                                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input ${value === o.value ? 'text-accent font-medium' : ''}`}
-                              >
-                                {o.label}
-                              </button>
-                            ))}
-                          </div>
-                        ))}
-                      </>
-                    )
-                  })()}
-                </div>
-                {/* Backdrop to close */}
-                <div className="fixed inset-0 z-20" style={{ bottom: '56px' }} onClick={() => { setEditing(null); setSearch('') }} />
-              </div>
-            ) : type === 'birthday' ? (
+      <div className="text-[13px] py-[3px]">
+        {isEditing && !options ? (
+          /* Full-width editing mode for text inputs */
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Icon size={13} className="text-text-muted flex-shrink-0" />
+              <span className="text-text-muted">{label}</span>
+            </div>
+            {type === 'birthday' ? (
               <BirthdayEditor value={value || ''} onSave={(v) => { updateField(field, v); setEditing(null) }} />
             ) : (
               <input
@@ -227,13 +171,79 @@ export default function ProfilePage() {
                 className={inputClass}
                 autoFocus
               />
-            )
-          ) : (
-            <span className={value ? (value === 'None' ? 'cursor-pointer hover:underline text-text-muted' : 'cursor-pointer hover:underline') : empty} onClick={() => setEditing(field)}>
-              {field === 'birthday' && value ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
-            </span>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Icon size={13} className="text-text-muted flex-shrink-0" />
+            <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
+            <div className="flex-1 min-w-0 relative">
+              {isEditing && options ? (
+                <div>
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search..."
+                    className={inputClass}
+                    autoFocus
+                  />
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto z-30">
+                    <button
+                      type="button"
+                      onClick={() => { updateField(field, 'None'); setEditing(null); setSearch('') }}
+                      className="w-full text-left px-3 py-2 text-[13px] text-text-muted hover:bg-bg-input"
+                    >
+                      — None —
+                    </button>
+                    {(() => {
+                      const grouped: Record<string, typeof options> = {}
+                      const ungrouped: typeof options = []
+                      filteredOptions?.forEach(o => {
+                        if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
+                        else ungrouped.push(o)
+                      })
+                      return (
+                        <>
+                          {ungrouped.map(o => (
+                            <button
+                              key={o.value}
+                              type="button"
+                              onClick={() => { updateField(field, o.value); setEditing(null); setSearch('') }}
+                              className={`w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input ${value === o.value ? 'text-accent font-medium' : ''}`}
+                            >
+                              {o.label}
+                            </button>
+                          ))}
+                          {Object.entries(grouped).map(([g, opts]) => (
+                            <div key={g}>
+                              <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-text-muted font-semibold bg-bg-input/50">{g}</div>
+                              {opts.map(o => (
+                                <button
+                                  key={o.value}
+                                  type="button"
+                                  onClick={() => { updateField(field, o.value); setEditing(null); setSearch('') }}
+                                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input ${value === o.value ? 'text-accent font-medium' : ''}`}
+                                >
+                                  {o.label}
+                                </button>
+                              ))}
+                            </div>
+                          ))}
+                        </>
+                      )
+                    })()}
+                  </div>
+                  <div className="fixed inset-0 z-20" style={{ bottom: '56px' }} onClick={() => { setEditing(null); setSearch('') }} />
+                </div>
+              ) : (
+                <span className={value ? (value === 'None' ? 'cursor-pointer hover:underline text-text-muted' : 'cursor-pointer hover:underline') : empty} onClick={() => setEditing(field)}>
+                  {field === 'birthday' && value ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
