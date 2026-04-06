@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 import DirectoryFilters from '@/components/DirectoryFilters'
@@ -14,6 +14,12 @@ interface Filters {
   gender: string
   major: string
   class_year: string
+  hometown: string
+  high_school: string
+  fraternity_sorority: string
+  clubs: string
+  relationship_status: string
+  interested_in: string
 }
 
 const emptyFilters: Filters = {
@@ -23,17 +29,19 @@ const emptyFilters: Filters = {
   gender: '',
   major: '',
   class_year: '',
+  hometown: '',
+  high_school: '',
+  fraternity_sorority: '',
+  clubs: '',
+  relationship_status: '',
+  interested_in: '',
 }
 
 export default function DirectoryPage() {
   const supabase = createClient()
   const [filters, setFilters] = useState<Filters>(emptyFilters)
-  const [results, setResults] = useState<Profile[]>([])
   const [allUsers, setAllUsers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
-  const [searched, setSearched] = useState(false)
-  const [blockedIds, setBlockedIds] = useState<string[]>([])
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -42,7 +50,6 @@ export default function DirectoryPage() {
 
       const { data: blocks } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id)
       const blocked = blocks ? blocks.map(b => b.blocked_id) : []
-      setBlockedIds(blocked)
 
       const { data: profiles } = await supabase
         .from('profiles')
@@ -60,38 +67,21 @@ export default function DirectoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const search = useCallback(async (f: Filters) => {
-    const hasAny = Object.values(f).some(v => v !== '')
-    if (!hasAny) {
-      setResults([])
-      setSearched(false)
-      return
-    }
-
-    setSearched(true)
-
-    const params: Record<string, string | number | null> = {
-      p_name: f.name || null,
-      p_residence_hall: f.residence_hall || null,
-      p_course: f.course || null,
-      p_gender: f.gender || null,
-      p_major: f.major || null,
-      p_class_year: f.class_year ? parseInt(f.class_year) : null,
-    }
-
-    const { data } = await supabase.rpc('search_directory', params)
-    const filtered = ((data || []) as Profile[]).filter(p => !blockedIds.includes(p.id))
-    setResults(filtered)
-  }, [supabase, blockedIds])
-
-  useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current)
-    searchTimer.current = setTimeout(() => search(filters), 400)
-    return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
-  }, [filters, search])
-
-  const hasFilters = Object.values(filters).some(v => v !== '')
-  const displayList = hasFilters ? results : allUsers
+  const displayList = allUsers.filter(p => {
+    if (filters.name && !p.full_name.toLowerCase().includes(filters.name.toLowerCase())) return false
+    if (filters.residence_hall && p.residence_hall !== filters.residence_hall) return false
+    if (filters.major && p.major !== filters.major) return false
+    if (filters.gender && p.gender !== filters.gender) return false
+    if (filters.class_year && p.class_year?.toString() !== filters.class_year) return false
+    if (filters.course && !p.courses?.toUpperCase().includes(filters.course.toUpperCase())) return false
+    if (filters.hometown && !p.hometown?.toLowerCase().includes(filters.hometown.toLowerCase())) return false
+    if (filters.high_school && !p.high_school?.toLowerCase().includes(filters.high_school.toLowerCase())) return false
+    if (filters.fraternity_sorority && p.fraternity_sorority !== filters.fraternity_sorority) return false
+    if (filters.clubs && p.clubs !== filters.clubs) return false
+    if (filters.relationship_status && p.relationship_status !== filters.relationship_status) return false
+    if (filters.interested_in && p.interested_in !== filters.interested_in) return false
+    return true
+  })
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
@@ -104,10 +94,6 @@ export default function DirectoryPage() {
           <div className="flex justify-center py-8">
             <Loader2 className="animate-spin text-text-muted" size={24} />
           </div>
-        ) : searched && results.length === 0 ? (
-          <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
-            <p className="text-text-muted text-[14px]">No students found matching your filters.</p>
-          </div>
         ) : displayList.length > 0 ? (
           <div className="space-y-2">
             <p className="text-[12px] text-text-muted mb-2">{displayList.length} student{displayList.length !== 1 ? 's' : ''}</p>
@@ -117,7 +103,7 @@ export default function DirectoryPage() {
           </div>
         ) : (
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
-            <p className="text-text-muted text-[14px]">No students yet.</p>
+            <p className="text-text-muted text-[14px]">No students found.</p>
           </div>
         )}
       </div>

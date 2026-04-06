@@ -4,7 +4,8 @@ import { Search, X } from 'lucide-react'
 import StyledSelect from '@/components/StyledSelect'
 import { SBU_MAJORS } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
-import { CLASS_YEARS, GENDERS } from '@/lib/constants'
+import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, INTERESTED_IN } from '@/lib/constants'
+import { SBU_GREEK_LIFE, SBU_CLUBS } from '@/lib/sbu-groups'
 
 interface Filters {
   name: string
@@ -13,6 +14,12 @@ interface Filters {
   gender: string
   major: string
   class_year: string
+  hometown: string
+  high_school: string
+  fraternity_sorority: string
+  clubs: string
+  relationship_status: string
+  interested_in: string
 }
 
 interface DirectoryFiltersProps {
@@ -41,7 +48,7 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
         />
       </div>
 
-      {/* Filter row */}
+      {/* Filter grid */}
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Residence Hall</label>
@@ -64,6 +71,15 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
           />
         </div>
         <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Class Year</label>
+          <StyledSelect
+            value={filters.class_year}
+            onChange={(v) => update('class_year', v)}
+            placeholder="Any"
+            options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))}
+          />
+        </div>
+        <div>
           <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Gender</label>
           <StyledSelect
             value={filters.gender}
@@ -73,31 +89,86 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
           />
         </div>
         <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Class Year</label>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Greek Life</label>
           <StyledSelect
-            value={filters.class_year}
-            onChange={(v) => update('class_year', v)}
+            value={filters.fraternity_sorority}
+            onChange={(v) => update('fraternity_sorority', v)}
             placeholder="Any"
-            options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))}
+            searchable
+            options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Club</label>
+          <StyledSelect
+            value={filters.clubs}
+            onChange={(v) => update('clubs', v)}
+            placeholder="Any"
+            searchable
+            options={SBU_CLUBS.map(c => ({ value: c, label: c }))}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Relationship</label>
+          <StyledSelect
+            value={filters.relationship_status}
+            onChange={(v) => update('relationship_status', v)}
+            placeholder="Any"
+            options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Interested In</label>
+          <StyledSelect
+            value={filters.interested_in}
+            onChange={(v) => update('interested_in', v)}
+            placeholder="Any"
+            options={INTERESTED_IN.map(s => ({ value: s, label: s }))}
           />
         </div>
       </div>
 
-      {/* Course search */}
-      <div>
-        <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Course</label>
-        <input
-          type="text"
-          value={filters.course}
-          onChange={(e) => update('course', e.target.value.toUpperCase())}
-          placeholder="e.g. CSE 214, ECO 108..."
-          className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[14px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
-        />
+      {/* Text filters */}
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Course</label>
+          <input
+            type="text"
+            value={filters.course}
+            onChange={(e) => update('course', e.target.value.toUpperCase())}
+            placeholder="e.g. CSE 214"
+            className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Hometown</label>
+          <input
+            type="text"
+            value={filters.hometown}
+            onChange={(e) => update('hometown', e.target.value)}
+            placeholder="Any"
+            className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">High School</label>
+          <input
+            type="text"
+            value={filters.high_school}
+            onChange={(e) => update('high_school', e.target.value)}
+            placeholder="Any"
+            className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+          />
+        </div>
       </div>
 
       {hasFilters && (
         <button
-          onClick={() => onChange({ name: '', residence_hall: '', course: '', gender: '', major: '', class_year: '' })}
+          onClick={() => onChange({
+            name: '', residence_hall: '', course: '', gender: '', major: '', class_year: '',
+            hometown: '', high_school: '', fraternity_sorority: '', clubs: '',
+            relationship_status: '', interested_in: '',
+          })}
           className="text-[12px] text-text-muted flex items-center gap-1 press hover:text-text"
         >
           <X size={12} /> Clear all filters
