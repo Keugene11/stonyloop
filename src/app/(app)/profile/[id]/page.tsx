@@ -353,7 +353,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
                 <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
                 <button
                   onClick={() => setShowGraph(true)}
-                  className="press flex items-center gap-1 text-[11px] text-text-muted hover:text-text font-medium"
+                  className="press flex items-center gap-1.5 text-[11px] font-semibold text-accent bg-accent/10 rounded-full px-3 py-1"
                 >
                   <Share2 size={12} /> Visualize
                 </button>
