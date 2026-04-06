@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "StonyLoop — The Facebook for Stony Brook",
+  title: "Stonyloop",
   description: "The social network for Stony Brook University students",
 };
 
