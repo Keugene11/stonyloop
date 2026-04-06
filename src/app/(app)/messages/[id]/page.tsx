@@ -160,7 +160,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="bg-bg-card border-t border-border px-4 py-3 flex gap-2">
+      <form onSubmit={handleSend} className="bg-bg-card border-t border-border px-4 py-3 flex gap-2 sticky bottom-14">
         <input
           type="text"
           value={content}
