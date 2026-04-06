@@ -94,7 +94,7 @@ export default function FriendGraph({ center, friends, onClose, onNavigate }: Fr
           const dx = nodes[j].x - nodes[i].x
           const dy = nodes[j].y - nodes[i].y
           const dist = Math.sqrt(dx * dx + dy * dy) || 1
-          const repulse = 4000 / (dist * dist)
+          const repulse = 2000 / (dist * dist)
           const fx = (dx / dist) * repulse
           const fy = (dy / dist) * repulse
           if (!dragRef.current || dragRef.current.node !== nodes[i]) {
@@ -121,15 +121,19 @@ export default function FriendGraph({ center, friends, onClose, onNavigate }: Fr
         }
       }
 
-      // Center gravity + damping
+      // Center gravity + damping + boundary clamping
+      const pad = 50
       for (const n of nodes) {
         if (dragRef.current && dragRef.current.node === n) continue
-        n.vx += (cx - n.x) * 0.0008
-        n.vy += (cy - n.y) * 0.0008
-        n.vx *= 0.88
-        n.vy *= 0.88
+        n.vx += (cx - n.x) * 0.002
+        n.vy += (cy - n.y) * 0.002
+        n.vx *= 0.85
+        n.vy *= 0.85
         n.x += n.vx
         n.y += n.vy
+        // Keep nodes inside viewport
+        n.x = Math.max(pad, Math.min(w - pad, n.x))
+        n.y = Math.max(pad, Math.min(h - pad, n.y))
       }
 
       draw()
