@@ -21,6 +21,8 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    const maxSize = file.type.startsWith('video/') ? 20 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxSize) { alert(file.type.startsWith('video/') ? 'Video must be under 20 MB.' : 'Image must be under 5 MB.'); return }
     setMediaFile(file)
     setMediaPreview(URL.createObjectURL(file))
   }

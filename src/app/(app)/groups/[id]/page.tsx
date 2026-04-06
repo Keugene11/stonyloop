@@ -95,6 +95,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
     let media_url: string | null = null
     if (mediaFile) {
+      const maxSize = mediaFile.type.startsWith('video/') ? 20 * 1024 * 1024 : 5 * 1024 * 1024
+      if (mediaFile.size > maxSize) { alert(mediaFile.type.startsWith('video/') ? 'Video must be under 20 MB.' : 'Image must be under 5 MB.'); setPosting(false); return }
       const ext = mediaFile.name.split('.').pop()
       const path = `${currentUserId}/${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('posts').upload(path, mediaFile)
@@ -134,6 +136,12 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   async function handleGroupImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !group) return
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
+    // Delete old image
+    if (group.image_url) {
+      const oldPath = group.image_url.split('/posts/')[1]
+      if (oldPath) await supabase.storage.from('posts').remove([decodeURIComponent(oldPath)])
+    }
     const ext = file.name.split('.').pop()
     const path = `${currentUserId}/group-${id}-${Date.now()}.${ext}`
     const { error } = await supabase.storage.from('posts').upload(path, file)
@@ -167,28 +175,29 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="max-w-4xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
 
-      {/* Group cover image */}
-      <div className="relative rounded-2xl overflow-hidden mb-5 bg-bg-card border border-border">
-        {group.image_url ? (
-          <img src={group.image_url} alt={group.name} className="w-full h-48 md:h-64 object-cover" />
-        ) : (
-          <div className="w-full h-48 md:h-64 bg-bg-input flex items-center justify-center">
-            <Users size={48} className="text-text-muted/30" />
-          </div>
-        )}
-        {isAdmin && (
-          <label className="absolute bottom-3 right-3 cursor-pointer press bg-black/60 hover:bg-black/80 text-white rounded-xl px-3 py-1.5 text-[12px] font-medium flex items-center gap-1.5 transition-colors">
-            <Camera size={14} />
-            {group.image_url ? 'Change Photo' : 'Add Photo'}
-            <input type="file" accept="image/*" onChange={handleGroupImageUpload} className="hidden" />
-          </label>
-        )}
-      </div>
-
       <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
 
         {/* LEFT — Group info + members */}
         <div className="md:w-[320px] md:flex-shrink-0 md:sticky md:top-4">
+
+          {/* Group image */}
+          <div className="relative rounded-2xl overflow-hidden mb-4 bg-bg-card border border-border">
+            {group.image_url ? (
+              <img src={group.image_url} alt={group.name} className="w-full h-40 object-cover" />
+            ) : (
+              <div className="w-full h-40 bg-bg-input flex items-center justify-center">
+                <Users size={36} className="text-text-muted/30" />
+              </div>
+            )}
+            {isAdmin && (
+              <label className="absolute bottom-2 right-2 cursor-pointer press bg-black/60 hover:bg-black/80 text-white rounded-lg px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 transition-colors">
+                <Camera size={12} />
+                {group.image_url ? 'Change' : 'Add Photo'}
+                <input type="file" accept="image/*" onChange={handleGroupImageUpload} className="hidden" />
+              </label>
+            )}
+          </div>
+
           {/* Group header */}
           <div className="bg-bg-card border border-border rounded-2xl p-4 mb-4">
             <div className="mb-3">

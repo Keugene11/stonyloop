@@ -56,6 +56,12 @@ export default function ProfilePage() {
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !userId) return
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
+    // Delete old avatar
+    if (avatarUrl && avatarUrl.includes('/avatars/')) {
+      const oldPath = avatarUrl.split('/avatars/')[1]
+      if (oldPath) await supabase.storage.from('avatars').remove([decodeURIComponent(oldPath)])
+    }
     const ext = file.name.split('.').pop()
     const path = `${userId}/${Date.now()}.${ext}`
     const { error } = await supabase.storage.from('avatars').upload(path, file)
