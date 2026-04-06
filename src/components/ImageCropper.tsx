@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { X, ZoomIn, ZoomOut, Check } from 'lucide-react'
 
 interface ImageCropperProps {
@@ -16,11 +16,18 @@ export default function ImageCropper({ file, aspectRatio = 16 / 9, onSave, onCan
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [imgDims, setImgDims] = useState({ w: 0, h: 0 })
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
 
   const WIDTH = 320
   const HEIGHT = WIDTH / aspectRatio
+
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => setImgDims({ w: img.naturalWidth, h: img.naturalHeight })
+    img.src = imgSrc
+  }, [imgSrc])
 
   function handlePointerDown(e: React.PointerEvent) {
     setDragging(true)
@@ -82,20 +89,28 @@ export default function ImageCropper({ file, aspectRatio = 16 / 9, onSave, onCan
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
-        <img
-          ref={imgRef}
-          src={imgSrc}
-          alt=""
-          className="absolute select-none pointer-events-none"
-          draggable={false}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transformOrigin: 'center center',
-            transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-          }}
-        />
+        {imgDims.w > 0 && (() => {
+          const fitScale = Math.max(WIDTH / imgDims.w, HEIGHT / imgDims.h)
+          const dispW = imgDims.w * fitScale
+          const dispH = imgDims.h * fitScale
+          return (
+            <img
+              ref={imgRef}
+              src={imgSrc}
+              alt=""
+              className="absolute select-none pointer-events-none"
+              draggable={false}
+              style={{
+                width: dispW,
+                height: dispH,
+                left: (WIDTH - dispW) / 2,
+                top: (HEIGHT - dispH) / 2,
+                transformOrigin: 'center center',
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+              }}
+            />
+          )
+        })()}
       </div>
 
       <div className="flex items-center gap-4 mt-5">
