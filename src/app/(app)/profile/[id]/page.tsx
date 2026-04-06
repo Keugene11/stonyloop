@@ -399,6 +399,14 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
+          {/* Greek Life & Clubs */}
+          {(show('fraternity_sorority', profile.fraternity_sorority) || show('clubs', profile.clubs)) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
+              {show('fraternity_sorority', profile.fraternity_sorority) && <div className="flex items-center gap-2 text-[13px] py-0.5"><span className="text-text-muted">Greek Life:</span> <span>{profile.fraternity_sorority}</span></div>}
+              {show('clubs', profile.clubs) && <div className="flex items-center gap-2 text-[13px] py-0.5"><span className="text-text-muted">Club:</span> <span>{profile.clubs}</span></div>}
+            </div>
+          )}
+
           {/* Courses */}
           {courses.length > 0 && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">

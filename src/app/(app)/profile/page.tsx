@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2 } from 'lucide-react'
+import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2, Users } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
+import { SBU_GREEK_LIFE, SBU_CLUBS } from '@/lib/sbu-groups'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 import type { Profile, WallPost, Group } from '@/types'
@@ -284,6 +285,12 @@ export default function ProfilePage() {
             <EditableRow icon={Mail} label="Email" field="email" value={profile.email} />
             <EditableRow icon={Phone} label="Phone" field="phone" value={profile.phone} type="tel" />
             <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
+          </div>
+
+          {/* Greek Life & Clubs */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
+            <EditableRow icon={Users} label="Greek Life" field="fraternity_sorority" value={profile.fraternity_sorority} options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))} />
+            <EditableRow icon={Users} label="Club" field="clubs" value={profile.clubs} options={SBU_CLUBS.map(c => ({ value: c, label: c }))} />
           </div>
 
           {/* Courses */}

@@ -24,6 +24,8 @@ export interface Profile {
   high_school: string
   websites: string
   birthday: string
+  fraternity_sorority: string
+  clubs: string
   private_fields: string
   last_seen: string | null
   created_at: string

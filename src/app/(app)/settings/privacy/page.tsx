@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, ArrowLeft, Lock, Unlock, GraduationCap, BookOpen, MapPin, Home, School, Cake, Heart, Globe, Mail, Phone } from 'lucide-react'
+import { Loader2, ArrowLeft, Lock, Unlock, GraduationCap, BookOpen, MapPin, Home, School, Cake, Heart, Globe, Mail, Phone, Users } from 'lucide-react'
 import type { Profile } from '@/types'
 
 const PRIVACY_FIELDS = [
@@ -23,6 +23,8 @@ const PRIVACY_FIELDS = [
   { field: 'email', label: 'Email', icon: Mail },
   { field: 'phone', label: 'Phone', icon: Phone },
   { field: 'websites', label: 'Website', icon: Globe },
+  { field: 'fraternity_sorority', label: 'Greek Life', icon: Users },
+  { field: 'clubs', label: 'Club', icon: Users },
 ]
 
 export default function PrivacySettingsPage() {
