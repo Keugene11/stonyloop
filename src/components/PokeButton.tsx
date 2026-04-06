@@ -11,7 +11,6 @@ interface PokeButtonProps {
 
 export default function PokeButton({ targetUserId, currentUserId }: PokeButtonProps) {
   const supabase = createClient()
-  const [poked, setPoked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [theyPokedMe, setTheyPokedMe] = useState(false)
 
@@ -21,21 +20,6 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
   }, [targetUserId])
 
   async function checkPoke() {
-    // Check if I already poked them
-    const { data: myPoke } = await supabase
-      .from('pokes')
-      .select('id')
-      .eq('poker_id', currentUserId)
-      .eq('poked_id', targetUserId)
-      .maybeSingle()
-
-    if (myPoke) {
-      setPoked(true)
-      setLoading(false)
-      return
-    }
-
-    // Check if they poked me
     const { data: theirPoke } = await supabase
       .from('pokes')
       .select('id')
@@ -43,23 +27,17 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
       .eq('poked_id', currentUserId)
       .maybeSingle()
 
-    if (theirPoke) {
-      setTheyPokedMe(true)
-    }
-
+    if (theirPoke) setTheyPokedMe(true)
     setLoading(false)
   }
 
   async function handlePoke() {
     setLoading(true)
 
-    // If they poked me, delete their poke first
+    // Delete any existing poke between us (either direction)
+    await supabase.from('pokes').delete().eq('poker_id', currentUserId).eq('poked_id', targetUserId)
     if (theyPokedMe) {
-      await supabase
-        .from('pokes')
-        .delete()
-        .eq('poker_id', targetUserId)
-        .eq('poked_id', currentUserId)
+      await supabase.from('pokes').delete().eq('poker_id', targetUserId).eq('poked_id', currentUserId)
     }
 
     await supabase.from('pokes').insert({
@@ -67,7 +45,6 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
       poked_id: targetUserId,
     })
 
-    setPoked(true)
     setTheyPokedMe(false)
     setLoading(false)
   }
@@ -76,14 +53,6 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
     return (
       <button disabled className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2">
         <Loader2 size={14} className="animate-spin" />
-      </button>
-    )
-  }
-
-  if (poked) {
-    return (
-      <button disabled className="bg-bg-input border border-border rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2 text-text-muted">
-        <Hand size={14} /> Poked!
       </button>
     )
   }

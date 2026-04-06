@@ -26,6 +26,8 @@ export default function ProfilePage() {
   const [courseOpen, setCourseOpen] = useState(false)
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
+  const [clubFilter, setClubFilter] = useState('')
+  const [clubOpen, setClubOpen] = useState(false)
   const [friends, setFriends] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
@@ -101,6 +103,7 @@ export default function ProfilePage() {
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
   const musicTags = profile.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
   const movieTags = profile.favorite_movies ? profile.favorite_movies.split(', ').filter(Boolean) : []
+  const clubTags = profile.clubs ? profile.clubs.split(', ').filter(Boolean) : []
   const empty = 'text-text-muted/40 italic cursor-pointer'
   const inputClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none w-full border border-border focus:border-text-muted'
   const selectClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border focus:border-text-muted cursor-pointer'
@@ -333,10 +336,60 @@ export default function ProfilePage() {
             <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
           </div>
 
-          {/* Greek Life & Clubs */}
+          {/* Greek Life */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
             <EditableRow icon={Users} label="Greek Life" field="fraternity_sorority" value={profile.fraternity_sorority} options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))} />
-            <EditableRow icon={Users} label="Club" field="clubs" value={profile.clubs} options={SBU_CLUBS.map(c => ({ value: c, label: c }))} />
+          </div>
+
+          {/* Clubs */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
+            {clubTags.length > 0 && <Tags items={clubTags} field="clubs" />}
+            <input
+              type="text"
+              value={clubFilter}
+              onChange={(e) => { setClubFilter(e.target.value); setClubOpen(true) }}
+              onFocus={() => setClubOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && clubFilter.trim()) {
+                  e.preventDefault()
+                  const val = clubFilter.trim()
+                  if (!clubTags.includes(val)) {
+                    updateField('clubs', [...clubTags, val].join(', '))
+                  }
+                  setClubFilter('')
+                  setClubOpen(false)
+                }
+              }}
+              className={`${inputClass} mt-1.5`}
+              placeholder="Search or type a club name..."
+            />
+            {clubOpen && clubFilter && (
+              <>
+                <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
+                <div className="relative z-20 mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                  {SBU_CLUBS.filter(c => !clubTags.includes(c) && c.toLowerCase().includes(clubFilter.toLowerCase())).slice(0, 20).map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => { updateField('clubs', [...clubTags, c].join(', ')); setClubFilter(''); setClubOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input"
+                    >
+                      {c}
+                    </button>
+                  ))}
+                  {clubFilter.trim() && !SBU_CLUBS.some(c => c.toLowerCase() === clubFilter.trim().toLowerCase()) && (
+                    <button
+                      type="button"
+                      onClick={() => { updateField('clubs', [...clubTags, clubFilter.trim()].join(', ')); setClubFilter(''); setClubOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-[13px] text-accent hover:bg-bg-input"
+                    >
+                      Add &quot;{clubFilter.trim()}&quot;
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Courses */}

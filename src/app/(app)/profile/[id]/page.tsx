@@ -399,11 +399,18 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Greek Life & Clubs */}
-          {(show('fraternity_sorority', profile.fraternity_sorority) || show('clubs', profile.clubs)) && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
-              {show('fraternity_sorority', profile.fraternity_sorority) && <div className="flex items-center gap-2 text-[13px] py-0.5"><span className="text-text-muted">Greek Life:</span> <span>{profile.fraternity_sorority}</span></div>}
-              {show('clubs', profile.clubs) && <div className="flex items-center gap-2 text-[13px] py-0.5"><span className="text-text-muted">Club:</span> <span>{profile.clubs}</span></div>}
+          {/* Greek Life */}
+          {show('fraternity_sorority', profile.fraternity_sorority) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <div className="flex items-center gap-2 text-[13px]"><span className="text-text-muted">Greek Life:</span> <span>{profile.fraternity_sorority}</span></div>
+            </div>
+          )}
+
+          {/* Clubs */}
+          {show('clubs', profile.clubs) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
+              <div className="flex flex-wrap gap-1">{profile.clubs.split(', ').filter(Boolean).map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
             </div>
           )}
 
