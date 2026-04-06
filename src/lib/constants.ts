@@ -22,6 +22,7 @@ export const LOOKING_FOR = [
   'Dating',
   'A Relationship',
   'Networking',
+  'Random Play',
   'Whatever I can get',
 ]
 
