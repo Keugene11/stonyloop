@@ -1,6 +1,7 @@
 'use client'
 
-import { Search, X } from 'lucide-react'
+import { useState } from 'react'
+import { Search, X, ChevronDown, ChevronUp } from 'lucide-react'
 import StyledSelect from '@/components/StyledSelect'
 import { SBU_MAJORS } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
@@ -28,11 +29,14 @@ interface DirectoryFiltersProps {
 }
 
 export default function DirectoryFilters({ filters, onChange }: DirectoryFiltersProps) {
+  const [showMore, setShowMore] = useState(false)
+
   const update = (key: keyof Filters, value: string) => {
     onChange({ ...filters, [key]: value })
   }
 
   const hasFilters = Object.values(filters).some(v => v !== '')
+  const moreCount = [filters.hometown, filters.high_school, filters.fraternity_sorority, filters.clubs, filters.relationship_status, filters.interested_in, filters.course].filter(Boolean).length
 
   return (
     <div className="space-y-3">
@@ -48,7 +52,7 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
         />
       </div>
 
-      {/* Filter grid */}
+      {/* Primary filters — always visible */}
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Residence Hall</label>
@@ -88,79 +92,94 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
             options={GENDERS.map(g => ({ value: g, label: g }))}
           />
         </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Greek Life</label>
-          <StyledSelect
-            value={filters.fraternity_sorority}
-            onChange={(v) => update('fraternity_sorority', v)}
-            placeholder="Any"
-            searchable
-            options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))}
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Club</label>
-          <StyledSelect
-            value={filters.clubs}
-            onChange={(v) => update('clubs', v)}
-            placeholder="Any"
-            searchable
-            options={SBU_CLUBS.map(c => ({ value: c, label: c }))}
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Relationship</label>
-          <StyledSelect
-            value={filters.relationship_status}
-            onChange={(v) => update('relationship_status', v)}
-            placeholder="Any"
-            options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))}
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Interested In</label>
-          <StyledSelect
-            value={filters.interested_in}
-            onChange={(v) => update('interested_in', v)}
-            placeholder="Any"
-            options={INTERESTED_IN.map(s => ({ value: s, label: s }))}
-          />
-        </div>
       </div>
 
-      {/* Text filters */}
-      <div className="grid grid-cols-3 gap-2">
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Course</label>
-          <input
-            type="text"
-            value={filters.course}
-            onChange={(e) => update('course', e.target.value.toUpperCase())}
-            placeholder="e.g. CSE 214"
-            className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Hometown</label>
-          <input
-            type="text"
-            value={filters.hometown}
-            onChange={(e) => update('hometown', e.target.value)}
-            placeholder="Any"
-            className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">High School</label>
-          <input
-            type="text"
-            value={filters.high_school}
-            onChange={(e) => update('high_school', e.target.value)}
-            placeholder="Any"
-            className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
-          />
-        </div>
-      </div>
+      {/* More filters toggle */}
+      <button
+        onClick={() => setShowMore(!showMore)}
+        className="press flex items-center gap-1 text-[12px] text-text-muted hover:text-text font-medium"
+      >
+        {showMore ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        More filters{moreCount > 0 && ` (${moreCount} active)`}
+      </button>
+
+      {/* Extra filters — collapsible */}
+      {showMore && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Greek Life</label>
+              <StyledSelect
+                value={filters.fraternity_sorority}
+                onChange={(v) => update('fraternity_sorority', v)}
+                placeholder="Any"
+                searchable
+                options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Club</label>
+              <StyledSelect
+                value={filters.clubs}
+                onChange={(v) => update('clubs', v)}
+                placeholder="Any"
+                searchable
+                options={SBU_CLUBS.map(c => ({ value: c, label: c }))}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Relationship</label>
+              <StyledSelect
+                value={filters.relationship_status}
+                onChange={(v) => update('relationship_status', v)}
+                placeholder="Any"
+                options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Interested In</label>
+              <StyledSelect
+                value={filters.interested_in}
+                onChange={(v) => update('interested_in', v)}
+                placeholder="Any"
+                options={INTERESTED_IN.map(s => ({ value: s, label: s }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Course</label>
+              <input
+                type="text"
+                value={filters.course}
+                onChange={(e) => update('course', e.target.value.toUpperCase())}
+                placeholder="e.g. CSE 214"
+                className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Hometown</label>
+              <input
+                type="text"
+                value={filters.hometown}
+                onChange={(e) => update('hometown', e.target.value)}
+                placeholder="Any"
+                className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">High School</label>
+              <input
+                type="text"
+                value={filters.high_school}
+                onChange={(e) => update('high_school', e.target.value)}
+                placeholder="Any"
+                className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {hasFilters && (
         <button
