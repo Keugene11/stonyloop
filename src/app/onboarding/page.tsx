@@ -18,6 +18,8 @@ export default function OnboardingPage() {
   const [userId, setUserId] = useState('')
   const [step, setStep] = useState(0)
 
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [fullName, setFullName] = useState('')
   const [major, setMajor] = useState('')
   const [majorFilter, setMajorFilter] = useState('')
@@ -44,7 +46,7 @@ export default function OnboardingPage() {
   const currentStep = STEPS[step]
 
   function canContinue() {
-    if (currentStep === 'name') return fullName.trim().length >= 2
+    if (currentStep === 'name') return firstName.trim().length >= 1 && lastName.trim().length >= 1
     if (currentStep === 'major') return major !== ''
     if (currentStep === 'class_year') return classYear !== ''
     if (currentStep === 'avatar') return true
@@ -109,14 +111,23 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-[24px] font-bold tracking-tight mb-2">What&apos;s your name?</h1>
             <p className="text-[14px] text-text-muted mb-6">This is how other students will see you.</p>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Full name"
-              className="w-full bg-bg-card border border-border rounded-2xl px-4 py-3 text-[16px] outline-none focus:border-text-muted transition-colors"
-              autoFocus
-            />
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => { setFirstName(e.target.value); setFullName(`${e.target.value} ${lastName}`.trim()) }}
+                placeholder="First name"
+                className="w-full bg-bg-card border border-border rounded-2xl px-4 py-3 text-[16px] outline-none focus:border-text-muted transition-colors"
+                autoFocus
+              />
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => { setLastName(e.target.value); setFullName(`${firstName} ${e.target.value}`.trim()) }}
+                placeholder="Last name"
+                className="w-full bg-bg-card border border-border rounded-2xl px-4 py-3 text-[16px] outline-none focus:border-text-muted transition-colors"
+              />
+            </div>
           </div>
         )}
 
