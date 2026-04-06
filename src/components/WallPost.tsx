@@ -5,24 +5,25 @@ import { createClient } from '@/lib/supabase/client'
 import { Trash2 } from 'lucide-react'
 import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
+import Impressions from '@/components/Impressions'
 
 interface WallPostItemProps {
   post: WallPost
   currentUserId: string
   wallOwnerId: string
   onDelete: (postId: string) => void
+  isFriend?: boolean
 }
 
-export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete }: WallPostItemProps) {
+export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, isFriend = false }: WallPostItemProps) {
   const supabase = createClient()
   const canDelete = currentUserId === post.author_id || currentUserId === wallOwnerId
+  const canComment = isFriend || currentUserId === wallOwnerId || currentUserId === post.author_id
 
   async function handleDelete() {
     await supabase.from('wall_posts').delete().eq('id', post.id)
     onDelete(post.id)
   }
-
-  const timeAgo = getTimeAgo(new Date(post.created_at))
 
   return (
     <div className="bg-bg-card border border-border rounded-2xl p-4">
@@ -43,17 +44,20 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
             <Link href={`/profile/${post.author_id}`} className="text-[13px] font-semibold hover:underline">
               {post.author?.full_name || 'Unknown'}
             </Link>
-            <p className="text-[11px] text-text-muted">{timeAgo}</p>
+            <p className="text-[11px] text-text-muted">{getTimeAgo(new Date(post.created_at))}</p>
           </div>
         </div>
-        {canDelete && (
-          <button onClick={handleDelete} className="press text-text-muted hover:text-red-500 p-1">
-            <Trash2 size={14} />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <Impressions postType="wall_post" postId={post.id} userId={currentUserId} />
+          {canDelete && (
+            <button onClick={handleDelete} className="press text-text-muted hover:text-red-500 p-1">
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
       </div>
       <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
-      <Comments postType="wall_post" postId={post.id} />
+      <Comments postType="wall_post" postId={post.id} canComment={canComment} />
     </div>
   )
 }

@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Camera, Loader2, LogOut, X } from 'lucide-react'
-import WallPostForm from '@/components/WallPostForm'
-import WallPostItem from '@/components/WallPost'
-import type { WallPost } from '@/types'
+import { Camera, Loader2, LogOut, X, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
@@ -24,7 +22,6 @@ export default function ProfilePage() {
   const [courseOpen, setCourseOpen] = useState(false)
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
-  const [wallPosts, setWallPosts] = useState<WallPost[]>([])
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -42,14 +39,6 @@ export default function ProfilePage() {
       setProfile(data as Profile)
       setAvatarUrl(data.avatar_url || '')
     }
-
-    const { data: posts } = await supabase
-      .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
-      .eq('wall_owner_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50)
-    if (posts) setWallPosts(posts as WallPost[])
 
     setLoading(false)
   }
@@ -139,18 +128,16 @@ export default function ProfilePage() {
             <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
           </label>
           <div>
-            <h1 className="text-[22px] font-bold tracking-tight">{profile.full_name || 'Your Profile'}</h1>
+            <h1 className="text-[22px] font-bold tracking-tight">Edit Profile</h1>
             {saving && <span className="text-[11px] text-text-muted">Saving...</span>}
           </div>
         </div>
-        <button onClick={handleSignOut} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
+        <Link href="/profile" className="press bg-accent text-white rounded-xl px-4 py-2 text-[13px] font-medium flex items-center gap-1.5">
+          <ArrowLeft size={13} /> Done
+        </Link>
       </div>
 
-      {/* Two-column layout */}
-      <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
-
-        {/* LEFT — Edit fields */}
-        <div className="md:w-[400px] md:flex-shrink-0 space-y-3">
+      <div className="max-w-lg space-y-3">
 
           {/* Basic Info */}
           <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
@@ -333,24 +320,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-
-        {/* RIGHT — The Wall */}
-        <div className="flex-1 min-w-0 mt-6 md:mt-0">
-          <h2 className="text-[18px] font-bold mb-3">The Wall</h2>
-          <WallPostForm wallOwnerId={userId} onPost={(post) => setWallPosts([post, ...wallPosts])} />
-          {wallPosts.length === 0 ? (
-            <div className="bg-bg-card border border-border rounded-2xl p-6 text-center mt-3">
-              <p className="text-text-muted text-[14px]">No wall posts yet.</p>
-            </div>
-          ) : (
-            <div className="space-y-3 mt-3">
-              {wallPosts.map(post => (
-                <WallPostItem key={post.id} post={post} currentUserId={userId} wallOwnerId={userId} onDelete={(postId) => setWallPosts(wallPosts.filter(p => p.id !== postId))} />
-              ))}
-            </div>
-          )}
-        </div>
       </div>
-    </div>
   )
 }

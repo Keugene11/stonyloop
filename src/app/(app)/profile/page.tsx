@@ -192,7 +192,7 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3 mt-3">
               {wallPosts.map(post => (
-                <WallPostItem key={post.id} post={post} currentUserId={userId} wallOwnerId={userId} onDelete={(postId) => setWallPosts(wallPosts.filter(p => p.id !== postId))} />
+                <WallPostItem key={post.id} post={post} currentUserId={userId} wallOwnerId={userId} isFriend={true} onDelete={(postId) => setWallPosts(wallPosts.filter(p => p.id !== postId))} />
               ))}
             </div>
           )}

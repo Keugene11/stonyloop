@@ -6,6 +6,7 @@ import { Loader2, Users, LogOut, Trash2, Send } from 'lucide-react'
 import Link from 'next/link'
 import type { Group, GroupMember, GroupPost, Profile } from '@/types'
 import Comments from '@/components/Comments'
+import Impressions from '@/components/Impressions'
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -253,11 +254,14 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                         <p className="text-[11px] text-text-muted">{getTimeAgo(new Date(post.created_at))}</p>
                       </div>
                     </div>
-                    {(currentUserId === post.author_id || isAdmin) && (
-                      <button onClick={() => handleDeletePost(post.id)} className="press text-text-muted hover:text-red-500 p-1">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Impressions postType="group_post" postId={post.id} userId={currentUserId} />
+                      {(currentUserId === post.author_id || isAdmin) && (
+                        <button onClick={() => handleDeletePost(post.id)} className="press text-text-muted hover:text-red-500 p-1">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
                   <Comments postType="group_post" postId={post.id} />

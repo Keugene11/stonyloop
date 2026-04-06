@@ -9,9 +9,10 @@ import type { Comment } from '@/types'
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
   postId: string
+  canComment?: boolean
 }
 
-export default function Comments({ postType, postId }: CommentsProps) {
+export default function Comments({ postType, postId, canComment = true }: CommentsProps) {
   const supabase = createClient()
   const [comments, setComments] = useState<Comment[]>([])
   const [input, setInput] = useState('')
@@ -143,23 +144,25 @@ export default function Comments({ postType, postId }: CommentsProps) {
           ))}
 
           {/* New comment input */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handlePost(null) }}
-              placeholder="Write a comment..."
-              className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50"
-            />
-            <button
-              onClick={() => handlePost(null)}
-              disabled={!input.trim()}
-              className="text-accent disabled:opacity-30 press"
-            >
-              <Send size={14} />
-            </button>
-          </div>
+          {canComment ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handlePost(null) }}
+                placeholder="Write a comment..."
+                className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50"
+              />
+              <button
+                onClick={() => handlePost(null)}
+                disabled={!input.trim()}
+                className="text-accent disabled:opacity-30 press"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+          ) : comments.length === 0 ? null : null}
         </div>
       )}
     </div>

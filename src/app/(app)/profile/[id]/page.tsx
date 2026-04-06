@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
 import FriendButton from '@/components/FriendButton'
+import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 
@@ -137,6 +138,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           {currentUserId && currentUserId !== id && (
             <div className="flex gap-2 mb-4">
               <FriendButton targetUserId={id} currentUserId={currentUserId} />
+              <PokeButton targetUserId={id} currentUserId={currentUserId} />
               <button
                 onClick={async () => {
                   const res = await fetch('/api/conversations', {
@@ -237,6 +239,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
                 post={post}
                 currentUserId={currentUserId}
                 wallOwnerId={id}
+                isFriend={isFriend}
                 onDelete={(postId) => setWallPosts(wallPosts.filter(p => p.id !== postId))}
               />
             ))}
