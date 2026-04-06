@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Pencil, MapPin, Clock, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail } from 'lucide-react'
+import { Loader2, LogOut, Pencil, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail } from 'lucide-react'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 import type { Profile, WallPost, Group } from '@/types'
@@ -60,16 +60,17 @@ export default function ProfilePage() {
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
   const musicTags = profile.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
   const movieTags = profile.favorite_movies ? profile.favorite_movies.split(', ').filter(Boolean) : []
+  const empty = 'text-text-muted/40 italic'
 
-  // Helper for compact info rows
-  const InfoRow = ({ icon: Icon, label, value }: { icon: typeof MapPin; label?: string; value: string }) => (
-    <div className="flex items-center gap-2 text-[13px] py-0.5">
+  const Row = ({ icon: Icon, label, value }: { icon: typeof MapPin; label: string; value?: string | null }) => (
+    <div className="flex items-center gap-2 text-[13px] py-[3px]">
       <Icon size={13} className="text-text-muted flex-shrink-0" />
-      {label ? <><span className="text-text-muted">{label}:</span> <span>{value}</span></> : <span>{value}</span>}
+      <span className="text-text-muted min-w-[70px] flex-shrink-0">{label}</span>
+      <span className={value ? '' : empty}>{value || 'Not set'}</span>
     </div>
   )
 
-  const TagList = ({ items }: { items: string[] }) => (
+  const Tags = ({ items }: { items: string[] }) => (
     <div className="flex flex-wrap gap-1">{items.map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div>
   )
 
@@ -87,9 +88,9 @@ export default function ProfilePage() {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[22px] font-bold tracking-tight truncate">{profile.full_name}</h1>
+          <h1 className="text-[22px] font-bold tracking-tight truncate">{profile.full_name || 'Your Name'}</h1>
           <p className="text-[13px] text-text-muted">
-            {profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
+            {profile.major || 'No major set'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
             {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
           </p>
         </div>
@@ -104,76 +105,78 @@ export default function ProfilePage() {
       {/* Two-column */}
       <div className="flex flex-col md:flex-row md:gap-5 md:items-start">
 
-        {/* LEFT — Info */}
-        <div className="md:w-[340px] md:flex-shrink-0 md:sticky md:top-4 space-y-3">
+        {/* LEFT — All info, always show every field */}
+        <div className="md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3">
 
           {/* About */}
-          {profile.about_me && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <p className="text-[14px]">{profile.about_me}</p>
-            </div>
-          )}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">About</p>
+            <p className={`text-[13px] ${profile.about_me ? '' : empty}`}>{profile.about_me || 'Tell people about yourself...'}</p>
+          </div>
 
           {/* Details */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 space-y-0.5">
-            {profile.major && <InfoRow icon={GraduationCap} value={profile.major} />}
-            {profile.second_major && <InfoRow icon={GraduationCap} value={profile.second_major} />}
-            {profile.minor && <InfoRow icon={BookOpen} label="Minor" value={profile.minor} />}
-            {profile.residence_hall && <InfoRow icon={MapPin} value={profile.residence_hall} />}
-            {profile.hometown && <InfoRow icon={Home} label="From" value={profile.hometown} />}
-            {profile.high_school && <InfoRow icon={School} label="HS" value={profile.high_school} />}
-            {profile.birthday && <InfoRow icon={Cake} value={new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} />}
-            {profile.relationship_status && profile.relationship_status !== 'Prefer not to say' && <InfoRow icon={Heart} value={profile.relationship_status} />}
-            {profile.interested_in && profile.interested_in !== 'Prefer not to say' && <InfoRow icon={Heart} label="Interested in" value={profile.interested_in} />}
-            {profile.looking_for && <InfoRow icon={Heart} label="Looking for" value={profile.looking_for} />}
-            {profile.political_views && <InfoRow icon={Globe} label="Political" value={profile.political_views} />}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
+            <Row icon={GraduationCap} label="Major" value={profile.major} />
+            <Row icon={GraduationCap} label="2nd Major" value={profile.second_major} />
+            <Row icon={BookOpen} label="Minor" value={profile.minor} />
+            <Row icon={MapPin} label="Dorm" value={profile.residence_hall} />
+            <Row icon={Home} label="From" value={profile.hometown} />
+            <Row icon={School} label="High School" value={profile.high_school} />
+            <Row icon={Cake} label="Birthday" value={profile.birthday ? new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : null} />
+          </div>
+
+          {/* Personal */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
+            <Row icon={Heart} label="Status" value={profile.relationship_status} />
+            <Row icon={Heart} label="Interested" value={profile.interested_in} />
+            <Row icon={Heart} label="Looking for" value={profile.looking_for} />
+            <Row icon={Globe} label="Political" value={profile.political_views} />
           </div>
 
           {/* Contact */}
-          {(profile.email || profile.phone || profile.websites) && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 space-y-0.5">
-              {profile.email && <InfoRow icon={Mail} value={profile.email} />}
-              {profile.phone && <InfoRow icon={Phone} value={profile.phone} />}
-              {profile.websites && <InfoRow icon={Globe} value={profile.websites} />}
-            </div>
-          )}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
+            <Row icon={Mail} label="Email" value={profile.email} />
+            <Row icon={Phone} label="Phone" value={profile.phone} />
+            <Row icon={Globe} label="Website" value={profile.websites} />
+          </div>
 
           {/* Courses */}
-          {courses.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
-              <TagList items={courses} />
-            </div>
-          )}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
+            {courses.length > 0 ? <Tags items={courses} /> : <p className={`text-[13px] ${empty}`}>No courses added</p>}
+          </div>
 
           {/* Interests */}
-          {profile.interests && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p>
-              <p className="text-[13px]">{profile.interests}</p>
-            </div>
-          )}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p>
+            <p className={`text-[13px] ${profile.interests ? '' : empty}`}>{profile.interests || 'Not set'}</p>
+          </div>
 
           {/* Favorites */}
-          {(musicTags.length > 0 || movieTags.length > 0 || profile.favorite_quotes) && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 space-y-2">
-              {musicTags.length > 0 && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Music</p><TagList items={musicTags} /></div>}
-              {movieTags.length > 0 && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Movies</p><TagList items={movieTags} /></div>}
-              {profile.favorite_quotes && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p><p className="text-[13px] italic">&ldquo;{profile.favorite_quotes}&rdquo;</p></div>}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 space-y-2">
+            <div>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Music</p>
+              {musicTags.length > 0 ? <Tags items={musicTags} /> : <p className={`text-[13px] ${empty}`}>Not set</p>}
             </div>
-          )}
+            <div>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Movies</p>
+              {movieTags.length > 0 ? <Tags items={movieTags} /> : <p className={`text-[13px] ${empty}`}>Not set</p>}
+            </div>
+            <div>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p>
+              <p className={`text-[13px] ${profile.favorite_quotes ? 'italic' : empty}`}>{profile.favorite_quotes ? `\u201c${profile.favorite_quotes}\u201d` : 'Not set'}</p>
+            </div>
+          </div>
 
           {/* Groups */}
-          {userGroups.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Groups</p>
-              <div className="space-y-1">
-                {userGroups.map(g => (
-                  <Link key={g.id} href={`/groups/${g.id}`} className="press block text-[13px] text-accent hover:underline">{g.name}</Link>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Groups</p>
+            {userGroups.length > 0 ? (
+              <div className="space-y-1">{userGroups.map(g => <Link key={g.id} href={`/groups/${g.id}`} className="press block text-[13px] text-accent hover:underline">{g.name}</Link>)}</div>
+            ) : (
+              <p className={`text-[13px] ${empty}`}>No groups joined</p>
+            )}
+          </div>
 
           <p className="text-[11px] text-text-muted px-1">Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
         </div>
