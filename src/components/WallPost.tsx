@@ -84,6 +84,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           <textarea
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
+            maxLength={2000}
             className="w-full bg-bg-input rounded-lg px-3 py-2 text-[14px] outline-none resize-none border border-border"
             rows={3}
             autoFocus

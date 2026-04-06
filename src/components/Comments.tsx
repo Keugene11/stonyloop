@@ -143,6 +143,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                     value={replyInput}
                     onChange={(e) => setReplyInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handlePost(c.id) }}
+                    maxLength={2000}
                     placeholder="Write a reply..."
                     className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50"
                     autoFocus
@@ -166,6 +167,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handlePost(null) }}
+                maxLength={2000}
                 placeholder="Write a comment..."
                 className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50"
               />
@@ -221,6 +223,7 @@ function CommentItem({ comment, userId, onDelete, onEdit, onReply }: {
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+              maxLength={2000}
               className="w-full bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none border border-border"
               autoFocus
             />

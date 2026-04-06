@@ -78,6 +78,7 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
+        maxLength={2000}
         placeholder="Write on the wall..."
         className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none h-16"
       />

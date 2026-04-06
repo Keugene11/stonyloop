@@ -261,6 +261,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
               <textarea
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
+                maxLength={2000}
                 placeholder="Write something to the group..."
                 className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none h-16"
               />
@@ -347,6 +348,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                       <textarea
                         value={editPostContent}
                         onChange={(e) => setEditPostContent(e.target.value)}
+                        maxLength={2000}
                         className="w-full bg-bg-input rounded-lg px-3 py-2 text-[14px] outline-none resize-none border border-border"
                         rows={3}
                         autoFocus
