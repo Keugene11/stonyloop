@@ -54,7 +54,6 @@ export default function DirectoryPage() {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
-        .neq('id', user.id)
         .order('full_name', { ascending: true })
 
       if (profiles) {
