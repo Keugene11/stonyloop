@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Lock, Trash2, Loader2 } from 'lucide-react'
+import { ArrowLeft, Lock, Trash2, Loader2, Mail } from 'lucide-react'
 
 export default function SettingsPage() {
   const supabase = createClient()
@@ -44,6 +44,13 @@ export default function SettingsPage() {
             <p className="text-[12px] text-text-muted">Control which fields others can see</p>
           </div>
         </Link>
+        <a href="mailto:keugenelee11@gmail.com" className="press flex items-center gap-3 px-4 py-3.5">
+          <Mail size={16} className="text-text-muted" />
+          <div className="flex-1">
+            <p className="text-[14px] font-medium">Support</p>
+            <p className="text-[12px] text-text-muted">Email keugenelee11@gmail.com</p>
+          </div>
+        </a>
       </div>
 
       <div className="bg-bg-card border border-red-500/20 rounded-2xl px-4 py-4">
