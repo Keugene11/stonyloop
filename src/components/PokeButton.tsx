@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Hand, Loader2 } from 'lucide-react'
+import { Hand, Loader2, Check } from 'lucide-react'
 
 interface PokeButtonProps {
   targetUserId: string
@@ -13,6 +13,7 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [theyPokedMe, setTheyPokedMe] = useState(false)
+  const [justPoked, setJustPoked] = useState(false)
 
   useEffect(() => {
     checkPoke()
@@ -34,7 +35,6 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
   async function handlePoke() {
     setLoading(true)
 
-    // Delete any existing poke between us (either direction)
     await supabase.from('pokes').delete().eq('poker_id', currentUserId).eq('poked_id', targetUserId)
     if (theyPokedMe) {
       await supabase.from('pokes').delete().eq('poker_id', targetUserId).eq('poked_id', currentUserId)
@@ -47,12 +47,22 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
 
     setTheyPokedMe(false)
     setLoading(false)
+    setJustPoked(true)
+    setTimeout(() => setJustPoked(false), 3000)
   }
 
   if (loading) {
     return (
       <button disabled className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2">
         <Loader2 size={14} className="animate-spin" />
+      </button>
+    )
+  }
+
+  if (justPoked) {
+    return (
+      <button disabled className="bg-accent/10 border border-accent/20 rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2 text-accent">
+        <Check size={14} /> Poked!
       </button>
     )
   }
