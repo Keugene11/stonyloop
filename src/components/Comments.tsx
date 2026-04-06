@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { MessageSquare, Send, Trash2 } from 'lucide-react'
+import { Send, Trash2 } from 'lucide-react'
 import type { Comment } from '@/types'
 
 interface CommentsProps {
@@ -19,7 +19,6 @@ export default function Comments({ postType, postId, canComment = true }: Commen
   const [replyTo, setReplyTo] = useState<string | null>(null)
   const [replyInput, setReplyInput] = useState('')
   const [userId, setUserId] = useState('')
-  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -89,17 +88,8 @@ export default function Comments({ postType, postId, canComment = true }: Commen
 
   return (
     <div className="mt-2">
-      {/* Toggle */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[12px] text-text-muted hover:text-text press"
-      >
-        <MessageSquare size={13} />
-        {totalCount > 0 ? `${totalCount} comment${totalCount !== 1 ? 's' : ''}` : 'Comment'}
-      </button>
-
-      {open && (
-        <div className="mt-2 space-y-2">
+      {(totalCount > 0 || canComment) && (
+        <div className="space-y-2">
           {/* Comment list */}
           {comments.map(c => (
             <div key={c.id}>
@@ -162,7 +152,7 @@ export default function Comments({ postType, postId, canComment = true }: Commen
                 <Send size={14} />
               </button>
             </div>
-          ) : comments.length === 0 ? null : null}
+          ) : null}
         </div>
       )}
     </div>
