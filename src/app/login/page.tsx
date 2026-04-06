@@ -55,10 +55,10 @@ export default function LoginPage() {
             [ Stonyloop ]
           </h1>
           <p className="text-[14px] text-text-muted mt-2">
-            The social network built for Stony Brook University.
+            The social network for Stony Brook University.
           </p>
-          <p className="text-[12px] text-text-muted/60 mt-3 leading-relaxed max-w-xs mx-auto">
-            Find classmates, connect with people in your dorm, join groups, share posts on walls, and stay in the loop with everything happening at SBU.
+          <p className="text-[13px] text-text-muted mt-3 leading-relaxed max-w-xs mx-auto">
+            Connect with friends, write on walls, see who&apos;s in your classes, find people in your dorm, and join clubs and groups — all at SBU.
           </p>
         </div>
 
