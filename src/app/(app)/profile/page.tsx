@@ -137,12 +137,65 @@ export default function ProfilePage() {
     })
   })).filter(d => d.courses.length > 0)
 
-  // Inline editable row: click value to edit, blur/enter to save
+  // Editable row: click to open edit sheet
   function EditableRow({ icon: Icon, label, field, value, type = 'text', options }: {
     icon: typeof MapPin; label: string; field: string; value?: string | null; type?: string
     options?: { value: string; label: string; group?: string }[]
   }) {
-    const isEditing = editing === field
+    return (
+      <div className="flex items-center gap-2 text-[13px] py-[3px]">
+        <Icon size={13} className="text-text-muted flex-shrink-0" />
+        <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
+        <div className="flex-1 min-w-0">
+          <span className={value ? (value === 'None' ? 'cursor-pointer hover:underline text-text-muted' : 'cursor-pointer hover:underline') : empty} onClick={() => setEditing(field)}>
+            {field === 'birthday' && value && value !== 'None' ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // Edit sheet modal
+  function EditSheet() {
+    if (!editing) return null
+
+    // Find the config for the current editing field
+    const fieldConfigs: Record<string, { label: string; type: string; options?: { value: string; label: string; group?: string }[] }> = {
+      full_name: { label: 'Name', type: 'text' },
+      about_me: { label: 'About', type: 'textarea' },
+      major: { label: 'Major', type: 'select', options: SBU_MAJORS.map(m => ({ value: m, label: m })) },
+      second_major: { label: 'Second Major', type: 'select', options: SBU_MAJORS.map(m => ({ value: m, label: m })) },
+      minor: { label: 'Minor', type: 'select', options: SBU_MINORS.map(m => ({ value: m, label: m })) },
+      residence_hall: { label: 'Dorm', type: 'select', options: RESIDENCE_HALLS },
+      hometown: { label: 'Hometown', type: 'text' },
+      high_school: { label: 'High School', type: 'text' },
+      birthday: { label: 'Birthday', type: 'birthday' },
+      class_year: { label: 'Class Year', type: 'select', options: CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() })) },
+      gender: { label: 'Gender', type: 'select', options: GENDERS.map(g => ({ value: g, label: g })) },
+      relationship_status: { label: 'Relationship Status', type: 'select', options: RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s })) },
+      interested_in: { label: 'Interested In', type: 'select', options: INTERESTED_IN.map(s => ({ value: s, label: s })) },
+      looking_for: { label: 'Looking For', type: 'select', options: LOOKING_FOR.map(s => ({ value: s, label: s })) },
+      political_views: { label: 'Political Views', type: 'select', options: POLITICAL_VIEWS.map(p => ({ value: p, label: p })) },
+      email: { label: 'Email', type: 'text' },
+      phone: { label: 'Phone', type: 'tel' },
+      websites: { label: 'Website', type: 'text' },
+      fraternity_sorority: { label: 'Greek Life', type: 'select', options: SBU_GREEK_LIFE.map(g => ({ value: g, label: g })) },
+      interests: { label: 'Interests', type: 'textarea' },
+      favorite_quotes: { label: 'Favorite Quotes', type: 'textarea' },
+    }
+
+    const config = fieldConfigs[editing]
+    if (!config) return null
+
+    const currentValue = (profile as unknown as Record<string, unknown>)?.[editing] as string || ''
+
+    return <EditSheetInner key={editing} label={config.label} field={editing} type={config.type} options={config.options} currentValue={currentValue} />
+  }
+
+  function EditSheetInner({ label, field, type, options, currentValue }: {
+    label: string; field: string; type: string; options?: { value: string; label: string; group?: string }[]; currentValue: string
+  }) {
+    const [localValue, setLocalValue] = useState(currentValue === 'None' ? '' : currentValue)
     const [search, setSearch] = useState('')
 
     const filteredOptions = options?.filter(o => {
@@ -150,100 +203,110 @@ export default function ProfilePage() {
       return o.label.toLowerCase().includes(search.toLowerCase())
     })
 
+    function save(val?: string) {
+      const v = val !== undefined ? val : localValue
+      updateField(field, v)
+      setEditing(null)
+    }
+
     return (
-      <div className="text-[13px] py-[3px]">
-        {isEditing && !options ? (
-          /* Full-width editing mode for text inputs */
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <Icon size={13} className="text-text-muted flex-shrink-0" />
-              <span className="text-text-muted">{label}</span>
-            </div>
-            {type === 'birthday' ? (
-              <BirthdayEditor value={value || ''} onSave={(v) => { updateField(field, v); setEditing(null) }} />
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center" onClick={() => setEditing(null)}>
+        <div
+          className="bg-bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">Cancel</button>
+            <h3 className="text-[16px] font-bold">{label}</h3>
+            {type !== 'select' && (
+              <button onClick={() => save()} className="press text-[14px] font-semibold text-accent">Done</button>
+            )}
+            {type === 'select' && <div className="w-[50px]" />}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-5">
+            {type === 'select' && options ? (
+              <div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={`Search ${label.toLowerCase()}...`}
+                  className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted mb-3"
+                  autoFocus
+                />
+                <div className="space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => save('None')}
+                    className="press w-full text-left px-4 py-3 rounded-xl text-[15px] text-text-muted hover:bg-bg-input"
+                  >
+                    None
+                  </button>
+                  {(() => {
+                    const grouped: Record<string, typeof options> = {}
+                    const ungrouped: typeof options = []
+                    filteredOptions?.forEach(o => {
+                      if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
+                      else ungrouped.push(o)
+                    })
+                    return (
+                      <>
+                        {ungrouped.map(o => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => save(o.value)}
+                            className={`press w-full text-left px-4 py-3 rounded-xl text-[15px] hover:bg-bg-input ${currentValue === o.value ? 'text-accent font-semibold' : ''}`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                        {Object.entries(grouped).map(([g, opts]) => (
+                          <div key={g}>
+                            <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-text-muted font-semibold">{g}</div>
+                            {opts.map(o => (
+                              <button
+                                key={o.value}
+                                type="button"
+                                onClick={() => save(o.value)}
+                                className={`press w-full text-left px-4 py-3 rounded-xl text-[15px] hover:bg-bg-input ${currentValue === o.value ? 'text-accent font-semibold' : ''}`}
+                              >
+                                {o.label}
+                              </button>
+                            ))}
+                          </div>
+                        ))}
+                      </>
+                    )
+                  })()}
+                </div>
+              </div>
+            ) : type === 'birthday' ? (
+              <BirthdayEditor value={localValue} onSave={(v) => { updateField(field, v); setEditing(null) }} />
+            ) : type === 'textarea' ? (
+              <textarea
+                value={localValue}
+                onChange={(e) => setLocalValue(e.target.value)}
+                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted resize-none h-32"
+                placeholder={`Enter ${label.toLowerCase()}...`}
+                autoFocus
+              />
             ) : (
               <input
                 type={type}
-                value={value || ''}
-                onChange={(e) => updateField(field, type === 'number' ? (e.target.value ? parseInt(e.target.value) : null) as unknown as string : e.target.value)}
-                onBlur={() => setEditing(null)}
-                onKeyDown={(e) => { if (e.key === 'Enter') setEditing(null) }}
-                className={inputClass}
+                value={localValue}
+                onChange={(e) => setLocalValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') save() }}
+                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted"
+                placeholder={`Enter ${label.toLowerCase()}...`}
                 autoFocus
               />
             )}
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Icon size={13} className="text-text-muted flex-shrink-0" />
-            <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
-            <div className="flex-1 min-w-0 relative">
-              {isEditing && options ? (
-                <div>
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search..."
-                    className={inputClass}
-                    autoFocus
-                  />
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto z-30">
-                    <button
-                      type="button"
-                      onClick={() => { updateField(field, 'None'); setEditing(null); setSearch('') }}
-                      className="w-full text-left px-3 py-2 text-[13px] text-text-muted hover:bg-bg-input"
-                    >
-                      — None —
-                    </button>
-                    {(() => {
-                      const grouped: Record<string, typeof options> = {}
-                      const ungrouped: typeof options = []
-                      filteredOptions?.forEach(o => {
-                        if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
-                        else ungrouped.push(o)
-                      })
-                      return (
-                        <>
-                          {ungrouped.map(o => (
-                            <button
-                              key={o.value}
-                              type="button"
-                              onClick={() => { updateField(field, o.value); setEditing(null); setSearch('') }}
-                              className={`w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input ${value === o.value ? 'text-accent font-medium' : ''}`}
-                            >
-                              {o.label}
-                            </button>
-                          ))}
-                          {Object.entries(grouped).map(([g, opts]) => (
-                            <div key={g}>
-                              <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-text-muted font-semibold bg-bg-input/50">{g}</div>
-                              {opts.map(o => (
-                                <button
-                                  key={o.value}
-                                  type="button"
-                                  onClick={() => { updateField(field, o.value); setEditing(null); setSearch('') }}
-                                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input ${value === o.value ? 'text-accent font-medium' : ''}`}
-                                >
-                                  {o.label}
-                                </button>
-                              ))}
-                            </div>
-                          ))}
-                        </>
-                      )
-                    })()}
-                  </div>
-                  <div className="fixed inset-0 z-20" style={{ bottom: '56px' }} onClick={() => { setEditing(null); setSearch('') }} />
-                </div>
-              ) : (
-                <span className={value ? (value === 'None' ? 'cursor-pointer hover:underline text-text-muted' : 'cursor-pointer hover:underline') : empty} onClick={() => setEditing(field)}>
-                  {field === 'birthday' && value ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     )
   }
@@ -273,11 +336,7 @@ export default function ProfilePage() {
           <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
         </label>
         <div className="flex-1 min-w-0">
-          {editing === 'full_name' ? (
-            <input type="text" value={profile.full_name} onChange={(e) => updateField('full_name', e.target.value)} onBlur={() => setEditing(null)} onKeyDown={(e) => { if (e.key === 'Enter') setEditing(null) }} className="text-[22px] font-bold tracking-tight bg-bg-input rounded-lg px-2 py-0.5 outline-none border border-border w-full" autoFocus />
-          ) : (
-            <h1 className="text-[22px] font-bold tracking-tight truncate cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
-          )}
+          <h1 className="text-[22px] font-bold tracking-tight truncate cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
           <p className="text-[13px] text-text-muted">
             {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
             {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
@@ -339,13 +398,9 @@ export default function ProfilePage() {
           </div>
 
           {/* About */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 press" onClick={() => setEditing('about_me')}>
             <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">About</p>
-            {editing === 'about_me' ? (
-              <textarea value={profile.about_me} onChange={(e) => updateField('about_me', e.target.value)} onBlur={() => setEditing(null)} className={`${inputClass} resize-none h-16`} autoFocus />
-            ) : (
-              <p className={`text-[13px] cursor-pointer ${profile.about_me ? 'hover:underline' : empty}`} onClick={() => setEditing('about_me')}>{profile.about_me || 'Click to add...'}</p>
-            )}
+            <p className={`text-[13px] cursor-pointer ${profile.about_me ? 'hover:underline' : empty}`}>{profile.about_me || 'Click to add...'}</p>
           </div>
 
           {/* Details */}
@@ -448,13 +503,9 @@ export default function ProfilePage() {
           </div>
 
           {/* Interests */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 press" onClick={() => setEditing('interests')}>
             <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p>
-            {editing === 'interests' ? (
-              <textarea value={profile.interests} onChange={(e) => updateField('interests', e.target.value)} onBlur={() => setEditing(null)} className={`${inputClass} resize-none h-14`} autoFocus />
-            ) : (
-              <p className={`text-[13px] cursor-pointer ${profile.interests ? 'hover:underline' : empty}`} onClick={() => setEditing('interests')}>{profile.interests || 'Click to add...'}</p>
-            )}
+            <p className={`text-[13px] cursor-pointer ${profile.interests ? 'hover:underline' : empty}`}>{profile.interests || 'Click to add...'}</p>
           </div>
 
           {/* Favorites */}
@@ -469,13 +520,9 @@ export default function ProfilePage() {
               {movieTags.length > 0 && <Tags items={movieTags} field="favorite_movies" />}
               <input type="text" value={movieInput} onChange={(e) => setMovieInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && movieInput.trim()) { e.preventDefault(); updateField('favorite_movies', [...movieTags, movieInput.trim()].join(', ')); setMovieInput('') } }} className={`${inputClass} mt-1`} placeholder="Type movie, press Enter" />
             </div>
-            <div>
+            <div className="press" onClick={() => setEditing('favorite_quotes')}>
               <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Quotes</p>
-              {editing === 'favorite_quotes' ? (
-                <textarea value={profile.favorite_quotes} onChange={(e) => updateField('favorite_quotes', e.target.value)} onBlur={() => setEditing(null)} className={`${inputClass} resize-none h-14`} autoFocus />
-              ) : (
-                <p className={`text-[13px] cursor-pointer ${profile.favorite_quotes ? 'italic hover:underline' : empty}`} onClick={() => setEditing('favorite_quotes')}>{profile.favorite_quotes ? `\u201c${profile.favorite_quotes}\u201d` : 'Click to add...'}</p>
-              )}
+              <p className={`text-[13px] cursor-pointer ${profile.favorite_quotes ? 'italic hover:underline' : empty}`}>{profile.favorite_quotes ? `\u201c${profile.favorite_quotes}\u201d` : 'Click to add...'}</p>
             </div>
           </div>
 
@@ -546,6 +593,8 @@ export default function ProfilePage() {
           onCancel={() => setCropFile(null)}
         />
       )}
+
+      <EditSheet />
     </div>
   )
 }
