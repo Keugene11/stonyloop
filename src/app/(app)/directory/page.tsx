@@ -29,17 +29,34 @@ export default function DirectoryPage() {
   const supabase = createClient()
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [results, setResults] = useState<Profile[]>([])
-  const [loading, setLoading] = useState(false)
+  const [allUsers, setAllUsers] = useState<Profile[]>([])
+  const [loading, setLoading] = useState(true)
   const [searched, setSearched] = useState(false)
   const [blockedIds, setBlockedIds] = useState<string[]>([])
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id)
-      if (data) setBlockedIds(data.map(b => b.blocked_id))
-    })
+
+      const { data: blocks } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id)
+      const blocked = blocks ? blocks.map(b => b.blocked_id) : []
+      setBlockedIds(blocked)
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', user.id)
+        .order('full_name', { ascending: true })
+
+      if (profiles) {
+        const filtered = (profiles as Profile[]).filter(p => !blocked.includes(p.id))
+        setAllUsers(filtered)
+      }
+      setLoading(false)
+    }
+    init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -51,7 +68,6 @@ export default function DirectoryPage() {
       return
     }
 
-    setLoading(true)
     setSearched(true)
 
     const params: Record<string, string | number | null> = {
@@ -66,8 +82,7 @@ export default function DirectoryPage() {
     const { data } = await supabase.rpc('search_directory', params)
     const filtered = ((data || []) as Profile[]).filter(p => !blockedIds.includes(p.id))
     setResults(filtered)
-    setLoading(false)
-  }, [supabase])
+  }, [supabase, blockedIds])
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current)
@@ -75,8 +90,11 @@ export default function DirectoryPage() {
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
   }, [filters, search])
 
+  const hasFilters = Object.values(filters).some(v => v !== '')
+  const displayList = hasFilters ? results : allUsers
+
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
       <h1 className="text-[24px] font-bold tracking-tight mb-4">Directory</h1>
 
       <DirectoryFilters filters={filters} onChange={setFilters} />
@@ -90,21 +108,16 @@ export default function DirectoryPage() {
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
             <p className="text-text-muted text-[14px]">No students found matching your filters.</p>
           </div>
-        ) : results.length > 0 ? (
+        ) : displayList.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-[12px] text-text-muted mb-2">{results.length} result{results.length !== 1 ? 's' : ''}</p>
-            {results.map(profile => (
+            <p className="text-[12px] text-text-muted mb-2">{displayList.length} student{displayList.length !== 1 ? 's' : ''}</p>
+            {displayList.map(profile => (
               <ProfileCard key={profile.id} profile={profile} />
             ))}
           </div>
         ) : (
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
-            <p className="text-text-muted text-[14px]">
-              Use the filters above to find students.
-            </p>
-            <p className="text-text-muted text-[12px] mt-1">
-              Try searching by dorm, major, course, or name.
-            </p>
+            <p className="text-text-muted text-[14px]">No students yet.</p>
           </div>
         )}
       </div>
