@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2, Users } from 'lucide-react'
+import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2, Users, ArrowLeft } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
@@ -210,102 +210,100 @@ export default function ProfilePage() {
     }
 
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center" onClick={() => setEditing(null)}>
-        <div
-          className="bg-bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up"
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">Cancel</button>
-            <h3 className="text-[16px] font-bold">{label}</h3>
-            {type !== 'select' && (
-              <button onClick={() => save()} className="press text-[14px] font-semibold text-accent">Done</button>
-            )}
-            {type === 'select' && <div className="w-[50px]" />}
-          </div>
+      <div className="fixed inset-0 bg-bg z-50 flex flex-col animate-slide-up">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+          <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">
+            <ArrowLeft size={20} />
+          </button>
+          <h3 className="text-[17px] font-bold">{label}</h3>
+          {type !== 'select' ? (
+            <button onClick={() => save()} className="press text-[14px] font-semibold text-accent">Save</button>
+          ) : (
+            <div className="w-[32px]" />
+          )}
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-5">
-            {type === 'select' && options ? (
-              <div>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder={`Search ${label.toLowerCase()}...`}
-                  className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted mb-3"
-                  autoFocus
-                />
-                <div className="space-y-0.5">
-                  <button
-                    type="button"
-                    onClick={() => save('None')}
-                    className="press w-full text-left px-4 py-3 rounded-xl text-[15px] text-text-muted hover:bg-bg-input"
-                  >
-                    None
-                  </button>
-                  {(() => {
-                    const grouped: Record<string, typeof options> = {}
-                    const ungrouped: typeof options = []
-                    filteredOptions?.forEach(o => {
-                      if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
-                      else ungrouped.push(o)
-                    })
-                    return (
-                      <>
-                        {ungrouped.map(o => (
-                          <button
-                            key={o.value}
-                            type="button"
-                            onClick={() => save(o.value)}
-                            className={`press w-full text-left px-4 py-3 rounded-xl text-[15px] hover:bg-bg-input ${currentValue === o.value ? 'text-accent font-semibold' : ''}`}
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                        {Object.entries(grouped).map(([g, opts]) => (
-                          <div key={g}>
-                            <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-text-muted font-semibold">{g}</div>
-                            {opts.map(o => (
-                              <button
-                                key={o.value}
-                                type="button"
-                                onClick={() => save(o.value)}
-                                className={`press w-full text-left px-4 py-3 rounded-xl text-[15px] hover:bg-bg-input ${currentValue === o.value ? 'text-accent font-semibold' : ''}`}
-                              >
-                                {o.label}
-                              </button>
-                            ))}
-                          </div>
-                        ))}
-                      </>
-                    )
-                  })()}
-                </div>
-              </div>
-            ) : type === 'birthday' ? (
-              <BirthdayEditor value={localValue} onSave={(v) => { updateField(field, v); setEditing(null) }} />
-            ) : type === 'textarea' ? (
-              <textarea
-                value={localValue}
-                onChange={(e) => setLocalValue(e.target.value)}
-                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted resize-none h-32"
-                placeholder={`Enter ${label.toLowerCase()}...`}
-                autoFocus
-              />
-            ) : (
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          {type === 'select' && options ? (
+            <div>
               <input
-                type={type}
-                value={localValue}
-                onChange={(e) => setLocalValue(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') save() }}
-                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted"
-                placeholder={`Enter ${label.toLowerCase()}...`}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search ${label.toLowerCase()}...`}
+                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted mb-4"
                 autoFocus
               />
-            )}
-          </div>
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => save('None')}
+                  className="press w-full text-left px-4 py-3.5 rounded-xl text-[15px] text-text-muted hover:bg-bg-input"
+                >
+                  None
+                </button>
+                {(() => {
+                  const grouped: Record<string, typeof options> = {}
+                  const ungrouped: typeof options = []
+                  filteredOptions?.forEach(o => {
+                    if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
+                    else ungrouped.push(o)
+                  })
+                  return (
+                    <>
+                      {ungrouped.map(o => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => save(o.value)}
+                          className={`press w-full text-left px-4 py-3.5 rounded-xl text-[15px] hover:bg-bg-input ${currentValue === o.value ? 'text-accent font-semibold' : ''}`}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                      {Object.entries(grouped).map(([g, opts]) => (
+                        <div key={g}>
+                          <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-text-muted font-semibold">{g}</div>
+                          {opts.map(o => (
+                            <button
+                              key={o.value}
+                              type="button"
+                              onClick={() => save(o.value)}
+                              className={`press w-full text-left px-4 py-3.5 rounded-xl text-[15px] hover:bg-bg-input ${currentValue === o.value ? 'text-accent font-semibold' : ''}`}
+                            >
+                              {o.label}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+          ) : type === 'birthday' ? (
+            <BirthdayEditor value={localValue} onSave={(v) => { updateField(field, v); setEditing(null) }} />
+          ) : type === 'textarea' ? (
+            <textarea
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              className="w-full bg-bg-input rounded-xl px-4 py-3 text-[16px] outline-none border border-border focus:border-text-muted resize-none h-40"
+              placeholder={`Enter ${label.toLowerCase()}...`}
+              autoFocus
+            />
+          ) : (
+            <input
+              type={type}
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') save() }}
+              className="w-full bg-bg-input rounded-xl px-4 py-3 text-[16px] outline-none border border-border focus:border-text-muted"
+              placeholder={`Enter ${label.toLowerCase()}...`}
+              autoFocus
+            />
+          )}
         </div>
       </div>
     )
