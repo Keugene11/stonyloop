@@ -455,7 +455,7 @@ export default function ProfilePage() {
           {/* Friends */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
+              <Link href="/friends" className="press text-[13px] font-semibold hover:underline">Friends ({friends.length})</Link>
               {friends.length > 0 && (
                 <Link
                   href={`/profile/${userId}/network`}
