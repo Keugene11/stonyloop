@@ -21,6 +21,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true)
   const [isFriend, setIsFriend] = useState(false)
   const [userGroups, setUserGroups] = useState<Group[]>([])
+  const [friends, setFriends] = useState<Profile[]>([])
 
   useEffect(() => {
     loadData()
@@ -60,6 +61,17 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       .limit(50)
 
     if (posts) setWallPosts(posts as WallPost[])
+
+    // Load friends
+    const { data: friendships } = await supabase
+      .from('friendships')
+      .select('*, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
+      .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
+      .eq('status', 'accepted')
+
+    if (friendships) {
+      setFriends(friendships.map(f => (f.requester_id === id ? f.addressee : f.requester) as Profile))
+    }
 
     // Load user's groups
     const { data: memberships } = await supabase
@@ -205,6 +217,29 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               {profile.favorite_music && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p><div className="flex flex-wrap gap-1">{profile.favorite_music.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
               {profile.favorite_movies && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p><div className="flex flex-wrap gap-1">{profile.favorite_movies.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
               {profile.favorite_quotes && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p><p className="text-[13px] italic">&ldquo;{profile.favorite_quotes}&rdquo;</p></div>}
+            </div>
+          )}
+
+          {/* Friends */}
+          {friends.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-2">Friends ({friends.length})</p>
+              <div className="flex flex-wrap gap-2">
+                {friends.map(f => (
+                  <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1 w-[60px]">
+                    <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
+                      {f.avatar_url ? (
+                        <img src={f.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[13px] font-bold text-text-muted">
+                          {f.full_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-center truncate w-full">{f.full_name?.split(' ')[0]}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 
