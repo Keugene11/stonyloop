@@ -124,10 +124,7 @@ export default function NotificationsPage() {
     setRequests(requests.filter(r => r.id !== friendshipId))
   }
 
-  async function dismissNotification(notifId: string) {
-    await supabase.from('notifications').delete().eq('id', notifId)
-    setNotifications(notifications.filter(n => n.id !== notifId))
-  }
+
 
   if (loading) {
     return (
@@ -250,7 +247,7 @@ export default function NotificationsPage() {
               : null
 
             return (
-              <div key={n.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+              <div key={n.id} className={`bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 ${n.seen ? 'opacity-60' : ''}`}>
                 <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
                     {n.actor?.avatar_url ? (
@@ -284,12 +281,6 @@ export default function NotificationsPage() {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => dismissNotification(n.id)}
-                  className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press flex-shrink-0"
-                >
-                  Dismiss
-                </button>
               </div>
             )
           })}
