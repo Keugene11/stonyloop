@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Pencil, Check, X } from 'lucide-react'
 import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
@@ -19,11 +20,26 @@ interface WallPostItemProps {
 export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, isFriend = false }: WallPostItemProps) {
   const supabase = createClient()
   const canDelete = currentUserId === post.author_id || currentUserId === wallOwnerId
+  const canEdit = currentUserId === post.author_id
   const canComment = isFriend || currentUserId === wallOwnerId || currentUserId === post.author_id
+  const [editing, setEditing] = useState(false)
+  const [editContent, setEditContent] = useState(post.content)
+  const [content, setContent] = useState(post.content)
 
   async function handleDelete() {
     await supabase.from('wall_posts').delete().eq('id', post.id)
     onDelete(post.id)
+  }
+
+  async function handleSave() {
+    if (!editContent.trim()) return
+    await supabase.from('wall_posts').update({ content: editContent.trim() }).eq('id', post.id)
+    setContent(editContent.trim())
+    setEditing(false)
+  }
+
+  function isVideo(url: string) {
+    return /\.(mp4|webm|mov|avi)$/i.test(url)
   }
 
   return (
@@ -51,6 +67,11 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
         <div className="flex items-center gap-2">
           <Likes postType="wall_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
           <Impressions postType="wall_post" postId={post.id} userId={currentUserId} />
+          {canEdit && !editing && (
+            <button onClick={() => { setEditContent(content); setEditing(true) }} className="press text-text-muted hover:text-text p-1">
+              <Pencil size={13} />
+            </button>
+          )}
           {canDelete && (
             <button onClick={handleDelete} className="press text-text-muted hover:text-red-500 p-1">
               <Trash2 size={14} />
@@ -58,7 +79,38 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           )}
         </div>
       </div>
-      <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
+      {editing ? (
+        <div className="mt-2.5">
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="w-full bg-bg-input rounded-lg px-3 py-2 text-[14px] outline-none resize-none border border-border"
+            rows={3}
+            autoFocus
+          />
+          <div className="flex gap-2 mt-1.5">
+            <button onClick={handleSave} className="press flex items-center gap-1 text-[12px] font-medium text-accent">
+              <Check size={13} /> Save
+            </button>
+            <button onClick={() => setEditing(false)} className="press flex items-center gap-1 text-[12px] text-text-muted">
+              <X size={13} /> Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {content && <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{content}</p>}
+          {post.media_url && (
+            <div className="mt-2.5">
+              {isVideo(post.media_url) ? (
+                <video src={post.media_url} className="max-w-full rounded-xl" controls />
+              ) : (
+                <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
+              )}
+            </div>
+          )}
+        </>
+      )}
       <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
     </div>
   )

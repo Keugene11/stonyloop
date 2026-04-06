@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Users, LogOut, Trash2, Send } from 'lucide-react'
+import { Loader2, Users, LogOut, Trash2, Send, Image, X, Pencil, Check } from 'lucide-react'
 import Link from 'next/link'
 import type { Group, GroupMember, GroupPost, Profile } from '@/types'
 import Comments from '@/components/Comments'
@@ -21,6 +21,10 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true)
   const [postContent, setPostContent] = useState('')
   const [posting, setPosting] = useState(false)
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null)
+  const [editingPost, setEditingPost] = useState<string | null>(null)
+  const [editPostContent, setEditPostContent] = useState('')
 
   useEffect(() => {
     loadGroup()
@@ -86,8 +90,19 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   async function handlePost(e: React.FormEvent) {
     e.preventDefault()
-    if (!postContent.trim()) return
+    if (!postContent.trim() && !mediaFile) return
     setPosting(true)
+
+    let media_url: string | null = null
+    if (mediaFile) {
+      const ext = mediaFile.name.split('.').pop()
+      const path = `${currentUserId}/${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('posts').upload(path, mediaFile)
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
+        media_url = publicUrl
+      }
+    }
 
     const { data, error } = await supabase
       .from('group_posts')
@@ -95,6 +110,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         group_id: id,
         author_id: currentUserId,
         content: postContent.trim(),
+        media_url,
       })
       .select('*, author:profiles!group_posts_author_id_fkey(*)')
       .single()
@@ -102,8 +118,17 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     if (!error && data) {
       setPosts([data as (GroupPost & { author: Profile }), ...posts])
       setPostContent('')
+      setMediaFile(null)
+      setMediaPreview(null)
     }
     setPosting(false)
+  }
+
+  async function handleEditPost(postId: string) {
+    if (!editPostContent.trim()) return
+    await supabase.from('group_posts').update({ content: editPostContent.trim() }).eq('id', postId)
+    setPosts(posts.map(p => p.id === postId ? { ...p, content: editPostContent.trim() } : p))
+    setEditingPost(null)
   }
 
   async function handleDeletePost(postId: string) {
@@ -208,10 +233,26 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 placeholder="Write something to the group..."
                 className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none h-16"
               />
-              <div className="flex justify-end">
+              {mediaPreview && (
+                <div className="relative mb-2 inline-block">
+                  {mediaFile?.type.startsWith('video/') ? (
+                    <video src={mediaPreview} className="max-h-48 rounded-xl" controls />
+                  ) : (
+                    <img src={mediaPreview} alt="" className="max-h-48 rounded-xl" />
+                  )}
+                  <button type="button" onClick={() => { setMediaFile(null); setMediaPreview(null) }} className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 press">
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <label className="press text-text-muted hover:text-text p-1 cursor-pointer">
+                  <Image size={18} />
+                  <input type="file" accept="image/*,video/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setMediaFile(f); setMediaPreview(URL.createObjectURL(f)) } }} className="hidden" />
+                </label>
                 <button
                   type="submit"
-                  disabled={posting || !postContent.trim()}
+                  disabled={posting || (!postContent.trim() && !mediaFile)}
                   className="bg-accent text-white rounded-xl px-4 py-1.5 text-[13px] font-medium press flex items-center gap-1.5 disabled:opacity-50"
                 >
                   {posting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
@@ -258,6 +299,11 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="flex items-center gap-2">
                       <Likes postType="group_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
                       <Impressions postType="group_post" postId={post.id} userId={currentUserId} />
+                      {currentUserId === post.author_id && editingPost !== post.id && (
+                        <button onClick={() => { setEditingPost(post.id); setEditPostContent(post.content) }} className="press text-text-muted hover:text-text p-1">
+                          <Pencil size={13} />
+                        </button>
+                      )}
                       {(currentUserId === post.author_id || isAdmin) && (
                         <button onClick={() => handleDeletePost(post.id)} className="press text-text-muted hover:text-red-500 p-1">
                           <Trash2 size={14} />
@@ -265,7 +311,38 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                       )}
                     </div>
                   </div>
-                  <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
+                  {editingPost === post.id ? (
+                    <div className="mt-2.5">
+                      <textarea
+                        value={editPostContent}
+                        onChange={(e) => setEditPostContent(e.target.value)}
+                        className="w-full bg-bg-input rounded-lg px-3 py-2 text-[14px] outline-none resize-none border border-border"
+                        rows={3}
+                        autoFocus
+                      />
+                      <div className="flex gap-2 mt-1.5">
+                        <button onClick={() => handleEditPost(post.id)} className="press flex items-center gap-1 text-[12px] font-medium text-accent">
+                          <Check size={13} /> Save
+                        </button>
+                        <button onClick={() => setEditingPost(null)} className="press flex items-center gap-1 text-[12px] text-text-muted">
+                          <X size={13} /> Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {post.content && <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>}
+                      {post.media_url && (
+                        <div className="mt-2.5">
+                          {/\.(mp4|webm|mov|avi)$/i.test(post.media_url) ? (
+                            <video src={post.media_url} className="max-w-full rounded-xl" controls />
+                          ) : (
+                            <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                   <Comments postType="group_post" postId={post.id} postAuthorId={post.author_id} />
                 </div>
               ))}

@@ -46,6 +46,7 @@ export interface WallPost {
   author_id: string
   wall_owner_id: string
   content: string
+  media_url: string | null
   created_at: string
   author?: Profile
 }
@@ -106,6 +107,7 @@ export interface GroupPost {
   group_id: string
   author_id: string
   content: string
+  media_url: string | null
   created_at: string
   author?: Profile
 }

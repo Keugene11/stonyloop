@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Send, Trash2 } from 'lucide-react'
+import { Send, Trash2, Pencil, Check, X } from 'lucide-react'
 import type { Comment } from '@/types'
 
 interface CommentsProps {
@@ -38,7 +38,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
       .order('created_at', { ascending: true })
 
     if (data) {
-      // Nest replies under parents
       const topLevel: Comment[] = []
       const replyMap: Record<string, Comment[]> = {}
 
@@ -71,7 +70,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
       content: text,
     }).select('id').single()
 
-    // Notify: if replying, notify the parent comment author; otherwise notify the post author
     if (parentId) {
       const parent = comments.find(c => c.id === parentId) || comments.flatMap(c => c.replies || []).find(c => c.id === parentId)
       if (parent && parent.author_id !== userId) {
@@ -109,32 +107,35 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     loadComments()
   }
 
+  async function handleEdit(commentId: string, newContent: string) {
+    await supabase.from('comments').update({ content: newContent }).eq('id', commentId)
+    loadComments()
+  }
+
   const totalCount = comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)
 
   return (
     <div className="mt-2">
       {(totalCount > 0 || canComment) && (
         <div className="space-y-2">
-          {/* Comment list */}
           {comments.map(c => (
             <div key={c.id}>
               <CommentItem
                 comment={c}
                 userId={userId}
                 onDelete={handleDelete}
+                onEdit={handleEdit}
                 onReply={() => { setReplyTo(replyTo === c.id ? null : c.id); setReplyInput('') }}
               />
 
-              {/* Replies */}
               {c.replies && c.replies.length > 0 && (
                 <div className="ml-6 space-y-1.5 mt-1.5">
                   {c.replies.map(r => (
-                    <CommentItem key={r.id} comment={r} userId={userId} onDelete={handleDelete} />
+                    <CommentItem key={r.id} comment={r} userId={userId} onDelete={handleDelete} onEdit={handleEdit} />
                   ))}
                 </div>
               )}
 
-              {/* Reply input */}
               {replyTo === c.id && (
                 <div className="ml-6 mt-1.5 flex gap-2">
                   <input
@@ -158,7 +159,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
             </div>
           ))}
 
-          {/* New comment input */}
           {canComment ? (
             <div className="flex gap-2">
               <input
@@ -184,12 +184,22 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   )
 }
 
-function CommentItem({ comment, userId, onDelete, onReply }: {
+function CommentItem({ comment, userId, onDelete, onEdit, onReply }: {
   comment: Comment
   userId: string
   onDelete: (id: string) => void
+  onEdit: (id: string, content: string) => void
   onReply?: () => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [editText, setEditText] = useState(comment.content)
+
+  function handleSave() {
+    if (!editText.trim()) return
+    onEdit(comment.id, editText.trim())
+    setEditing(false)
+  }
+
   return (
     <div className="flex gap-2">
       <Link href={`/profile/${comment.author_id}`} className="press flex-shrink-0">
@@ -204,21 +214,47 @@ function CommentItem({ comment, userId, onDelete, onReply }: {
         </div>
       </Link>
       <div className="flex-1 min-w-0">
-        <div className="bg-bg-input rounded-xl px-3 py-1.5 inline-block">
-          <Link href={`/profile/${comment.author_id}`} className="text-[12px] font-semibold hover:underline">
-            {comment.author?.full_name || 'Unknown'}
-          </Link>
-          <p className="text-[12px]">{comment.content}</p>
-        </div>
-        <div className="flex items-center gap-3 mt-0.5 px-1">
-          <span className="text-[10px] text-text-muted">{getTimeAgo(new Date(comment.created_at))}</span>
-          {onReply && (
-            <button onClick={onReply} className="text-[10px] text-text-muted hover:text-text font-medium press">Reply</button>
-          )}
-          {userId === comment.author_id && (
-            <button onClick={() => onDelete(comment.id)} className="text-[10px] text-text-muted hover:text-red-500 press">Delete</button>
-          )}
-        </div>
+        {editing ? (
+          <div>
+            <input
+              type="text"
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+              className="w-full bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none border border-border"
+              autoFocus
+            />
+            <div className="flex gap-2 mt-1 px-1">
+              <button onClick={handleSave} className="press flex items-center gap-0.5 text-[10px] font-medium text-accent">
+                <Check size={10} /> Save
+              </button>
+              <button onClick={() => setEditing(false)} className="press flex items-center gap-0.5 text-[10px] text-text-muted">
+                <X size={10} /> Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="bg-bg-input rounded-xl px-3 py-1.5 inline-block">
+              <Link href={`/profile/${comment.author_id}`} className="text-[12px] font-semibold hover:underline">
+                {comment.author?.full_name || 'Unknown'}
+              </Link>
+              <p className="text-[12px]">{comment.content}</p>
+            </div>
+            <div className="flex items-center gap-3 mt-0.5 px-1">
+              <span className="text-[10px] text-text-muted">{getTimeAgo(new Date(comment.created_at))}</span>
+              {onReply && (
+                <button onClick={onReply} className="text-[10px] text-text-muted hover:text-text font-medium press">Reply</button>
+              )}
+              {userId === comment.author_id && (
+                <button onClick={() => { setEditText(comment.content); setEditing(true) }} className="text-[10px] text-text-muted hover:text-text font-medium press">Edit</button>
+              )}
+              {userId === comment.author_id && (
+                <button onClick={() => onDelete(comment.id)} className="text-[10px] text-text-muted hover:text-red-500 press">Delete</button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
