@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail, Eye, Ban, Flag } from 'lucide-react'
+import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, Home, School, Cake, Phone, Globe, Mail, Eye, Ban, Flag, Share2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
@@ -10,6 +10,7 @@ import FriendButton from '@/components/FriendButton'
 import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
+import FriendGraph from '@/components/FriendGraph'
 
 export default function ProfileViewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -29,6 +30,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [reportReason, setReportReason] = useState('')
   const [reportDetails, setReportDetails] = useState('')
   const [reportSent, setReportSent] = useState(false)
+  const [showGraph, setShowGraph] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -347,7 +349,15 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           {/* Friends */}
           {friends.length > 0 && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
-              <p className="text-[13px] font-semibold mb-3">Friends ({friends.length})</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
+                <button
+                  onClick={() => setShowGraph(true)}
+                  className="press flex items-center gap-1 text-[11px] text-text-muted hover:text-text font-medium"
+                >
+                  <Share2 size={12} /> Visualize
+                </button>
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 {friends.map(f => (
                   <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1.5">
@@ -451,6 +461,15 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         )}
         </div>
       </div>
+
+      {showGraph && profile && (
+        <FriendGraph
+          center={profile}
+          friends={friends}
+          onClose={() => setShowGraph(false)}
+          onNavigate={(navId) => { setShowGraph(false); router.push(`/profile/${navId}`) }}
+        />
+      )}
     </div>
   )
 }

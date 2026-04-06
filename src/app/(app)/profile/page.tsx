@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye } from 'lucide-react'
+import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2 } from 'lucide-react'
 import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
 import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
+import FriendGraph from '@/components/FriendGraph'
 import type { Profile, WallPost, Group } from '@/types'
 
 export default function ProfilePage() {
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const [friends, setFriends] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
+  const [showGraph, setShowGraph] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -329,7 +331,17 @@ export default function ProfilePage() {
 
           {/* Friends */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-4">
-            <p className="text-[13px] font-semibold mb-3">Friends ({friends.length})</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
+              {friends.length > 0 && (
+                <button
+                  onClick={() => setShowGraph(true)}
+                  className="press flex items-center gap-1 text-[11px] text-text-muted hover:text-text font-medium"
+                >
+                  <Share2 size={12} /> Visualize
+                </button>
+              )}
+            </div>
             {friends.length > 0 ? (
               <div className="grid grid-cols-3 gap-3">
                 {friends.map(f => (
@@ -376,6 +388,15 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {showGraph && profile && (
+        <FriendGraph
+          center={profile}
+          friends={friends}
+          onClose={() => setShowGraph(false)}
+          onNavigate={(navId) => { setShowGraph(false); router.push(`/profile/${navId}`) }}
+        />
+      )}
     </div>
   )
 }
