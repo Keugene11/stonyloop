@@ -33,6 +33,8 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
   const hoverRef = useRef<Node | null>(null)
   const frameRef = useRef(0)
   const sizeRef = useRef({ w: 0, h: 0 })
+  const zoomRef = useRef(1)
+  const panRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     async function load() {
@@ -126,6 +128,12 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       ctx.scale(dpr, dpr)
       ctx.clearRect(0, 0, w, h)
 
+      const zoom = zoomRef.current
+      const pan = panRef.current
+      ctx.save()
+      ctx.translate(pan.x, pan.y)
+      ctx.scale(zoom, zoom)
+
       const nodes = nodesRef.current
       const centerNode = nodes[0]
       const hover = hoverRef.current
@@ -210,13 +218,39 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
           }
         }
       }
+
+      ctx.restore()
     }
 
+    // Wheel zoom
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault()
+      const rect = canvas.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+      const oldZoom = zoomRef.current
+      const delta = e.deltaY > 0 ? 0.9 : 1.1
+      const newZoom = Math.max(0.3, Math.min(3, oldZoom * delta))
+      // Zoom toward mouse position
+      panRef.current.x = mouseX - (mouseX - panRef.current.x) * (newZoom / oldZoom)
+      panRef.current.y = mouseY - (mouseY - panRef.current.y) * (newZoom / oldZoom)
+      zoomRef.current = newZoom
+    }
+    canvas.addEventListener('wheel', handleWheel, { passive: false })
+
     animRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animRef.current)
+    return () => { cancelAnimationFrame(animRef.current); canvas.removeEventListener('wheel', handleWheel) }
   }, [loading, profile, friends])
 
-  function getNodeAt(x: number, y: number): Node | null {
+  function screenToWorld(sx: number, sy: number) {
+    return {
+      x: (sx - panRef.current.x) / zoomRef.current,
+      y: (sy - panRef.current.y) / zoomRef.current,
+    }
+  }
+
+  function getNodeAt(sx: number, sy: number): Node | null {
+    const { x, y } = screenToWorld(sx, sy)
     for (const n of [...nodesRef.current].reverse()) {
       const r = (n.isCenter ? 38 : 26) * n.scale
       const dx = x - n.x
@@ -229,24 +263,28 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
   function handlePointerDown(e: React.PointerEvent) {
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const node = getNodeAt(x, y)
-    if (node) dragRef.current = { node, offsetX: x - node.x, offsetY: y - node.y, startX: x, startY: y }
+    const sx = e.clientX - rect.left
+    const sy = e.clientY - rect.top
+    const node = getNodeAt(sx, sy)
+    if (node) {
+      const { x, y } = screenToWorld(sx, sy)
+      dragRef.current = { node, offsetX: x - node.x, offsetY: y - node.y, startX: sx, startY: sy }
+    }
   }
 
   function handlePointerMove(e: React.PointerEvent) {
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    const sx = e.clientX - rect.left
+    const sy = e.clientY - rect.top
     if (dragRef.current) {
+      const { x, y } = screenToWorld(sx, sy)
       dragRef.current.node.x = x - dragRef.current.offsetX
       dragRef.current.node.y = y - dragRef.current.offsetY
       dragRef.current.node.vx = 0
       dragRef.current.node.vy = 0
     }
-    const node = getNodeAt(x, y)
+    const node = getNodeAt(sx, sy)
     hoverRef.current = node
     if (canvasRef.current) canvasRef.current.style.cursor = node ? 'pointer' : 'default'
   }
@@ -290,7 +328,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         </button>
         <div>
           <h1 className="text-white text-[15px] font-bold">{profile.full_name}&apos;s Network</h1>
-          <p className="text-white/30 text-[11px]">{friends.length} friend{friends.length !== 1 ? 's' : ''} &middot; drag to rearrange &middot; tap to visit</p>
+          <p className="text-white/30 text-[11px]">{friends.length} friend{friends.length !== 1 ? 's' : ''} &middot; drag to rearrange &middot; scroll to zoom &middot; tap to visit</p>
         </div>
       </div>
 
