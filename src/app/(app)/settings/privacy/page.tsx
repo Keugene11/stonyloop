@@ -165,9 +165,11 @@ export default function PrivacySettingsPage() {
 
               {/* Inline editor */}
               {isEditing && (
-                <div className="mt-2">
+                <div className="mt-2 relative">
+                  {/* Backdrop to close on outside click */}
+                  <div className="fixed inset-0 z-10" onClick={() => { setEditing(null); setSearchFilter('') }} />
                   {options ? (
-                    <>
+                    <div className="relative z-20">
                       {searchable && (
                         <input
                           type="text"
@@ -197,9 +199,9 @@ export default function PrivacySettingsPage() {
                           </button>
                         ))}
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 relative z-20">
                       <input
                         type={type === 'date' ? 'date' : type === 'tel' ? 'tel' : 'text'}
                         value={editValue}
