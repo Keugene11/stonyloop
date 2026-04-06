@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Users, LogOut, Trash2, Send, Image, X, Pencil, Check } from 'lucide-react'
+import { Loader2, Users, LogOut, Trash2, Send, Image, X, Pencil, Check, Camera } from 'lucide-react'
 import Link from 'next/link'
 import type { Group, GroupMember, GroupPost, Profile } from '@/types'
 import Comments from '@/components/Comments'
@@ -131,6 +131,18 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     setEditingPost(null)
   }
 
+  async function handleGroupImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !group) return
+    const ext = file.name.split('.').pop()
+    const path = `${currentUserId}/group-${id}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('posts').upload(path, file)
+    if (error) return
+    const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
+    await supabase.from('groups').update({ image_url: publicUrl }).eq('id', id)
+    setGroup({ ...group, image_url: publicUrl })
+  }
+
   async function handleDeletePost(postId: string) {
     await supabase.from('group_posts').delete().eq('id', postId)
     setPosts(posts.filter(p => p.id !== postId))
@@ -161,13 +173,29 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
           {/* Group header */}
           <div className="bg-bg-card border border-border rounded-2xl p-4 mb-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-14 h-14 rounded-xl bg-bg-input border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
-                {group.image_url ? (
-                  <img src={group.image_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <Users size={24} className="text-text-muted" />
-                )}
-              </div>
+              {isAdmin ? (
+                <label className="relative cursor-pointer press flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl bg-bg-input border border-border overflow-hidden flex items-center justify-center">
+                    {group.image_url ? (
+                      <img src={group.image_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Users size={24} className="text-text-muted" />
+                    )}
+                  </div>
+                  <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1">
+                    <Camera size={8} />
+                  </div>
+                  <input type="file" accept="image/*" onChange={handleGroupImageUpload} className="hidden" />
+                </label>
+              ) : (
+                <div className="w-14 h-14 rounded-xl bg-bg-input border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {group.image_url ? (
+                    <img src={group.image_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Users size={24} className="text-text-muted" />
+                  )}
+                </div>
+              )}
               <div className="min-w-0">
                 <h1 className="text-[20px] font-bold tracking-tight truncate">{group.name}</h1>
                 <p className="text-[12px] text-text-muted">{members.length} member{members.length !== 1 ? 's' : ''} · {group.group_type}</p>
