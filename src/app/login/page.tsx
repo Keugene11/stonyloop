@@ -128,9 +128,14 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <p className="text-center text-[15px] font-medium text-text-muted/70 mt-5">
-          You must have a @stonybrook.edu email to join.
-        </p>
+        <div className="mt-6 border border-border rounded-2xl px-4 py-3 bg-bg-card">
+          <p className="text-center text-[15px] font-bold text-text">
+            You must use your @stonybrook.edu email to sign in.
+          </p>
+          <p className="text-center text-[13px] text-text-muted mt-1">
+            Use the Google account linked to your Stony Brook email.
+          </p>
+        </div>
 
         <p className="text-center text-[12px] text-text-muted mt-2">
           <Link href="/about" className="text-accent press">Learn more about Stonyloop</Link>
