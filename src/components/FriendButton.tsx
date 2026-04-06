@@ -70,7 +70,7 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
 
   if (state === 'loading') {
     return (
-      <button disabled className="flex-1 bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2">
+      <button disabled className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2">
         <Loader2 size={14} className="animate-spin" />
       </button>
     )
@@ -80,7 +80,7 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
     return (
       <button
         onClick={removeFriendship}
-        className="flex-1 bg-bg-input border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
+        className="bg-bg-input border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
       >
         <UserCheck size={14} /> Friends
       </button>
@@ -91,7 +91,7 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
     return (
       <button
         onClick={removeFriendship}
-        className="flex-1 bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 text-text-muted"
+        className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 text-text-muted"
       >
         <Clock size={14} /> Request Sent
       </button>
@@ -100,16 +100,16 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
 
   if (state === 'pending_received') {
     return (
-      <div className="flex-1 flex gap-2">
+      <div className="flex gap-2">
         <button
           onClick={acceptRequest}
-          className="flex-1 bg-accent text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
+          className="bg-accent text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
         >
           Accept
         </button>
         <button
           onClick={removeFriendship}
-          className="flex-1 bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
+          className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
         >
           Decline
         </button>
@@ -120,7 +120,7 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
   return (
     <button
       onClick={sendRequest}
-      className="flex-1 bg-accent text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
+      className="bg-accent text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
     >
       <UserPlus size={14} /> Add Friend
     </button>
