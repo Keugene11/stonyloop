@@ -255,10 +255,10 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-5">
         <label className="relative cursor-pointer press">
-          <div className="w-24 h-24 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
-            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[28px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
+          <div className="w-28 h-28 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[32px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
           </div>
-          <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1.5"><Camera size={12} /></div>
+          <div className="absolute bottom-1 right-1 bg-accent text-white rounded-full p-1.5"><Camera size={12} /></div>
           <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
         </label>
         <div className="flex-1 min-w-0">
