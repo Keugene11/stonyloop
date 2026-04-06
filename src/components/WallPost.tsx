@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Trash2 } from 'lucide-react'
 import type { WallPost } from '@/types'
+import Comments from '@/components/Comments'
 
 interface WallPostItemProps {
   post: WallPost
@@ -52,6 +53,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
         )}
       </div>
       <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
+      <Comments postType="wall_post" postId={post.id} />
     </div>
   )
 }

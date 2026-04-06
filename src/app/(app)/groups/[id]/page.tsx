@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, Users, LogOut, Trash2, Send } from 'lucide-react'
 import Link from 'next/link'
 import type { Group, GroupMember, GroupPost, Profile } from '@/types'
+import Comments from '@/components/Comments'
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -259,6 +260,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                   </div>
                   <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{post.content}</p>
+                  <Comments postType="group_post" postId={post.id} />
                 </div>
               ))}
             </div>

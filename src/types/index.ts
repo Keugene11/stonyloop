@@ -108,3 +108,15 @@ export interface GroupPost {
   created_at: string
   author?: Profile
 }
+
+export interface Comment {
+  id: string
+  post_type: 'wall_post' | 'group_post'
+  post_id: string
+  parent_id: string | null
+  author_id: string
+  content: string
+  created_at: string
+  author?: Profile
+  replies?: Comment[]
+}
