@@ -82,7 +82,10 @@ export default function SignupPage() {
       <div className="w-full max-w-sm animate-slide-up">
         <div className="text-center mb-8">
           <h1 className="text-[32px] font-extrabold tracking-tight text-text">Join StonyLoop</h1>
-          <p className="text-[14px] text-text-muted mt-1">Connect with Stony Brook students</p>
+          <p className="text-[14px] text-text-muted mt-2">Connect with Stony Brook students</p>
+          <p className="text-[12px] text-text-muted/60 mt-3 leading-relaxed max-w-xs mx-auto">
+            Browse the student directory, message friends, post on walls, join groups, and visualize your social network — all in one place.
+          </p>
         </div>
 
         <button
