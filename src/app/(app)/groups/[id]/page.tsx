@@ -166,40 +166,34 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-4xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
+
+      {/* Group cover image */}
+      <div className="relative rounded-2xl overflow-hidden mb-5 bg-bg-card border border-border">
+        {group.image_url ? (
+          <img src={group.image_url} alt={group.name} className="w-full h-48 md:h-64 object-cover" />
+        ) : (
+          <div className="w-full h-48 md:h-64 bg-bg-input flex items-center justify-center">
+            <Users size={48} className="text-text-muted/30" />
+          </div>
+        )}
+        {isAdmin && (
+          <label className="absolute bottom-3 right-3 cursor-pointer press bg-black/60 hover:bg-black/80 text-white rounded-xl px-3 py-1.5 text-[12px] font-medium flex items-center gap-1.5 transition-colors">
+            <Camera size={14} />
+            {group.image_url ? 'Change Photo' : 'Add Photo'}
+            <input type="file" accept="image/*" onChange={handleGroupImageUpload} className="hidden" />
+          </label>
+        )}
+      </div>
+
       <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
 
         {/* LEFT — Group info + members */}
         <div className="md:w-[320px] md:flex-shrink-0 md:sticky md:top-4">
           {/* Group header */}
           <div className="bg-bg-card border border-border rounded-2xl p-4 mb-4">
-            <div className="flex items-center gap-3 mb-3">
-              {isAdmin ? (
-                <label className="relative cursor-pointer press flex-shrink-0">
-                  <div className="w-14 h-14 rounded-xl bg-bg-input border border-border overflow-hidden flex items-center justify-center">
-                    {group.image_url ? (
-                      <img src={group.image_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <Users size={24} className="text-text-muted" />
-                    )}
-                  </div>
-                  <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1">
-                    <Camera size={8} />
-                  </div>
-                  <input type="file" accept="image/*" onChange={handleGroupImageUpload} className="hidden" />
-                </label>
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-bg-input border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  {group.image_url ? (
-                    <img src={group.image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Users size={24} className="text-text-muted" />
-                  )}
-                </div>
-              )}
-              <div className="min-w-0">
-                <h1 className="text-[20px] font-bold tracking-tight truncate">{group.name}</h1>
-                <p className="text-[12px] text-text-muted">{members.length} member{members.length !== 1 ? 's' : ''} · {group.group_type}</p>
-              </div>
+            <div className="mb-3">
+              <h1 className="text-[20px] font-bold tracking-tight">{group.name}</h1>
+              <p className="text-[12px] text-text-muted">{members.length} member{members.length !== 1 ? 's' : ''} · {group.group_type}</p>
             </div>
 
             {group.description && (
