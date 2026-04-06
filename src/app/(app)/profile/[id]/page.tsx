@@ -222,21 +222,21 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
           {/* Friends */}
           {friends.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-2">Friends ({friends.length})</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
+              <p className="text-[13px] font-semibold mb-3">Friends ({friends.length})</p>
+              <div className="grid grid-cols-3 gap-3">
                 {friends.map(f => (
-                  <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1 w-[60px]">
-                    <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
+                  <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1.5">
+                    <div className="w-16 h-16 rounded-full bg-bg-input border-2 border-border overflow-hidden">
                       {f.avatar_url ? (
                         <img src={f.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[13px] font-bold text-text-muted">
+                        <div className="w-full h-full flex items-center justify-center text-[18px] font-bold text-text-muted">
                           {f.full_name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] text-center truncate w-full">{f.full_name?.split(' ')[0]}</span>
+                    <span className="text-[12px] font-medium text-center truncate w-full">{f.full_name?.split(' ')[0]}</span>
                   </Link>
                 ))}
               </div>
