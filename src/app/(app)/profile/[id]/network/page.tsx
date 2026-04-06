@@ -75,13 +75,17 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
 
     const radius = Math.min(w, h) * 0.3
     friends.forEach((f, i) => {
-      const angle = (2 * Math.PI * i) / friends.length - Math.PI / 2
+      // Random offset so nodes don't line up perfectly
+      const baseAngle = (2 * Math.PI * i) / friends.length
+      const jitter = (Math.random() - 0.5) * 0.8
+      const angle = baseAngle + jitter
+      const rJitter = radius * (0.7 + Math.random() * 0.5)
       nodes.push({
         id: f.id,
         name: f.full_name,
         avatar: f.avatar_url,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle),
+        x: cx + rJitter * Math.cos(angle),
+        y: cy + rJitter * Math.sin(angle),
         vx: 0,
         vy: 0,
         isCenter: false,
@@ -184,14 +188,14 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         const n = nodes[i]
         if (n.scale < 0.05) continue
         const grad = ctx.createLinearGradient(centerNode.x, centerNode.y, n.x, n.y)
-        const alpha = hover === n ? 0.25 : 0.1
+        const alpha = hover === n ? 0.5 : 0.25
         grad.addColorStop(0, `rgba(255,255,255,${alpha * n.scale})`)
-        grad.addColorStop(1, `rgba(255,255,255,${alpha * 0.3 * n.scale})`)
+        grad.addColorStop(1, `rgba(255,255,255,${alpha * 0.4 * n.scale})`)
         ctx.beginPath()
         ctx.moveTo(centerNode.x, centerNode.y)
         ctx.lineTo(n.x, n.y)
         ctx.strokeStyle = grad
-        ctx.lineWidth = hover === n ? 2 : 1
+        ctx.lineWidth = hover === n ? 2.5 : 1.5
         ctx.stroke()
       }
 
@@ -209,7 +213,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
           ctx.beginPath()
           ctx.arc(n.x, n.y, r + 10, 0, Math.PI * 2)
           const glow = ctx.createRadialGradient(n.x, n.y, r, n.x, n.y, r + 10)
-          glow.addColorStop(0, `rgba(255,255,255,${n.isCenter ? 0.1 : 0.06})`)
+          glow.addColorStop(0, `rgba(255,255,255,${n.isCenter ? 0.15 : 0.1})`)
           glow.addColorStop(1, 'rgba(255,255,255,0)')
           ctx.fillStyle = glow
           ctx.fill()
@@ -224,9 +228,9 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         if (n.img && n.img.complete && n.img.naturalWidth > 0) {
           ctx.drawImage(n.img, n.x - r, n.y - r, r * 2, r * 2)
         } else {
-          ctx.fillStyle = '#1a1a1a'
+          ctx.fillStyle = '#222'
           ctx.fillRect(n.x - r, n.y - r, r * 2, r * 2)
-          ctx.fillStyle = '#555'
+          ctx.fillStyle = '#999'
           ctx.font = `bold ${r * 0.7}px "DM Sans", sans-serif`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
@@ -237,8 +241,8 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         // Ring
         ctx.beginPath()
         ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
-        ctx.strokeStyle = n.isCenter ? 'rgba(255,255,255,0.5)' : isHovered ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)'
-        ctx.lineWidth = n.isCenter ? 2.5 : 1.5
+        ctx.strokeStyle = n.isCenter ? 'rgba(255,255,255,0.7)' : isHovered ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)'
+        ctx.lineWidth = n.isCenter ? 3 : 2
         ctx.stroke()
 
         // Label
@@ -247,13 +251,13 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         ctx.textAlign = 'center'
         ctx.fillStyle = 'rgba(0,0,0,0.6)'
         ctx.fillText(n.name?.split(' ')[0] || '', n.x + 1, labelY + 1)
-        ctx.fillStyle = n.isCenter ? '#fff' : isHovered ? '#fff' : 'rgba(255,255,255,0.6)'
+        ctx.fillStyle = n.isCenter ? '#fff' : isHovered ? '#fff' : 'rgba(255,255,255,0.85)'
         ctx.fillText(n.name?.split(' ')[0] || '', n.x, labelY)
 
         if (n.isCenter && n.scale > 0.8) {
           const last = n.name?.split(' ').slice(1).join(' ')
           if (last) {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)'
+            ctx.fillStyle = 'rgba(255,255,255,0.5)'
             ctx.font = '400 10px "DM Sans", sans-serif'
             ctx.fillText(last, n.x, labelY + 14)
           }
@@ -331,9 +335,9 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col" style={{ bottom: '56px' }}>
+    <div className="fixed inset-0 bg-[#111] flex flex-col" style={{ bottom: '56px' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border-b border-white/5 flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#111] border-b border-white/10 flex-shrink-0">
         <button onClick={() => router.back()} className="press text-white/50 hover:text-white p-1">
           <ArrowLeft size={18} />
         </button>
