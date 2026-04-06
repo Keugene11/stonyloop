@@ -225,6 +225,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
     // Wheel zoom
     function handleWheel(e: WheelEvent) {
       e.preventDefault()
+      if (!canvas) return
       const rect = canvas.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
