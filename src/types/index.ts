@@ -26,6 +26,7 @@ export interface Profile {
   birthday: string
   fraternity_sorority: string
   clubs: string
+  onboarding_complete: boolean
   private_fields: string
   last_seen: string | null
   created_at: string

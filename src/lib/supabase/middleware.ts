@@ -56,7 +56,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If logged in and on auth pages, redirect to feed
+  // If logged in and on auth pages, redirect to directory
   if (
     user &&
     (request.nextUrl.pathname.startsWith('/login') ||
@@ -65,6 +65,21 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/directory'
     return NextResponse.redirect(url)
+  }
+
+  // If logged in but onboarding not complete, redirect to onboarding
+  if (
+    user &&
+    !request.nextUrl.pathname.startsWith('/onboarding') &&
+    !request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/api')
+  ) {
+    const { data: profile } = await supabase.from('profiles').select('onboarding_complete').eq('id', user.id).single()
+    if (profile && !profile.onboarding_complete) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

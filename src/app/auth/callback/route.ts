@@ -19,6 +19,11 @@ export async function GET(request: Request) {
           `${origin}/login?error=You must use a @stonybrook.edu email address`
         )
       }
+      // Check if onboarding is complete
+      const { data: profile } = await supabase.from('profiles').select('onboarding_complete').eq('id', user!.id).single()
+      if (profile && !profile.onboarding_complete) {
+        return NextResponse.redirect(`${origin}/onboarding`)
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
