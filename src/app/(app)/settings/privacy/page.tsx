@@ -24,7 +24,7 @@ const PRIVACY_FIELDS = [
   { field: 'phone', label: 'Phone', icon: Phone },
   { field: 'websites', label: 'Website', icon: Globe },
   { field: 'fraternity_sorority', label: 'Greek Life', icon: Users },
-  { field: 'clubs', label: 'Club', icon: Users },
+  { field: 'clubs', label: 'Clubs', icon: Users },
 ]
 
 export default function PrivacySettingsPage() {
@@ -32,6 +32,7 @@ export default function PrivacySettingsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [privateFields, setPrivateFields] = useState<string[]>([])
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -40,9 +41,12 @@ export default function PrivacySettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
-      const { data } = await supabase.from('profiles').select('private_fields').eq('id', user.id).single()
-      if (data?.private_fields) {
-        setPrivateFields(data.private_fields.split(',').filter(Boolean))
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      if (data) {
+        setProfile(data as Profile)
+        if (data.private_fields) {
+          setPrivateFields(data.private_fields.split(',').filter(Boolean))
+        }
       }
       setLoading(false)
     }
@@ -62,6 +66,16 @@ export default function PrivacySettingsPage() {
     save(isPrivate ? privateFields.filter(f => f !== field) : [...privateFields, field])
   }
 
+  function getFieldValue(field: string): string {
+    if (!profile) return ''
+    const val = (profile as Record<string, unknown>)[field]
+    if (!val) return ''
+    if (field === 'birthday' && typeof val === 'string') {
+      return new Date(val + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+    }
+    return String(val)
+  }
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-text-muted" size={24} /></div>
 
   return (
@@ -77,6 +91,7 @@ export default function PrivacySettingsPage() {
       <div className="bg-bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border">
         {PRIVACY_FIELDS.map(({ field, label, icon: Icon }) => {
           const isPrivate = privateFields.includes(field)
+          const value = getFieldValue(field)
           return (
             <button
               key={field}
@@ -84,14 +99,21 @@ export default function PrivacySettingsPage() {
               className="press w-full flex items-center gap-3 px-4 py-3 text-left"
             >
               <Icon size={14} className="text-text-muted flex-shrink-0" />
-              <span className="flex-1 text-[14px]">{label}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px]">{label}</p>
+                {value ? (
+                  <p className="text-[12px] text-text-muted truncate">{value}</p>
+                ) : (
+                  <p className="text-[12px] text-text-muted/40 italic">Not set</p>
+                )}
+              </div>
               {isPrivate ? (
-                <span className="flex items-center gap-1.5 text-[12px] text-accent font-medium">
+                <span className="flex items-center gap-1.5 text-[12px] text-accent font-medium flex-shrink-0">
                   <Lock size={13} />
                   Private
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5 text-[12px] text-text-muted/40 font-medium">
+                <span className="flex items-center gap-1.5 text-[12px] text-text-muted/40 font-medium flex-shrink-0">
                   <Unlock size={13} />
                   Visible
                 </span>
