@@ -272,7 +272,7 @@ export default function ProfilePage() {
             {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
             {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
           </p>
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-3 mt-2">
             <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
             <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
           </div>
