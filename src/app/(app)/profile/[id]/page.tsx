@@ -447,12 +447,16 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         <div className="flex-1 min-w-0">
           <h2 className="text-[18px] font-bold mb-3">The Wall</h2>
 
-        {(isFriend || currentUserId === id) && (
+        {(isFriend || currentUserId === id) ? (
           <WallPostForm
             wallOwnerId={id}
             onPost={(post) => setWallPosts([post, ...wallPosts])}
           />
-        )}
+        ) : currentUserId && currentUserId !== id ? (
+          <div className="bg-bg-card border border-border rounded-2xl p-4 text-center mt-0 mb-3">
+            <p className="text-text-muted text-[13px]">Add {profile.full_name?.split(' ')[0]} as a friend to write on their wall.</p>
+          </div>
+        ) : null}
 
         {wallPosts.length === 0 ? (
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center mt-3">
