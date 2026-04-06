@@ -128,9 +128,9 @@ export default function ProfilePage() {
           {/* Personal */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
             <Row icon={Heart} label="Status" value={profile.relationship_status} />
-            <Row icon={Heart} label="Interested" value={profile.interested_in} />
-            <Row icon={Heart} label="Looking for" value={profile.looking_for} />
-            <Row icon={Globe} label="Political" value={profile.political_views} />
+            <Row icon={Heart} label="Interested In" value={profile.interested_in} />
+            <Row icon={Heart} label="Looking For" value={profile.looking_for} />
+            <Row icon={Globe} label="Political Views" value={profile.political_views} />
           </div>
 
           {/* Contact */}
@@ -155,11 +155,11 @@ export default function ProfilePage() {
           {/* Favorites */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 space-y-2">
             <div>
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Music</p>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p>
               {musicTags.length > 0 ? <Tags items={musicTags} /> : <p className={`text-[13px] ${empty}`}>Not set</p>}
             </div>
             <div>
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Movies</p>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p>
               {movieTags.length > 0 ? <Tags items={movieTags} /> : <p className={`text-[13px] ${empty}`}>Not set</p>}
             </div>
             <div>

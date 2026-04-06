@@ -173,7 +173,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             {profile.relationship_status && profile.relationship_status !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span>{profile.relationship_status}</span></div>}
             {profile.interested_in && profile.interested_in !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Interested in:</span> <span>{profile.interested_in}</span></div>}
             {profile.looking_for && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Looking for:</span> <span>{profile.looking_for}</span></div>}
-            {profile.political_views && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span>{profile.political_views}</span></div>}
+            {profile.political_views && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Political Views:</span> <span>{profile.political_views}</span></div>}
           </div>
 
           {/* Contact */}
@@ -197,8 +197,8 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           {(profile.favorite_music || profile.favorite_movies || profile.interests || profile.favorite_quotes) && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-2">
               {profile.interests && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p><p className="text-[13px]">{profile.interests}</p></div>}
-              {profile.favorite_music && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Music</p><div className="flex flex-wrap gap-1">{profile.favorite_music.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
-              {profile.favorite_movies && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Movies</p><div className="flex flex-wrap gap-1">{profile.favorite_movies.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
+              {profile.favorite_music && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p><div className="flex flex-wrap gap-1">{profile.favorite_music.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
+              {profile.favorite_movies && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p><div className="flex flex-wrap gap-1">{profile.favorite_movies.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
               {profile.favorite_quotes && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p><p className="text-[13px] italic">&ldquo;{profile.favorite_quotes}&rdquo;</p></div>}
             </div>
           )}
