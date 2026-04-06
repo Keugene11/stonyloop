@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Pencil, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail } from 'lucide-react'
+import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X } from 'lucide-react'
+import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
+import { RESIDENCE_HALLS } from '@/lib/residence-halls'
+import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 import type { Profile, WallPost, Group } from '@/types'
@@ -17,41 +20,49 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [wallPosts, setWallPosts] = useState<WallPost[]>([])
   const [userGroups, setUserGroups] = useState<Group[]>([])
+  const [editing, setEditing] = useState<string | null>(null)
+  const [courseFilter, setCourseFilter] = useState('')
+  const [courseOpen, setCourseOpen] = useState(false)
+  const [musicInput, setMusicInput] = useState('')
+  const [movieInput, setMovieInput] = useState('')
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    loadProfile()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadProfile() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     setUserId(user.id)
-
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (data) setProfile(data as Profile)
-
-    const { data: posts } = await supabase
-      .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
-      .eq('wall_owner_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50)
+    const { data: posts } = await supabase.from('wall_posts').select('*, author:profiles!wall_posts_author_id_fkey(*)').eq('wall_owner_id', user.id).order('created_at', { ascending: false }).limit(50)
     if (posts) setWallPosts(posts as WallPost[])
-
     const { data: memberships } = await supabase.from('group_members').select('group_id').eq('user_id', user.id)
     if (memberships && memberships.length > 0) {
       const { data: groups } = await supabase.from('groups').select('*').in('id', memberships.map(m => m.group_id))
       if (groups) setUserGroups(groups as Group[])
     }
-
     setLoading(false)
   }
 
-  async function handleSignOut() {
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+  const updateField = useCallback((field: string, value: string | number | null) => {
+    setProfile(prev => prev ? { ...prev, [field]: value } : prev)
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      await supabase.from('profiles').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', userId)
+    }, 800)
+  }, [userId, supabase])
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+    const ext = file.name.split('.').pop()
+    const path = `${userId}/${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, file)
+    if (error) return
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId)
+    setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : prev)
   }
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-text-muted" size={24} /></div>
@@ -60,111 +71,201 @@ export default function ProfilePage() {
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
   const musicTags = profile.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
   const movieTags = profile.favorite_movies ? profile.favorite_movies.split(', ').filter(Boolean) : []
-  const empty = 'text-text-muted/40 italic'
+  const empty = 'text-text-muted/40 italic cursor-pointer'
+  const inputClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none w-full border border-border focus:border-text-muted'
+  const selectClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border focus:border-text-muted cursor-pointer'
 
-  const Row = ({ icon: Icon, label, value }: { icon: typeof MapPin; label: string; value?: string | null }) => (
-    <div className="flex items-center gap-2 text-[13px] py-[3px]">
-      <Icon size={13} className="text-text-muted flex-shrink-0" />
-      <span className="text-text-muted min-w-[70px] flex-shrink-0">{label}</span>
-      <span className={value ? '' : empty}>{value || 'Not set'}</span>
-    </div>
-  )
+  // Hall groups for select
+  const hallGroups: Record<string, typeof RESIDENCE_HALLS> = {}
+  for (const h of RESIDENCE_HALLS) { const g = h.group || 'Other'; if (!hallGroups[g]) hallGroups[g] = []; hallGroups[g].push(h) }
 
-  const Tags = ({ items }: { items: string[] }) => (
-    <div className="flex flex-wrap gap-1">{items.map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div>
-  )
+  // Course helpers
+  const sortedDepts = Object.entries(SBU_COURSES).sort((a, b) => a[0].localeCompare(b[0]))
+  const filteredDepts = sortedDepts.map(([code, dept]) => ({
+    code, name: dept.name,
+    courses: dept.courses.map(n => `${code} ${n}`).filter(c => !courses.includes(c)).filter(c => {
+      if (!courseFilter) return true
+      const q = courseFilter.trim().toUpperCase()
+      if (/^[A-Z]{2,4}$/.test(q)) return code === q
+      if (/^[A-Z]{2,4}\s/.test(q)) return c.toUpperCase().startsWith(q)
+      return dept.name.toLowerCase().includes(courseFilter.toLowerCase())
+    })
+  })).filter(d => d.courses.length > 0)
+
+  // Inline editable row: click value to edit, blur/enter to save
+  function EditableRow({ icon: Icon, label, field, value, type = 'text', options }: {
+    icon: typeof MapPin; label: string; field: string; value?: string | null; type?: string
+    options?: { value: string; label: string; group?: string }[]
+  }) {
+    const isEditing = editing === field
+    return (
+      <div className="flex items-center gap-2 text-[13px] py-[3px]">
+        <Icon size={13} className="text-text-muted flex-shrink-0" />
+        <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
+        {isEditing ? (
+          options ? (
+            <select
+              value={value || ''}
+              onChange={(e) => { updateField(field, e.target.value); setEditing(null) }}
+              onBlur={() => setEditing(null)}
+              className={selectClass}
+              autoFocus
+            >
+              <option value="">—</option>
+              {options.map(o => o.group ? null : <option key={o.value} value={o.value}>{o.label}</option>)}
+              {/* grouped options */}
+              {(() => {
+                const groups: Record<string, typeof options> = {}
+                options.forEach(o => { if (o.group) { if (!groups[o.group]) groups[o.group] = []; groups[o.group].push(o) } })
+                return Object.entries(groups).map(([g, opts]) => (
+                  <optgroup key={g} label={g}>{opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</optgroup>
+                ))
+              })()}
+            </select>
+          ) : (
+            <input
+              type={type}
+              value={value || ''}
+              onChange={(e) => updateField(field, type === 'number' ? (e.target.value ? parseInt(e.target.value) : null) as unknown as string : e.target.value)}
+              onBlur={() => setEditing(null)}
+              onKeyDown={(e) => { if (e.key === 'Enter') setEditing(null) }}
+              className={inputClass}
+              autoFocus
+            />
+          )
+        ) : (
+          <span className={value ? 'cursor-pointer hover:underline' : empty} onClick={() => setEditing(field)}>
+            {field === 'birthday' && value ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  function Tags({ items, field }: { items: string[]; field: string }) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {items.map(t => (
+          <span key={t} className="inline-flex items-center gap-1 bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">
+            {t}
+            <button type="button" onClick={() => updateField(field, items.filter(i => i !== t).join(', '))} className="text-text-muted hover:text-text"><X size={10} /></button>
+          </span>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-10 pb-28 animate-slide-up">
       {/* Header */}
       <div className="flex items-center gap-4 mb-5">
-        <div className="w-20 h-20 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
-          {profile.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-text-muted text-[24px] font-bold">
-              {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
-            </div>
-          )}
-        </div>
+        <label className="relative cursor-pointer press">
+          <div className="w-20 h-20 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[24px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
+          </div>
+          <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1"><Camera size={10} /></div>
+          <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+        </label>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[22px] font-bold tracking-tight truncate">{profile.full_name || 'Your Name'}</h1>
+          {editing === 'full_name' ? (
+            <input type="text" value={profile.full_name} onChange={(e) => updateField('full_name', e.target.value)} onBlur={() => setEditing(null)} onKeyDown={(e) => { if (e.key === 'Enter') setEditing(null) }} className="text-[22px] font-bold tracking-tight bg-bg-input rounded-lg px-2 py-0.5 outline-none border border-border w-full" autoFocus />
+          ) : (
+            <h1 className="text-[22px] font-bold tracking-tight truncate cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
+          )}
           <p className="text-[13px] text-text-muted">
-            {profile.major || 'No major set'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
+            {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
             {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <Link href="/profile/edit" className="press bg-accent text-white rounded-xl px-4 py-2 text-[13px] font-medium flex items-center gap-1.5">
-            <Pencil size={13} /> Edit
-          </Link>
-          <button onClick={handleSignOut} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
-        </div>
+        <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
       </div>
 
-      {/* Two-column */}
       <div className="flex flex-col md:flex-row md:gap-5 md:items-start">
-
-        {/* LEFT — All info, always show every field */}
+        {/* LEFT */}
         <div className="md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3">
 
           {/* About */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
             <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">About</p>
-            <p className={`text-[13px] ${profile.about_me ? '' : empty}`}>{profile.about_me || 'Tell people about yourself...'}</p>
+            {editing === 'about_me' ? (
+              <textarea value={profile.about_me} onChange={(e) => updateField('about_me', e.target.value)} onBlur={() => setEditing(null)} className={`${inputClass} resize-none h-16`} autoFocus />
+            ) : (
+              <p className={`text-[13px] cursor-pointer ${profile.about_me ? 'hover:underline' : empty}`} onClick={() => setEditing('about_me')}>{profile.about_me || 'Click to add...'}</p>
+            )}
           </div>
 
           {/* Details */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <Row icon={GraduationCap} label="Major" value={profile.major} />
-            <Row icon={GraduationCap} label="2nd Major" value={profile.second_major} />
-            <Row icon={BookOpen} label="Minor" value={profile.minor} />
-            <Row icon={MapPin} label="Dorm" value={profile.residence_hall} />
-            <Row icon={Home} label="From" value={profile.hometown} />
-            <Row icon={School} label="High School" value={profile.high_school} />
-            <Row icon={Cake} label="Birthday" value={profile.birthday ? new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : null} />
+            <EditableRow icon={GraduationCap} label="Major" field="major" value={profile.major} options={SBU_MAJORS.map(m => ({ value: m, label: m }))} />
+            <EditableRow icon={GraduationCap} label="2nd Major" field="second_major" value={profile.second_major} options={SBU_MAJORS.map(m => ({ value: m, label: m }))} />
+            <EditableRow icon={BookOpen} label="Minor" field="minor" value={profile.minor} options={SBU_MINORS.map(m => ({ value: m, label: m }))} />
+            <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={RESIDENCE_HALLS} />
+            <EditableRow icon={Home} label="From" field="hometown" value={profile.hometown} />
+            <EditableRow icon={School} label="High School" field="high_school" value={profile.high_school} />
+            <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="date" />
+            <EditableRow icon={GraduationCap} label="Class Year" field="class_year" value={profile.class_year?.toString()} options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))} />
+            <EditableRow icon={GraduationCap} label="Gender" field="gender" value={profile.gender} options={GENDERS.map(g => ({ value: g, label: g }))} />
           </div>
 
           {/* Personal */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <Row icon={Heart} label="Status" value={profile.relationship_status} />
-            <Row icon={Heart} label="Interested In" value={profile.interested_in} />
-            <Row icon={Heart} label="Looking For" value={profile.looking_for} />
-            <Row icon={Globe} label="Political Views" value={profile.political_views} />
+            <EditableRow icon={Heart} label="Status" field="relationship_status" value={profile.relationship_status} options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))} />
+            <EditableRow icon={Heart} label="Interested In" field="interested_in" value={profile.interested_in} options={INTERESTED_IN.map(s => ({ value: s, label: s }))} />
+            <EditableRow icon={Heart} label="Looking For" field="looking_for" value={profile.looking_for} options={LOOKING_FOR.map(s => ({ value: s, label: s }))} />
+            <EditableRow icon={Globe} label="Political Views" field="political_views" value={profile.political_views} options={POLITICAL_VIEWS.map(p => ({ value: p, label: p }))} />
           </div>
 
           {/* Contact */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <Row icon={Mail} label="Email" value={profile.email} />
-            <Row icon={Phone} label="Phone" value={profile.phone} />
-            <Row icon={Globe} label="Website" value={profile.websites} />
+            <EditableRow icon={Mail} label="Email" field="email" value={profile.email} />
+            <EditableRow icon={Phone} label="Phone" field="phone" value={profile.phone} type="tel" />
+            <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
           </div>
 
           {/* Courses */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
             <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
-            {courses.length > 0 ? <Tags items={courses} /> : <p className={`text-[13px] ${empty}`}>No courses added</p>}
+            {courses.length > 0 && <Tags items={courses} field="courses" />}
+            <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={`${inputClass} mt-1.5`} placeholder="Search courses (e.g. CSE)" />
+            {courseOpen && (
+              <>
+                <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
+                <select value="" onChange={(e) => { if (e.target.value) { updateField('courses', [...courses, e.target.value].join(', ')); setCourseFilter(''); setCourseOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
+                  {filteredDepts.map(d => <optgroup key={d.code} label={`${d.code} — ${d.name}`}>{d.courses.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>)}
+                </select>
+              </>
+            )}
           </div>
 
           {/* Interests */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
             <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p>
-            <p className={`text-[13px] ${profile.interests ? '' : empty}`}>{profile.interests || 'Not set'}</p>
+            {editing === 'interests' ? (
+              <textarea value={profile.interests} onChange={(e) => updateField('interests', e.target.value)} onBlur={() => setEditing(null)} className={`${inputClass} resize-none h-14`} autoFocus />
+            ) : (
+              <p className={`text-[13px] cursor-pointer ${profile.interests ? 'hover:underline' : empty}`} onClick={() => setEditing('interests')}>{profile.interests || 'Click to add...'}</p>
+            )}
           </div>
 
           {/* Favorites */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 space-y-2">
             <div>
               <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p>
-              {musicTags.length > 0 ? <Tags items={musicTags} /> : <p className={`text-[13px] ${empty}`}>Not set</p>}
+              {musicTags.length > 0 && <Tags items={musicTags} field="favorite_music" />}
+              <input type="text" value={musicInput} onChange={(e) => setMusicInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && musicInput.trim()) { e.preventDefault(); updateField('favorite_music', [...musicTags, musicInput.trim()].join(', ')); setMusicInput('') } }} className={`${inputClass} mt-1`} placeholder="Type artist, press Enter" />
             </div>
             <div>
               <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p>
-              {movieTags.length > 0 ? <Tags items={movieTags} /> : <p className={`text-[13px] ${empty}`}>Not set</p>}
+              {movieTags.length > 0 && <Tags items={movieTags} field="favorite_movies" />}
+              <input type="text" value={movieInput} onChange={(e) => setMovieInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && movieInput.trim()) { e.preventDefault(); updateField('favorite_movies', [...movieTags, movieInput.trim()].join(', ')); setMovieInput('') } }} className={`${inputClass} mt-1`} placeholder="Type movie, press Enter" />
             </div>
             <div>
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p>
-              <p className={`text-[13px] ${profile.favorite_quotes ? 'italic' : empty}`}>{profile.favorite_quotes ? `\u201c${profile.favorite_quotes}\u201d` : 'Not set'}</p>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Quotes</p>
+              {editing === 'favorite_quotes' ? (
+                <textarea value={profile.favorite_quotes} onChange={(e) => updateField('favorite_quotes', e.target.value)} onBlur={() => setEditing(null)} className={`${inputClass} resize-none h-14`} autoFocus />
+              ) : (
+                <p className={`text-[13px] cursor-pointer ${profile.favorite_quotes ? 'italic hover:underline' : empty}`} onClick={() => setEditing('favorite_quotes')}>{profile.favorite_quotes ? `\u201c${profile.favorite_quotes}\u201d` : 'Click to add...'}</p>
+              )}
             </div>
           </div>
 
@@ -174,7 +275,7 @@ export default function ProfilePage() {
             {userGroups.length > 0 ? (
               <div className="space-y-1">{userGroups.map(g => <Link key={g.id} href={`/groups/${g.id}`} className="press block text-[13px] text-accent hover:underline">{g.name}</Link>)}</div>
             ) : (
-              <p className={`text-[13px] ${empty}`}>No groups joined</p>
+              <Link href="/groups" className="text-[13px] text-accent press">Browse groups</Link>
             )}
           </div>
 
