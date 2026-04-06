@@ -213,10 +213,10 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Profile views (own profile only) */}
-          {isOwn && profileViews.length > 0 && (
+          {isOwn && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-4">
               <button
-                onClick={() => setShowViewers(!showViewers)}
+                onClick={() => profileViews.length > 0 && setShowViewers(!showViewers)}
                 className="press flex items-center gap-2 w-full"
               >
                 <Eye size={14} className="text-text-muted" />

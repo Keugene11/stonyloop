@@ -267,15 +267,14 @@ export default function ProfilePage() {
         <div className="md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3">
 
           {/* Profile Views */}
-          {profileViews.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <button
-                onClick={() => setShowViewers(!showViewers)}
-                className="press flex items-center gap-2 w-full"
-              >
-                <Eye size={14} className="text-text-muted" />
-                <span className="text-[13px] font-medium">{profileViews.length} profile view{profileViews.length !== 1 ? 's' : ''}</span>
-              </button>
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+            <button
+              onClick={() => profileViews.length > 0 && setShowViewers(!showViewers)}
+              className="press flex items-center gap-2 w-full"
+            >
+              <Eye size={14} className="text-text-muted" />
+              <span className="text-[13px] font-medium">{profileViews.length} profile view{profileViews.length !== 1 ? 's' : ''}</span>
+            </button>
               {showViewers && (
                 <div className="mt-3 space-y-2">
                   {profileViews.map(v => (
@@ -294,8 +293,7 @@ export default function ProfilePage() {
                   ))}
                 </div>
               )}
-            </div>
-          )}
+          </div>
 
           {/* About */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
