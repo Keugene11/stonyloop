@@ -16,7 +16,7 @@ interface FieldConfig {
   field: string
   label: string
   icon: IconType
-  type?: 'text' | 'date' | 'tel' | 'select'
+  type?: 'text' | 'date' | 'tel' | 'select' | 'birthday'
   options?: string[]
   searchable?: boolean
 }
@@ -28,7 +28,7 @@ const PRIVACY_FIELDS: FieldConfig[] = [
   { field: 'residence_hall', label: 'Dorm', icon: MapPin, type: 'select', options: RESIDENCE_HALLS.map(h => typeof h === 'string' ? h : h.value), searchable: true },
   { field: 'hometown', label: 'Hometown', icon: Home },
   { field: 'high_school', label: 'High School', icon: School },
-  { field: 'birthday', label: 'Birthday', icon: Cake, type: 'date' },
+  { field: 'birthday', label: 'Birthday', icon: Cake, type: 'birthday' },
   { field: 'class_year', label: 'Class Year', icon: GraduationCap, type: 'select', options: CLASS_YEARS.map(String) },
   { field: 'gender', label: 'Gender', icon: GraduationCap, type: 'select', options: GENDERS },
   { field: 'relationship_status', label: 'Relationship Status', icon: Heart, type: 'select', options: RELATIONSHIP_STATUSES },
@@ -200,10 +200,12 @@ export default function PrivacySettingsPage() {
                         ))}
                       </div>
                     </div>
+                  ) : type === 'birthday' ? (
+                    <BirthdayPicker value={editValue} onSave={(v) => saveField(field, v)} onCancel={() => { setEditing(null); setSearchFilter('') }} />
                   ) : (
                     <div className="flex gap-2 relative z-20">
                       <input
-                        type={type === 'date' ? 'date' : type === 'tel' ? 'tel' : 'text'}
+                        type={type === 'tel' ? 'tel' : 'text'}
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') saveField(field, editValue) }}
@@ -229,6 +231,51 @@ export default function PrivacySettingsPage() {
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+function BirthdayPicker({ value, onSave, onCancel }: { value: string; onSave: (v: string) => void; onCancel: () => void }) {
+  const parts = value ? value.split('-') : ['', '', '']
+  const [month, setMonth] = useState(parts[1] ? parseInt(parts[1]) : 0)
+  const [day, setDay] = useState(parts[2] ? parseInt(parts[2]) : 0)
+
+  const daysInMonth = month ? new Date(2000, month, 0).getDate() : 31
+
+  function handleSave() {
+    if (!month || !day) { onSave(''); return }
+    const m = month.toString().padStart(2, '0')
+    const d = day.toString().padStart(2, '0')
+    onSave(`2000-${m}-${d}`)
+  }
+
+  return (
+    <div className="relative z-20">
+      <div className="flex gap-2 mb-2">
+        <select
+          value={month}
+          onChange={(e) => { setMonth(parseInt(e.target.value)); if (day > new Date(2000, parseInt(e.target.value), 0).getDate()) setDay(1) }}
+          className="flex-1 bg-bg-input rounded-xl px-3 py-2 text-[13px] outline-none border border-border"
+        >
+          <option value={0}>Month</option>
+          {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+        </select>
+        <select
+          value={day}
+          onChange={(e) => setDay(parseInt(e.target.value))}
+          className="w-20 bg-bg-input rounded-xl px-3 py-2 text-[13px] outline-none border border-border"
+        >
+          <option value={0}>Day</option>
+          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+        </select>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={handleSave} className="bg-accent text-white rounded-xl px-4 py-2 text-[12px] font-medium press">Save</button>
+        <button onClick={() => { onSave(''); }} className="text-text-muted text-[12px] press px-2">Clear</button>
+        <button onClick={onCancel} className="text-text-muted text-[12px] press px-2">Cancel</button>
       </div>
     </div>
   )

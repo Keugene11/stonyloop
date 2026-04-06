@@ -203,6 +203,8 @@ export default function ProfilePage() {
                 {/* Backdrop to close */}
                 <div className="fixed inset-0 z-20" style={{ bottom: '56px' }} onClick={() => { setEditing(null); setSearch('') }} />
               </div>
+            ) : type === 'birthday' ? (
+              <BirthdayEditor value={value || ''} onSave={(v) => { updateField(field, v); setEditing(null) }} />
             ) : (
               <input
                 type={type}
@@ -316,7 +318,7 @@ export default function ProfilePage() {
             <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={RESIDENCE_HALLS} />
             <EditableRow icon={Home} label="From" field="hometown" value={profile.hometown} />
             <EditableRow icon={School} label="High School" field="high_school" value={profile.high_school} />
-            <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="date" />
+            <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="birthday" />
             <EditableRow icon={GraduationCap} label="Class Year" field="class_year" value={profile.class_year?.toString()} options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))} />
             <EditableRow icon={GraduationCap} label="Gender" field="gender" value={profile.gender} options={GENDERS.map(g => ({ value: g, label: g }))} />
           </div>
@@ -499,6 +501,45 @@ export default function ProfilePage() {
         </div>
       </div>
 
+    </div>
+  )
+}
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+function BirthdayEditor({ value, onSave }: { value: string; onSave: (v: string) => void }) {
+  const parts = value ? value.split('-') : ['', '', '']
+  const [month, setMonth] = useState(parts[1] ? parseInt(parts[1]) : 0)
+  const [day, setDay] = useState(parts[2] ? parseInt(parts[2]) : 0)
+  const daysInMonth = month ? new Date(2000, month, 0).getDate() : 31
+
+  return (
+    <div className="flex gap-2 items-center">
+      <select
+        value={month}
+        onChange={(e) => { const m = parseInt(e.target.value); setMonth(m); if (day > new Date(2000, m, 0).getDate()) setDay(1) }}
+        className="bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border"
+      >
+        <option value={0}>Month</option>
+        {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+      </select>
+      <select
+        value={day}
+        onChange={(e) => setDay(parseInt(e.target.value))}
+        className="bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border"
+      >
+        <option value={0}>Day</option>
+        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+      </select>
+      <button
+        onClick={() => {
+          if (!month || !day) { onSave(''); return }
+          onSave(`2000-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`)
+        }}
+        className="text-accent text-[12px] font-medium press"
+      >
+        Save
+      </button>
     </div>
   )
 }
