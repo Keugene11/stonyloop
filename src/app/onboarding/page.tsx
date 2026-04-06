@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, ArrowRight, Camera, Check } from 'lucide-react'
+import { Loader2, ArrowRight, ArrowLeft, Camera, Check } from 'lucide-react'
 import { SBU_MAJORS } from '@/lib/sbu-data'
 import { CLASS_YEARS } from '@/lib/constants'
 
@@ -135,27 +135,39 @@ export default function OnboardingPage() {
         {currentStep === 'major' && (
           <div>
             <h1 className="text-[24px] font-bold tracking-tight mb-2">What&apos;s your major?</h1>
-            <p className="text-[14px] text-text-muted mb-6">You can change this later.</p>
-            <input
-              type="text"
-              value={majorFilter}
-              onChange={(e) => setMajorFilter(e.target.value)}
-              placeholder="Search majors..."
-              className="w-full bg-bg-card border border-border rounded-2xl px-4 py-3 text-[14px] outline-none focus:border-text-muted transition-colors mb-3"
-              autoFocus
-            />
-            <div className="bg-bg-card border border-border rounded-2xl max-h-56 overflow-y-auto">
-              {filteredMajors.map(m => (
-                <button
-                  key={m}
-                  onClick={() => { setMajor(m); setMajorFilter('') }}
-                  className={`press w-full text-left px-4 py-2.5 text-[14px] border-b border-border last:border-0 ${major === m ? 'text-accent font-medium' : ''}`}
-                >
-                  {major === m && <Check size={14} className="inline mr-2" />}
-                  {m}
-                </button>
-              ))}
-            </div>
+            <p className="text-[14px] text-text-muted mb-4">You can change this later.</p>
+            {major && (
+              <div className="bg-accent/10 border border-accent/20 rounded-2xl px-4 py-3 mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] text-accent uppercase tracking-wide font-medium">Your major</p>
+                  <p className="text-[16px] font-semibold mt-0.5">{major}</p>
+                </div>
+                <button onClick={() => setMajor('')} className="press text-text-muted hover:text-text text-[12px]">Change</button>
+              </div>
+            )}
+            {!major && (
+              <>
+                <input
+                  type="text"
+                  value={majorFilter}
+                  onChange={(e) => setMajorFilter(e.target.value)}
+                  placeholder="Search majors..."
+                  className="w-full bg-bg-card border border-border rounded-2xl px-4 py-3 text-[14px] outline-none focus:border-text-muted transition-colors mb-3"
+                  autoFocus
+                />
+                <div className="bg-bg-card border border-border rounded-2xl max-h-56 overflow-y-auto">
+                  {filteredMajors.map(m => (
+                    <button
+                      key={m}
+                      onClick={() => { setMajor(m); setMajorFilter('') }}
+                      className="press w-full text-left px-4 py-2.5 text-[14px] border-b border-border last:border-0 hover:bg-bg-input"
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -203,12 +215,21 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Continue button */}
-        <button
-          onClick={handleNext}
-          disabled={!canContinue() || saving}
-          className="w-full bg-accent text-white py-3 rounded-2xl font-semibold press flex items-center justify-center gap-2 disabled:opacity-40 mt-8"
-        >
+        {/* Navigation buttons */}
+        <div className="flex gap-3 mt-8">
+          {step > 0 && (
+            <button
+              onClick={() => setStep(step - 1)}
+              className="bg-bg-card border border-border py-3 px-4 rounded-2xl press flex items-center justify-center"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={!canContinue() || saving}
+            className="flex-1 bg-accent text-white py-3 rounded-2xl font-semibold press flex items-center justify-center gap-2 disabled:opacity-40"
+          >
           {saving ? (
             <Loader2 size={18} className="animate-spin" />
           ) : step === STEPS.length - 1 ? (
@@ -222,7 +243,8 @@ export default function OnboardingPage() {
               <ArrowRight size={16} />
             </>
           )}
-        </button>
+          </button>
+        </div>
 
         {/* Step counter */}
         <p className="text-center text-[12px] text-text-muted mt-4">
