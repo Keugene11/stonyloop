@@ -50,21 +50,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-5 bg-bg">
       <div className="w-full max-w-sm animate-slide-up">
-        <div className="text-center mb-6">
-          <p className="text-[20px] font-extrabold text-text leading-snug">
-            Sign in with your @stonybrook.edu Google account.
-          </p>
-          <p className="text-[14px] text-text-muted mt-2">
-            Only Stony Brook students can join.
-          </p>
-        </div>
-
         <div className="text-center mb-8">
-          <h1 className="text-[14px] font-bold tracking-tight text-text-muted">
+          <h1 className="text-[24px] font-extrabold tracking-tight text-text">
             [ Stonyloop ]
           </h1>
           <p className="text-[13px] text-text-muted mt-1">
             The social network for Stony Brook University.
+          </p>
+          <p className="text-[18px] font-bold text-text mt-5 leading-snug">
+            Sign in with your @stonybrook.edu Google account.
+          </p>
+          <p className="text-[13px] text-text-muted mt-1">
+            Only Stony Brook students can join.
           </p>
         </div>
 
