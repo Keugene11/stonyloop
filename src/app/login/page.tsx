@@ -60,7 +60,7 @@ export default function LoginPage() {
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-[18px] font-bold tracking-tight text-text-muted">
+          <h1 className="text-[14px] font-bold tracking-tight text-text-muted">
             [ Stonyloop ]
           </h1>
           <p className="text-[13px] text-text-muted mt-1">
