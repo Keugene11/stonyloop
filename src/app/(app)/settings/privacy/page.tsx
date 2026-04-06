@@ -68,7 +68,7 @@ export default function PrivacySettingsPage() {
 
   function getFieldValue(field: string): string {
     if (!profile) return ''
-    const val = (profile as Record<string, unknown>)[field]
+    const val = (profile as unknown as Record<string, unknown>)[field]
     if (!val) return ''
     if (field === 'birthday' && typeof val === 'string') {
       return new Date(val + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
