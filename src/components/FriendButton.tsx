@@ -15,6 +15,7 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
   const supabase = createClient()
   const [state, setState] = useState<FriendState>('loading')
   const [friendshipId, setFriendshipId] = useState('')
+  const [confirmUnfriend, setConfirmUnfriend] = useState(false)
 
   useEffect(() => {
     checkFriendship()
@@ -96,9 +97,27 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
   }
 
   if (state === 'friends') {
+    if (confirmUnfriend) {
+      return (
+        <div className="flex gap-2">
+          <button
+            onClick={removeFriendship}
+            className="bg-red-500 text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
+          >
+            Unfriend
+          </button>
+          <button
+            onClick={() => setConfirmUnfriend(false)}
+            className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press"
+          >
+            Cancel
+          </button>
+        </div>
+      )
+    }
     return (
       <button
-        onClick={removeFriendship}
+        onClick={() => setConfirmUnfriend(true)}
         className="bg-bg-input border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
       >
         <UserCheck size={14} /> Friends
