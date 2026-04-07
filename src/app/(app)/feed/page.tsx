@@ -68,6 +68,7 @@ export default function FeedPage() {
 
       if (wallPosts) {
         wallPosts.forEach(p => {
+          if (p.author_id === user.id) return
           allPosts.push({
             id: `wall-${p.id}`,
             type: 'wall',
@@ -101,6 +102,7 @@ export default function FeedPage() {
 
       if (groupPosts) {
         groupPosts.forEach(p => {
+          if (p.author_id === user.id) return
           allPosts.push({
             id: `group-${p.id}`,
             type: 'group',
@@ -123,13 +125,8 @@ export default function FeedPage() {
     setPosts(posts.filter(p => p.wallPost?.id !== postId))
   }
 
-  function handleNewPost(post: WallPost) {
-    setPosts([{
-      id: `wall-${post.id}`,
-      type: 'wall',
-      created_at: post.created_at,
-      wallPost: post,
-    }, ...posts])
+  function handleNewPost(_post: WallPost) {
+    // Own posts don't appear in the feed — no-op
   }
 
   function isVideo(url: string) {
