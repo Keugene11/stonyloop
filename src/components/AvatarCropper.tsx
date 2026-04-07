@@ -17,9 +17,8 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
-  const SIZE = Math.min(280, typeof window !== 'undefined' ? window.innerWidth - 48 : 280)
+  const SIZE = Math.min(300, typeof window !== 'undefined' ? window.innerWidth - 48 : 300)
 
   useEffect(() => {
     const img = new window.Image()
@@ -28,7 +27,6 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
     return () => URL.revokeObjectURL(imgSrc)
   }, [imgSrc])
 
-  // Base scale to fill the crop area
   const baseScale = imgNatural.w > 0 ? Math.max(SIZE / imgNatural.w, SIZE / imgNatural.h) : 1
 
   function handlePointerDown(e: React.PointerEvent) {
@@ -38,9 +36,10 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
 
   function handlePointerMove(e: React.PointerEvent) {
     if (!dragRef.current) return
-    const dx = e.clientX - dragRef.current.startX
-    const dy = e.clientY - dragRef.current.startY
-    setOffset({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy })
+    setOffset({
+      x: dragRef.current.origX + (e.clientX - dragRef.current.startX),
+      y: dragRef.current.origY + (e.clientY - dragRef.current.startY),
+    })
   }
 
   function handlePointerUp() {
@@ -50,43 +49,36 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
   function handleSave() {
     const img = imgRef.current
     if (!img) return
-
     const canvas = canvasRef.current!
     const ctx = canvas.getContext('2d')!
     const outSize = 512
     canvas.width = outSize
     canvas.height = outSize
-
     const s = outSize / SIZE
     const totalScale = baseScale * zoom
     const drawW = imgNatural.w * totalScale * s
     const drawH = imgNatural.h * totalScale * s
     const drawX = (outSize - drawW) / 2 + offset.x * s
     const drawY = (outSize - drawH) / 2 + offset.y * s
-
     ctx.beginPath()
     ctx.arc(outSize / 2, outSize / 2, outSize / 2, 0, Math.PI * 2)
     ctx.clip()
     ctx.drawImage(img, drawX, drawY, drawW, drawH)
-
-    canvas.toBlob((blob) => {
-      if (blob) onSave(blob)
-    }, 'image/jpeg', 0.9)
+    canvas.toBlob((blob) => { if (blob) onSave(blob) }, 'image/jpeg', 0.9)
   }
 
   const dispW = imgNatural.w * baseScale * zoom
   const dispH = imgNatural.h * baseScale * zoom
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center px-6">
-      <div className="text-center mb-4">
-        <h2 className="text-white text-[16px] font-bold">Adjust your photo</h2>
-        <p className="text-white/40 text-[12px]">Drag to reposition, zoom to fit</p>
+    <div className="fixed inset-0 bg-bg/95 z-50 flex flex-col items-center justify-center px-4">
+      <div className="text-center mb-5">
+        <h2 className="text-text text-[18px] font-bold">Adjust photo</h2>
+        <p className="text-text-muted text-[13px] mt-1">Drag to reposition</p>
       </div>
 
       <div
-        ref={containerRef}
-        className="relative rounded-full overflow-hidden border-2 border-white/20 cursor-grab active:cursor-grabbing"
+        className="relative rounded-full overflow-hidden border border-border cursor-grab active:cursor-grabbing bg-bg-input"
         style={{ width: SIZE, height: SIZE, touchAction: 'none' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -109,10 +101,8 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
         )}
       </div>
 
-      <div className="flex items-center gap-4 mt-5">
-        <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="press text-white/60 hover:text-white p-2">
-          <ZoomOut size={20} />
-        </button>
+      <div className="flex items-center gap-3 mt-4">
+        <ZoomOut size={16} className="text-text-muted" />
         <input
           type="range"
           min="0.5"
@@ -120,15 +110,13 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
           step="0.05"
           value={zoom}
           onChange={(e) => setZoom(parseFloat(e.target.value))}
-          className="w-40 accent-accent"
+          className="w-48 accent-accent"
         />
-        <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="press text-white/60 hover:text-white p-2">
-          <ZoomIn size={20} />
-        </button>
+        <ZoomIn size={16} className="text-text-muted" />
       </div>
 
-      <div className="flex gap-3 mt-6">
-        <button onClick={onCancel} className="press flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white rounded-2xl px-6 py-2.5 text-[14px] font-medium">
+      <div className="flex gap-3 mt-5">
+        <button onClick={onCancel} className="press flex items-center gap-2 bg-bg-card border border-border rounded-2xl px-6 py-2.5 text-[14px] font-medium">
           <X size={16} /> Cancel
         </button>
         <button onClick={handleSave} className="press flex items-center gap-2 bg-accent text-white rounded-2xl px-6 py-2.5 text-[14px] font-medium">
