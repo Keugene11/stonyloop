@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { MapPin } from 'lucide-react'
+import { MapPin, Circle } from 'lucide-react'
 import type { Profile } from '@/types'
 
 interface ProfileCardProps {
@@ -31,8 +31,33 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
               <MapPin size={10} /> {profile.residence_hall}
             </p>
           )}
+          {profile.last_seen && (
+            <p className={`text-[11px] flex items-center gap-1 ${isOnline(profile.last_seen) ? 'text-green-500' : 'text-text-muted'}`}>
+              <Circle size={6} className={isOnline(profile.last_seen) ? 'fill-green-500 text-green-500' : 'fill-text-muted/40 text-text-muted/40'} />
+              {getLastSeen(profile.last_seen)}
+            </p>
+          )}
         </div>
       </div>
     </Link>
   )
+}
+
+function isOnline(lastSeen: string | null): boolean {
+  if (!lastSeen) return false
+  return (Date.now() - new Date(lastSeen).getTime()) < 60000
+}
+
+function getLastSeen(lastSeen: string | null): string {
+  if (!lastSeen) return ''
+  const seconds = Math.floor((Date.now() - new Date(lastSeen).getTime()) / 1000)
+  if (seconds < 60) return 'Online now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `Active ${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Active ${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days === 1) return 'Active yesterday'
+  if (days < 7) return `Active ${days}d ago`
+  return `Active ${new Date(lastSeen).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 }
