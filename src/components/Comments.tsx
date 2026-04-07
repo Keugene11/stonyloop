@@ -103,6 +103,8 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   }
 
   async function handleDelete(commentId: string) {
+    // Nullify notification references before deleting so notifications don't cascade-delete
+    await supabase.from('notifications').update({ comment_id: null }).eq('comment_id', commentId)
     await supabase.from('comments').delete().eq('id', commentId)
     loadComments()
   }

@@ -96,6 +96,24 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       last_message_at: new Date().toISOString(),
     }).eq('id', conversationId)
 
+    // Notify the other user (only if they don't already have an unseen message notif from us)
+    if (otherUser) {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', otherUser.id)
+        .eq('actor_id', currentUserId)
+        .eq('type', 'message')
+        .eq('seen', false)
+      if (!count) {
+        await supabase.from('notifications').insert({
+          user_id: otherUser.id,
+          actor_id: currentUserId,
+          type: 'message',
+        })
+      }
+    }
+
     setSending(false)
   }
 
@@ -160,13 +178,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="bg-bg-card border-t border-border px-4 py-3 flex gap-2 sticky bottom-14">
+      <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2">
         <input
           type="text"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none placeholder:text-text-muted/50"
+          className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
         />
         <button
           type="submit"

@@ -163,6 +163,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   async function handleDeletePost(postId: string) {
+    // Nullify notification references before deleting so notifications don't cascade-delete
+    await supabase.from('notifications').update({ post_id: null }).eq('post_id', postId).eq('post_type', 'group_post')
     await supabase.from('group_posts').delete().eq('id', postId)
     setPosts(posts.filter(p => p.id !== postId))
   }

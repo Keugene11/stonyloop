@@ -50,6 +50,12 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
       requester_id: currentUserId,
       addressee_id: targetUserId,
     })
+    // Notify the recipient of the friend request
+    await supabase.from('notifications').insert({
+      user_id: targetUserId,
+      actor_id: currentUserId,
+      type: 'friend_request',
+    })
     await checkFriendship()
   }
 
@@ -58,6 +64,19 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
     await supabase.from('friendships')
       .update({ status: 'accepted', updated_at: new Date().toISOString() })
       .eq('id', friendshipId)
+    // Notify the requester that their request was accepted
+    const { data: friendship } = await supabase
+      .from('friendships')
+      .select('requester_id')
+      .eq('id', friendshipId)
+      .single()
+    if (friendship) {
+      await supabase.from('notifications').insert({
+        user_id: friendship.requester_id,
+        actor_id: currentUserId,
+        type: 'friend_accept',
+      })
+    }
     setState('friends')
   }
 

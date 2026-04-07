@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand, UserPlus, Heart, MessageSquare } from 'lucide-react'
+import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import type { Poke, Friendship, Profile } from '@/types'
 
@@ -113,9 +113,18 @@ export default function NotificationsPage() {
   }
 
   async function acceptRequest(friendshipId: string) {
+    const request = requests.find(r => r.id === friendshipId)
     await supabase.from('friendships')
       .update({ status: 'accepted', updated_at: new Date().toISOString() })
       .eq('id', friendshipId)
+    // Notify the requester that their request was accepted
+    if (request) {
+      await supabase.from('notifications').insert({
+        user_id: request.requester_id,
+        actor_id: userId,
+        type: 'friend_accept',
+      })
+    }
     setRequests(requests.filter(r => r.id !== friendshipId))
   }
 
@@ -140,6 +149,9 @@ export default function NotificationsPage() {
     if (type === 'like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     if (type === 'comment') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
     if (type === 'reply') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
+    if (type === 'friend_request') return <UserPlus size={12} className="text-accent flex-shrink-0" />
+    if (type === 'friend_accept') return <UserCheck size={12} className="text-green-500 flex-shrink-0" />
+    if (type === 'message') return <MessageCircle size={12} className="text-accent flex-shrink-0" />
     return null
   }
 
@@ -147,6 +159,9 @@ export default function NotificationsPage() {
     if (type === 'like') return 'liked your post'
     if (type === 'comment') return 'commented on your post'
     if (type === 'reply') return 'replied to your comment'
+    if (type === 'friend_request') return 'sent you a friend request'
+    if (type === 'friend_accept') return 'accepted your friend request'
+    if (type === 'message') return 'sent you a message'
     return ''
   }
 
@@ -277,6 +292,11 @@ export default function NotificationsPage() {
                     {postLink && (
                       <Link href={postLink} className="text-[11px] text-accent font-medium press">
                         View post
+                      </Link>
+                    )}
+                    {n.type === 'message' && (
+                      <Link href="/messages" className="text-[11px] text-accent font-medium press">
+                        View messages
                       </Link>
                     )}
                   </div>

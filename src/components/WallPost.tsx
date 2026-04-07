@@ -27,6 +27,8 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const [content, setContent] = useState(post.content)
 
   async function handleDelete() {
+    // Nullify notification references before deleting so notifications don't cascade-delete
+    await supabase.from('notifications').update({ post_id: null }).eq('post_id', post.id).eq('post_type', 'wall_post')
     await supabase.from('wall_posts').delete().eq('id', post.id)
     onDelete(post.id)
   }
