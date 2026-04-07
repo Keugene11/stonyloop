@@ -23,8 +23,9 @@ export async function POST(request: Request) {
   const tokens = await tokenRes.json()
 
   if (!tokens.id_token) {
+    console.error('Google token exchange failed:', tokens)
     return NextResponse.json(
-      { error: 'Failed to get ID token from Google' },
+      { error: tokens.error_description || tokens.error || 'Failed to get ID token from Google' },
       { status: 400 }
     )
   }

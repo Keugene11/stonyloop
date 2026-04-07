@@ -16,6 +16,7 @@ export default function LoginPage() {
 
   const googleLogin = useGoogleLogin({
     flow: 'auth-code',
+    scope: 'openid email profile',
     onSuccess: async (codeResponse) => {
       setLoading(true)
       setError('')
