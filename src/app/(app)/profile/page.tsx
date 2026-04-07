@@ -424,7 +424,6 @@ export default function ProfilePage() {
 
           {/* Contact */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <EditableRow icon={Mail} label="Email" field="email" value={profile.email} />
             <EditableRow icon={Phone} label="Phone" field="phone" value={profile.phone} type="tel" />
             <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
           </div>

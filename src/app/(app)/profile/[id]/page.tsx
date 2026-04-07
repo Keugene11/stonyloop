@@ -411,9 +411,8 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           )}
 
           {/* Contact */}
-          {(show('email', profile.email) || show('phone', profile.phone) || show('websites', profile.websites)) && (
+          {(show('phone', profile.phone) || show('websites', profile.websites)) && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
-              {show('email', profile.email) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Mail size={13} className="text-text-muted flex-shrink-0" /><span>{profile.email}</span></div>}
               {show('phone', profile.phone) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Phone size={13} className="text-text-muted flex-shrink-0" /><span>{profile.phone}</span></div>}
               {show('websites', profile.websites) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-accent break-all">{profile.websites}</span></div>}
             </div>

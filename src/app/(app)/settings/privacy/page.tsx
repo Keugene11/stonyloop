@@ -35,7 +35,6 @@ const PRIVACY_FIELDS: FieldConfig[] = [
   { field: 'interested_in', label: 'Interested In', icon: Heart, type: 'select', options: INTERESTED_IN },
   { field: 'looking_for', label: 'Looking For', icon: Heart, type: 'select', options: LOOKING_FOR },
   { field: 'political_views', label: 'Political Views', icon: Globe, type: 'select', options: POLITICAL_VIEWS },
-  { field: 'email', label: 'Email', icon: Mail },
   { field: 'phone', label: 'Phone', icon: Phone, type: 'tel' },
   { field: 'websites', label: 'Website', icon: Globe },
   { field: 'fraternity_sorority', label: 'Greek Life', icon: Users, type: 'select', options: SBU_GREEK_LIFE, searchable: true },
