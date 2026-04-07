@@ -261,15 +261,21 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
     return null
   }
 
+  const panDragRef = useRef<{ startX: number; startY: number; origPanX: number; origPanY: number } | null>(null)
+
   function handlePointerDown(e: React.PointerEvent) {
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     const sx = e.clientX - rect.left
     const sy = e.clientY - rect.top
     const node = getNodeAt(sx, sy)
     if (node) {
       const { x, y } = screenToWorld(sx, sy)
       dragRef.current = { node, offsetX: x - node.x, offsetY: y - node.y, startX: sx, startY: sy }
+    } else {
+      // Pan the canvas
+      panDragRef.current = { startX: e.clientX, startY: e.clientY, origPanX: panRef.current.x, origPanY: panRef.current.y }
     }
   }
 
@@ -284,10 +290,13 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       dragRef.current.node.y = y - dragRef.current.offsetY
       dragRef.current.node.vx = 0
       dragRef.current.node.vy = 0
+    } else if (panDragRef.current) {
+      panRef.current.x = panDragRef.current.origPanX + (e.clientX - panDragRef.current.startX)
+      panRef.current.y = panDragRef.current.origPanY + (e.clientY - panDragRef.current.startY)
     }
     const node = getNodeAt(sx, sy)
     hoverRef.current = node
-    if (canvasRef.current) canvasRef.current.style.cursor = node ? 'pointer' : 'default'
+    if (canvasRef.current) canvasRef.current.style.cursor = dragRef.current ? 'grabbing' : panDragRef.current ? 'grabbing' : node ? 'pointer' : 'grab'
   }
 
   function handlePointerUp(e: React.PointerEvent) {
@@ -302,6 +311,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       }
       dragRef.current = null
     }
+    panDragRef.current = null
   }
 
   if (loading) {
@@ -329,7 +339,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         </button>
         <div>
           <h1 className="text-white text-[15px] font-bold">{profile.full_name}&apos;s Network</h1>
-          <p className="text-white/30 text-[11px]">{friends.length} friend{friends.length !== 1 ? 's' : ''} &middot; drag to rearrange &middot; scroll to zoom &middot; tap to visit</p>
+          <p className="text-white/30 text-[11px]">{friends.length} friend{friends.length !== 1 ? 's' : ''} &middot; drag to pan &middot; scroll to zoom &middot; tap to visit</p>
         </div>
       </div>
 
@@ -337,7 +347,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       <div className="flex-1 relative">
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full touch-none"
+          className="absolute inset-0 w-full h-full touch-none cursor-grab"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
