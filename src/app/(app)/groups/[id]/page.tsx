@@ -8,7 +8,6 @@ import type { Group, GroupMember, GroupPost, Profile } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
 import Likes from '@/components/Likes'
-import ImageCropper from '@/components/ImageCropper'
 import { notifyFriends } from '@/lib/notifyFriends'
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +26,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const [editingPost, setEditingPost] = useState<string | null>(null)
   const [editPostContent, setEditPostContent] = useState('')
-  const [groupCropFile, setGroupCropFile] = useState<File | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     loadGroup()
@@ -152,31 +151,32 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     setEditingPost(null)
   }
 
-  function handleGroupImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleGroupImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !group) return
     if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
-    setGroupCropFile(file)
+    const ext = (file.name.split('.').pop() || '').toLowerCase()
+    if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return
     e.target.value = ''
-  }
 
-  async function handleGroupImageSave(blob: Blob) {
-    setGroupCropFile(null)
-    if (!group) return
     // Instant preview
-    const previewUrl = URL.createObjectURL(blob)
+    setUploadingImage(true)
+    const previewUrl = URL.createObjectURL(file)
     setGroup({ ...group, image_url: previewUrl })
+
     // Delete old image
     if (group.image_url && group.image_url.includes('/posts/')) {
       const oldPath = group.image_url.split('/posts/')[1]
       if (oldPath) await supabase.storage.from('posts').remove([decodeURIComponent(oldPath)])
     }
-    const path = `${currentUserId}/group-${id}-${Date.now()}.jpg`
-    const { error } = await supabase.storage.from('posts').upload(path, blob)
-    if (error) return
-    const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
-    await supabase.from('groups').update({ image_url: publicUrl }).eq('id', id)
-    setGroup({ ...group, image_url: publicUrl })
+    const path = `${currentUserId}/group-${id}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('posts').upload(path, file)
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
+      await supabase.from('groups').update({ image_url: publicUrl }).eq('id', id)
+      setGroup({ ...group, image_url: publicUrl })
+    }
+    setUploadingImage(false)
   }
 
   async function handleDeletePost(postId: string) {
@@ -220,10 +220,10 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
             {isAdmin && (
-              <label className="absolute bottom-2 right-2 cursor-pointer press bg-black/60 hover:bg-black/80 text-white rounded-lg px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 transition-colors">
-                <Camera size={12} />
-                {group.image_url ? 'Change' : 'Add Photo'}
-                <input type="file" accept="image/*" onChange={handleGroupImageSelect} className="hidden" />
+              <label className={`absolute bottom-2 right-2 cursor-pointer press bg-black/60 hover:bg-black/80 text-white rounded-lg px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 transition-colors ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                {uploadingImage ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
+                {uploadingImage ? 'Uploading...' : group.image_url ? 'Change' : 'Add Photo'}
+                <input type="file" accept="image/*" onChange={handleGroupImageSelect} className="hidden" disabled={uploadingImage} />
               </label>
             )}
           </div>
@@ -413,14 +413,6 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
       </div>
-      {groupCropFile && (
-        <ImageCropper
-          file={groupCropFile}
-          aspectRatio={2}
-          onSave={handleGroupImageSave}
-          onCancel={() => setGroupCropFile(null)}
-        />
-      )}
     </div>
   )
 }
