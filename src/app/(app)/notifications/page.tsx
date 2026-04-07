@@ -22,6 +22,7 @@ interface Notification {
   comment?: { content: string } | null
   wall_owner_id?: string
   conversation_id?: string
+  group_id?: string
 }
 
 export default function NotificationsPage() {
@@ -65,6 +66,22 @@ export default function NotificationsPage() {
         notifs.forEach(n => {
           if (n.post_type === 'wall_post' && n.post_id) {
             n.wall_owner_id = ownerMap[n.post_id]
+          }
+        })
+      }
+
+      // Fetch group_id for group_post notifications so we can link to the group
+      const groupPostIds = [...new Set(notifs.filter(n => n.post_type === 'group_post' && n.post_id).map(n => n.post_id!))]
+      if (groupPostIds.length > 0) {
+        const { data: groupPosts } = await supabase
+          .from('group_posts')
+          .select('id, group_id')
+          .in('id', groupPostIds)
+        const groupMap: Record<string, string> = {}
+        groupPosts?.forEach(gp => { groupMap[gp.id] = gp.group_id })
+        notifs.forEach(n => {
+          if (n.post_type === 'group_post' && n.post_id) {
+            n.group_id = groupMap[n.post_id]
           }
         })
       }
@@ -221,16 +238,19 @@ export default function NotificationsPage() {
           {notifications.map(n => {
             const postLink = n.post_type === 'wall_post' && n.wall_owner_id
               ? `/profile/${n.wall_owner_id}`
+              : n.post_type === 'group_post' && n.group_id
+              ? `/groups/${n.group_id}`
               : null
             const showFriendActions = n.type === 'friend_request' && !handledRequests.has(n.actor_id)
 
             const isMessage = n.type === 'message' && n.conversation_id
+            const isClickable = isMessage || postLink
 
             return (
               <div
                 key={n.id}
-                className={`bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 ${isMessage ? 'cursor-pointer hover:bg-bg-card-hover transition-colors' : ''}`}
-                onClick={isMessage ? () => router.push(`/messages/${n.conversation_id}`) : undefined}
+                className={`bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 ${isClickable ? 'cursor-pointer hover:bg-bg-card-hover transition-colors' : ''}`}
+                onClick={isClickable ? () => router.push(isMessage ? `/messages/${n.conversation_id}` : postLink!) : undefined}
               >
                 <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
@@ -270,11 +290,6 @@ export default function NotificationsPage() {
                   )}
                   <div className="flex items-center gap-2 mt-0.5 pl-[18px]">
                     <span className="text-[11px] text-text-muted">{getTimeAgo(new Date(n.created_at))}</span>
-                    {postLink && (
-                      <Link href={postLink} className="text-[11px] text-accent font-medium press">
-                        View post
-                      </Link>
-                    )}
                   </div>
                 </div>
                 {/* Action buttons for friend requests */}
