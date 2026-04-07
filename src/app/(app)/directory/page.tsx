@@ -51,6 +51,15 @@ export default function DirectoryPage() {
       const { data: blocks } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id)
       const blocked = blocks ? blocks.map(b => b.blocked_id) : []
 
+      const { data: friendships } = await supabase
+        .from('friendships')
+        .select('requester_id, addressee_id')
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+        .eq('status', 'accepted')
+      const friendSet = new Set((friendships || []).map(f =>
+        f.requester_id === user.id ? f.addressee_id : f.requester_id
+      ))
+
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
@@ -58,7 +67,10 @@ export default function DirectoryPage() {
 
       if (profiles) {
         const filtered = (profiles as Profile[]).filter(p => !blocked.includes(p.id))
-        setAllUsers(filtered)
+        // Friends first, then sorted by last_seen (already sorted from DB)
+        const friends = filtered.filter(p => friendSet.has(p.id))
+        const others = filtered.filter(p => !friendSet.has(p.id))
+        setAllUsers([...friends, ...others])
       }
       setLoading(false)
     }
