@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Image, X } from 'lucide-react'
 
 export default function CreateGroupPage() {
   const supabase = createClient()
@@ -12,6 +12,19 @@ export default function CreateGroupPage() {
   const [description, setDescription] = useState('')
   const [groupType, setGroupType] = useState('open')
   const [loading, setLoading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
+    const ext = (file.name.split('.').pop() || '').toLowerCase()
+    if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -21,6 +34,17 @@ export default function CreateGroupPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    let image_url: string | null = null
+    if (imageFile) {
+      const ext = (imageFile.name.split('.').pop() || '').toLowerCase()
+      const path = `${user.id}/group-${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('posts').upload(path, imageFile)
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
+        image_url = publicUrl
+      }
+    }
+
     const { data: group, error } = await supabase
       .from('groups')
       .insert({
@@ -28,6 +52,7 @@ export default function CreateGroupPage() {
         description: description.trim(),
         group_type: groupType,
         created_by: user.id,
+        image_url,
       })
       .select()
       .single()
@@ -52,6 +77,33 @@ export default function CreateGroupPage() {
       <h1 className="text-[24px] font-bold tracking-tight mb-6">Create a Group</h1>
 
       <form onSubmit={handleCreate} className="space-y-4">
+        {/* Group Photo */}
+        <div>
+          <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Group Photo</label>
+          {imagePreview ? (
+            <div className="relative rounded-2xl overflow-hidden">
+              <img src={imagePreview} alt="" className="w-full h-48 object-cover" />
+              <button
+                type="button"
+                onClick={() => { setImageFile(null); setImagePreview(null); if (fileRef.current) fileRef.current.value = '' }}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 press"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full h-36 bg-bg-card border border-border border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 press hover:bg-bg-card-hover transition-colors"
+            >
+              <Image size={24} className="text-text-muted" />
+              <span className="text-[13px] text-text-muted">Add a cover photo</span>
+            </button>
+          )}
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+        </div>
+
         <div>
           <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Group Name</label>
           <input

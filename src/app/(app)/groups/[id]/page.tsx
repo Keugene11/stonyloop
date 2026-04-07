@@ -213,9 +213,9 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
           {/* Group image */}
           <div className="relative rounded-2xl overflow-hidden mb-4 bg-bg-card border border-border">
             {group.image_url ? (
-              <img src={group.image_url} alt={group.name} className="w-full h-40 object-cover" />
+              <img src={group.image_url} alt={group.name} className="w-full h-56 object-cover" />
             ) : (
-              <div className="w-full h-40 bg-bg-input flex items-center justify-center">
+              <div className="w-full h-56 bg-bg-input flex items-center justify-center">
                 <Users size={36} className="text-text-muted/30" />
               </div>
             )}
