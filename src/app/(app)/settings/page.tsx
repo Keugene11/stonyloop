@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Lock, Trash2, Loader2, Mail, Info, Bell } from 'lucide-react'
+import { ArrowLeft, Lock, Trash2, Loader2, Mail, Info, Bell, Moon, Sun } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 
 export default function SettingsPage() {
   const supabase = createClient()
   const router = useRouter()
+  const { dark, toggle } = useTheme()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmText, setConfirmText] = useState('')
@@ -37,6 +39,16 @@ export default function SettingsPage() {
       <h1 className="text-[22px] font-bold tracking-tight mb-5">Settings</h1>
 
       <div className="bg-bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border mb-6">
+        <button onClick={toggle} className="press flex items-center gap-3 px-4 py-3.5 w-full text-left">
+          {dark ? <Sun size={16} className="text-text-muted" /> : <Moon size={16} className="text-text-muted" />}
+          <div className="flex-1">
+            <p className="text-[14px] font-medium">{dark ? 'Light Mode' : 'Dark Mode'}</p>
+            <p className="text-[12px] text-text-muted">Switch to {dark ? 'light' : 'dark'} theme</p>
+          </div>
+          <div className={`w-10 h-6 rounded-full transition-colors ${dark ? 'bg-accent' : 'bg-bg-input'} relative`}>
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${dark ? 'left-5' : 'left-1'}`} />
+          </div>
+        </button>
         <Link href="/settings/privacy" className="press flex items-center gap-3 px-4 py-3.5">
           <Lock size={16} className="text-text-muted" />
           <div className="flex-1">

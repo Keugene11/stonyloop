@@ -17,6 +17,17 @@
   --color-nav: #1a1a1a;
 }
 
+.dark {
+  --color-bg: #0a0a0a;
+  --color-bg-card: #161616;
+  --color-bg-card-hover: #1e1e1e;
+  --color-bg-input: #222222;
+  --color-text: #e8e8e8;
+  --color-text-muted: #777777;
+  --color-border: #2a2a2a;
+  --color-nav: #0a0a0a;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
@@ -62,8 +73,8 @@ select {
 }
 
 select option {
-  background: white;
-  color: #1a1a1a;
+  background: var(--color-bg-card);
+  color: var(--color-text);
   padding: 8px;
 }
 
