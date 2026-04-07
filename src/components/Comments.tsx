@@ -117,13 +117,20 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
       })
     }
 
-    // Notify friends
+    // Notify friends (exclude people who already got a direct notification)
+    const exclude: string[] = []
+    if (parentId) {
+      const parent = comments.find(c => c.id === parentId) || comments.flatMap(c => c.replies || []).find(c => c.id === parentId)
+      if (parent && parent.author_id !== userId) exclude.push(parent.author_id)
+    } else if (postAuthorId && postAuthorId !== userId) {
+      exclude.push(postAuthorId)
+    }
     notifyFriends(supabase, userId, 'friend_comment', {
       post_type: postType,
       post_id: postId,
       comment_id: newComment?.id,
       content: text.slice(0, 100),
-    })
+    }, exclude)
 
     if (parentId) {
       setReplyInput('')

@@ -4,7 +4,8 @@ export async function notifyFriends(
   supabase: SupabaseClient,
   actorId: string,
   type: string,
-  extra?: { post_type?: string; post_id?: string; comment_id?: string; content?: string }
+  extra?: { post_type?: string; post_id?: string; comment_id?: string; content?: string },
+  exclude?: string[]
 ) {
   // Get all accepted friends
   const { data: friendships } = await supabase
@@ -15,9 +16,12 @@ export async function notifyFriends(
 
   if (!friendships || friendships.length === 0) return
 
-  const friendIds = friendships.map(f =>
-    f.requester_id === actorId ? f.addressee_id : f.requester_id
-  )
+  const excludeSet = new Set(exclude || [])
+  const friendIds = friendships
+    .map(f => f.requester_id === actorId ? f.addressee_id : f.requester_id)
+    .filter(id => !excludeSet.has(id))
+
+  if (friendIds.length === 0) return
 
   // Batch insert notifications for all friends
   const notifications = friendIds.map(friendId => ({

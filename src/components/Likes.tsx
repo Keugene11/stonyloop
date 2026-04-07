@@ -59,8 +59,9 @@ export default function Likes({ postType, postId, userId, authorId }: LikesProps
           post_id: postId,
         })
       }
-      // Notify friends
-      notifyFriends(supabase, userId, 'friend_like', { post_type: postType, post_id: postId })
+      // Notify friends (exclude post author who already got a direct 'like' notification)
+      notifyFriends(supabase, userId, 'friend_like', { post_type: postType, post_id: postId },
+        authorId !== userId ? [authorId] : [])
     }
   }
 
