@@ -10,15 +10,17 @@ export async function DELETE() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  // Delete user data from all tables
+  // Delete user data from all tables (order matters for FK constraints)
   const userId = user.id
   await supabase.from('reports').delete().or(`reporter_id.eq.${userId},reported_id.eq.${userId}`)
   await supabase.from('blocks').delete().or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`)
   await supabase.from('notifications').delete().or(`user_id.eq.${userId},actor_id.eq.${userId}`)
+  await supabase.from('comment_likes').delete().eq('user_id', userId)
   await supabase.from('post_likes').delete().eq('user_id', userId)
   await supabase.from('profile_views').delete().or(`profile_id.eq.${userId},viewer_id.eq.${userId}`)
   await supabase.from('comments').delete().eq('author_id', userId)
   await supabase.from('wall_posts').delete().or(`author_id.eq.${userId},wall_owner_id.eq.${userId}`)
+  await supabase.from('message_likes').delete().eq('user_id', userId)
   await supabase.from('messages').delete().eq('sender_id', userId)
   await supabase.from('conversations').delete().or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
   await supabase.from('pokes').delete().or(`poker_id.eq.${userId},poked_id.eq.${userId}`)
