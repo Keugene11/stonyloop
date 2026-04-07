@@ -210,7 +210,9 @@ export default function NotificationsPage() {
                     {getNotifIcon(n.type)}
                     <span className="text-[13px]">
                       <Link href={`/profile/${n.actor_id}`} className="font-semibold hover:underline">{n.actor?.full_name}</Link>
-                      <span className="text-text-muted"> {getNotifText(n.type)}</span>
+                      {!(n.type === 'message' && n.content) && (
+                        <span className="text-text-muted"> {getNotifText(n.type)}</span>
+                      )}
                     </span>
                   </div>
                   {n.comment?.content && (n.type === 'comment' || n.type === 'reply') && (
@@ -218,9 +220,9 @@ export default function NotificationsPage() {
                       &ldquo;{n.comment.content}&rdquo;
                     </p>
                   )}
-                  {n.content && n.type === 'message' && (
-                    <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
-                      &ldquo;{n.content}&rdquo;
+                  {n.type === 'message' && n.content && (
+                    <p className="text-[13px] mt-1 pl-[18px] line-clamp-2">
+                      {n.content}
                     </p>
                   )}
                   <div className="flex items-center gap-2 mt-0.5 pl-[18px]">
