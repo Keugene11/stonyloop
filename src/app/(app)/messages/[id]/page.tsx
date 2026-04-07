@@ -128,7 +128,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-56px)]">
       {/* Header */}
-      <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3">
+      <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3 sticky top-0 z-10 flex-shrink-0">
         <Link href="/messages" className="press">
           <ArrowLeft size={20} />
         </Link>
