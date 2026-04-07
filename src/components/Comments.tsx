@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Send, Trash2, Pencil, Check, X } from 'lucide-react'
+import { Send, Trash2, Pencil, Check, X, Heart } from 'lucide-react'
 import type { Comment } from '@/types'
 
 interface CommentsProps {
@@ -20,6 +20,8 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   const [replyTo, setReplyTo] = useState<string | null>(null)
   const [replyInput, setReplyInput] = useState('')
   const [userId, setUserId] = useState('')
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -38,10 +40,11 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
       .order('created_at', { ascending: true })
 
     if (data) {
+      const allComments = data as Comment[]
       const topLevel: Comment[] = []
       const replyMap: Record<string, Comment[]> = {}
 
-      for (const c of data as Comment[]) {
+      for (const c of allComments) {
         if (c.parent_id) {
           if (!replyMap[c.parent_id]) replyMap[c.parent_id] = []
           replyMap[c.parent_id].push(c)
@@ -55,6 +58,26 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
       }
 
       setComments(topLevel)
+
+      // Load likes for all comments
+      const commentIds = allComments.map(c => c.id)
+      if (commentIds.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        const { data: likes } = await supabase
+          .from('comment_likes')
+          .select('comment_id, user_id')
+          .in('comment_id', commentIds)
+        if (likes) {
+          const myLikes = new Set<string>()
+          const counts: Record<string, number> = {}
+          likes.forEach(l => {
+            counts[l.comment_id] = (counts[l.comment_id] || 0) + 1
+            if (user && l.user_id === user.id) myLikes.add(l.comment_id)
+          })
+          setLikedComments(myLikes)
+          setLikeCounts(counts)
+        }
+      }
     }
   }
 
@@ -114,6 +137,23 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     loadComments()
   }
 
+  async function toggleLikeComment(commentId: string) {
+    if (likedComments.has(commentId)) {
+      await supabase.from('comment_likes').delete()
+        .eq('comment_id', commentId)
+        .eq('user_id', userId)
+      setLikedComments(prev => { const s = new Set(prev); s.delete(commentId); return s })
+      setLikeCounts(prev => ({ ...prev, [commentId]: (prev[commentId] || 1) - 1 }))
+    } else {
+      await supabase.from('comment_likes').insert({
+        comment_id: commentId,
+        user_id: userId,
+      })
+      setLikedComments(prev => new Set([...prev, commentId]))
+      setLikeCounts(prev => ({ ...prev, [commentId]: (prev[commentId] || 0) + 1 }))
+    }
+  }
+
   const totalCount = comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)
 
   return (
@@ -128,12 +168,24 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 onDelete={handleDelete}
                 onEdit={handleEdit}
                 onReply={() => { setReplyTo(replyTo === c.id ? null : c.id); setReplyInput('') }}
+                liked={likedComments.has(c.id)}
+                likeCount={likeCounts[c.id] || 0}
+                onToggleLike={() => toggleLikeComment(c.id)}
               />
 
               {c.replies && c.replies.length > 0 && (
                 <div className="ml-6 space-y-1.5 mt-1.5">
                   {c.replies.map(r => (
-                    <CommentItem key={r.id} comment={r} userId={userId} onDelete={handleDelete} onEdit={handleEdit} />
+                    <CommentItem
+                      key={r.id}
+                      comment={r}
+                      userId={userId}
+                      onDelete={handleDelete}
+                      onEdit={handleEdit}
+                      liked={likedComments.has(r.id)}
+                      likeCount={likeCounts[r.id] || 0}
+                      onToggleLike={() => toggleLikeComment(r.id)}
+                    />
                   ))}
                 </div>
               )}
@@ -188,12 +240,15 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   )
 }
 
-function CommentItem({ comment, userId, onDelete, onEdit, onReply }: {
+function CommentItem({ comment, userId, onDelete, onEdit, onReply, liked, likeCount, onToggleLike }: {
   comment: Comment
   userId: string
   onDelete: (id: string) => void
   onEdit: (id: string, content: string) => void
   onReply?: () => void
+  liked: boolean
+  likeCount: number
+  onToggleLike: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(comment.content)
@@ -248,6 +303,10 @@ function CommentItem({ comment, userId, onDelete, onEdit, onReply }: {
             </div>
             <div className="flex items-center gap-3 mt-0.5 px-1">
               <span className="text-[10px] text-text-muted">{getTimeAgo(new Date(comment.created_at))}</span>
+              <button onClick={onToggleLike} className="flex items-center gap-0.5 press">
+                <Heart size={10} className={liked ? 'fill-red-500 text-red-500' : 'text-text-muted hover:text-red-400'} />
+                {likeCount > 0 && <span className={`text-[10px] ${liked ? 'text-red-500' : 'text-text-muted'}`}>{likeCount}</span>}
+              </button>
               {onReply && (
                 <button onClick={onReply} className="text-[10px] text-text-muted hover:text-text font-medium press">Reply</button>
               )}

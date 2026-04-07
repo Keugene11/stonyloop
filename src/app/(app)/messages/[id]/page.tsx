@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, ArrowLeft, Send } from 'lucide-react'
+import { Loader2, ArrowLeft, Send, Heart, Check, CheckCheck } from 'lucide-react'
 import Link from 'next/link'
 import type { Message, Profile } from '@/types'
 
@@ -16,6 +16,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [amUser1, setAmUser1] = useState(false)
+  const [otherReadAt, setOtherReadAt] = useState<string | null>(null)
+  const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set())
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       const isUser1 = conv.user1_id === user.id
       setAmUser1(isUser1)
       setOtherUser((isUser1 ? conv.user2 : conv.user1) as Profile)
+      setOtherReadAt(isUser1 ? conv.user2_read_at : conv.user1_read_at)
 
       // Mark conversation as read
       await supabase.from('conversations').update(
@@ -55,7 +59,27 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true })
 
-    if (msgs) setMessages(msgs as Message[])
+    if (msgs) {
+      setMessages(msgs as Message[])
+      // Load likes for all messages
+      const msgIds = msgs.map(m => m.id)
+      if (msgIds.length > 0) {
+        const { data: likes } = await supabase
+          .from('message_likes')
+          .select('message_id, user_id')
+          .in('message_id', msgIds)
+        if (likes) {
+          const myLikes = new Set<string>()
+          const counts: Record<string, number> = {}
+          likes.forEach(l => {
+            counts[l.message_id] = (counts[l.message_id] || 0) + 1
+            if (l.user_id === user.id) myLikes.add(l.message_id)
+          })
+          setLikedMessages(myLikes)
+          setLikeCounts(counts)
+        }
+      }
+    }
     setLoading(false)
 
     // Realtime
@@ -121,6 +145,29 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setSending(false)
   }
 
+  async function toggleLikeMessage(messageId: string) {
+    if (likedMessages.has(messageId)) {
+      await supabase.from('message_likes').delete()
+        .eq('message_id', messageId)
+        .eq('user_id', currentUserId)
+      setLikedMessages(prev => { const s = new Set(prev); s.delete(messageId); return s })
+      setLikeCounts(prev => ({ ...prev, [messageId]: (prev[messageId] || 1) - 1 }))
+    } else {
+      await supabase.from('message_likes').insert({
+        message_id: messageId,
+        user_id: currentUserId,
+      })
+      setLikedMessages(prev => new Set([...prev, messageId]))
+      setLikeCounts(prev => ({ ...prev, [messageId]: (prev[messageId] || 0) + 1 }))
+    }
+  }
+
+  function getDeliveryStatus(msg: Message): 'sent' | 'delivered' {
+    if (msg.sender_id !== currentUserId) return 'sent'
+    if (otherReadAt && new Date(otherReadAt) >= new Date(msg.created_at)) return 'delivered'
+    return 'sent'
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -158,27 +205,57 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           {messages.length === 0 && (
             <p className="text-center text-text-muted text-[13px] py-8">No messages yet. Say hi!</p>
           )}
-          {messages.map(msg => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-            >
+          {messages.map(msg => {
+            const isMine = msg.sender_id === currentUserId
+            const status = isMine ? getDeliveryStatus(msg) : null
+            const msgLikeCount = likeCounts[msg.id] || 0
+            const iLiked = likedMessages.has(msg.id)
+
+            return (
               <div
-                className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-[14px] ${
-                  msg.sender_id === currentUserId
-                    ? 'bg-accent text-white rounded-br-sm'
-                    : 'bg-bg-card border border-border rounded-bl-sm'
-                }`}
+                key={msg.id}
+                className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
               >
-                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                <p className={`text-[10px] mt-0.5 ${
-                  msg.sender_id === currentUserId ? 'text-white/60' : 'text-text-muted'
-                }`}>
-                  {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                </p>
+                <div className="max-w-[75%]">
+                  <div
+                    className={`relative rounded-2xl px-3.5 py-2 text-[14px] ${
+                      isMine
+                        ? 'bg-accent text-white rounded-br-sm'
+                        : 'bg-bg-card border border-border rounded-bl-sm'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                    <div className={`flex items-center gap-1 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
+                      <span className={`text-[10px] ${isMine ? 'text-white/60' : 'text-text-muted'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      </span>
+                      {status && (
+                        status === 'delivered'
+                          ? <CheckCheck size={12} className="text-white/60" />
+                          : <Check size={12} className="text-white/60" />
+                      )}
+                    </div>
+                    {/* Like bubble */}
+                    {msgLikeCount > 0 && (
+                      <div className={`absolute -bottom-2.5 ${isMine ? 'left-1' : 'right-1'} bg-bg-card border border-border rounded-full px-1.5 py-0.5 flex items-center gap-0.5`}>
+                        <Heart size={10} className="text-red-500 fill-red-500" />
+                        {msgLikeCount > 1 && <span className="text-[9px] text-text-muted">{msgLikeCount}</span>}
+                      </div>
+                    )}
+                  </div>
+                  {/* Like button */}
+                  <div className={`flex ${isMine ? 'justify-start' : 'justify-end'} mt-0.5`}>
+                    <button
+                      onClick={() => toggleLikeMessage(msg.id)}
+                      className="press p-0.5"
+                    >
+                      <Heart size={11} className={iLiked ? 'fill-red-500 text-red-500' : 'text-text-muted/40 hover:text-text-muted'} />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           <div ref={bottomRef} />
         </div>
 
