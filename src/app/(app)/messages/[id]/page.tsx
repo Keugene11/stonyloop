@@ -19,11 +19,23 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [otherReadAt, setOtherReadAt] = useState<string | null>(null)
   const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
+  const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const initialScrollDone = useRef(false)
 
+  function scrollToBottom(instant: boolean) {
+    const el = scrollRef.current
+    if (!el) return
+    if (instant) {
+      el.scrollTop = el.scrollHeight
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    }
+  }
+
   useEffect(() => {
+    initialScrollDone.current = false
     loadChat()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId])
@@ -31,14 +43,23 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   // Scroll when messages change
   useEffect(() => {
     if (messages.length === 0) return
-    const instant = !initialScrollDone.current
-    // Use requestAnimationFrame to ensure DOM has rendered
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        bottomRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' })
-        initialScrollDone.current = true
-      })
-    })
+    if (!initialScrollDone.current) {
+      // For initial load, keep retrying until scroll is at bottom
+      const tryScroll = () => {
+        const el = scrollRef.current
+        if (!el) return
+        el.scrollTop = el.scrollHeight
+        // Verify it worked — if not, try again (images may still be loading)
+        if (el.scrollTop + el.clientHeight < el.scrollHeight - 10) {
+          requestAnimationFrame(tryScroll)
+        } else {
+          initialScrollDone.current = true
+        }
+      }
+      requestAnimationFrame(tryScroll)
+    } else {
+      scrollToBottom(false)
+    }
   }, [messages])
 
   // Realtime subscription — separate effect with proper cleanup
@@ -219,7 +240,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
           {messages.length === 0 && (
             <p className="text-center text-text-muted text-[13px] py-8">No messages yet. Say hi!</p>
           )}
