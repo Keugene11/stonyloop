@@ -66,7 +66,7 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/signup'))
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/directory'
+    url.pathname = '/feed'
     return NextResponse.redirect(url)
   }
 

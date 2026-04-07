@@ -32,7 +32,7 @@ export default function LoginPage() {
           setLoading(false)
           return
         }
-        window.location.href = data.redirectTo || '/directory'
+        window.location.href = data.redirectTo || '/feed'
       } catch {
         setError('Could not authenticate')
         setLoading(false)

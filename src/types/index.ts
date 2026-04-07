@@ -58,6 +58,7 @@ export interface WallPost {
   media_url: string | null
   created_at: string
   author?: Profile
+  wall_owner?: Profile
 }
 
 export interface Poke {
