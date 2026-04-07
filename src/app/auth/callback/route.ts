@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
-      const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+      const ALLOWED_EMAILS = (process.env.ALLOWED_EMAILS || '').split(',').filter(Boolean)
       if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
         // Clean up: delete the profile and auth user that were auto-created
         await supabase.from('profiles').delete().eq('id', user.id)

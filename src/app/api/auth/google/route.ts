@@ -5,7 +5,8 @@ import { NextResponse } from 'next/server'
 const GOOGLE_CLIENT_ID = '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.googleusercontent.com'
 
 export async function POST(request: Request) {
-  const { code, redirectTo } = await request.json()
+  const { code, redirectTo: rawRedirect } = await request.json()
+  const redirectTo = rawRedirect && typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/directory'
 
   // Exchange auth code for tokens with Google
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
   }
 
   const { data: { user } } = await supabase.auth.getUser()
-  const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+  const ALLOWED_EMAILS = (process.env.ALLOWED_EMAILS || '').split(',').filter(Boolean)
   if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
     // Clean up: delete the profile and auth user that were auto-created
     await supabase.from('profiles').delete().eq('id', user.id)

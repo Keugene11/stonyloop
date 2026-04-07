@@ -44,7 +44,9 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
 
     let media_url: string | null = null
     if (mediaFile) {
-      const ext = mediaFile.name.split('.').pop()
+      const ext = (mediaFile.name.split('.').pop() || '').toLowerCase()
+      const allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov']
+      if (!allowed.includes(ext)) { setLoading(false); return }
       const path = `${user.id}/${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('posts').upload(path, mediaFile)
       if (!error) {

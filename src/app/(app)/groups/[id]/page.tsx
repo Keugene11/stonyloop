@@ -108,7 +108,9 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     if (mediaFile) {
       const maxSize = mediaFile.type.startsWith('video/') ? 20 * 1024 * 1024 : 5 * 1024 * 1024
       if (mediaFile.size > maxSize) { alert(mediaFile.type.startsWith('video/') ? 'Video must be under 20 MB.' : 'Image must be under 5 MB.'); setPosting(false); return }
-      const ext = mediaFile.name.split('.').pop()
+      const ext = (mediaFile.name.split('.').pop() || '').toLowerCase()
+      const allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov']
+      if (!allowed.includes(ext)) { setPosting(false); return }
       const path = `${currentUserId}/${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('posts').upload(path, mediaFile)
       if (!error) {
