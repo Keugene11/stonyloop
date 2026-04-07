@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, use } from 'react'
+import { useState, useEffect, useRef, use, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, ArrowLeft, Send, Heart, Check, CheckCheck } from 'lucide-react'
 import Link from 'next/link'
@@ -20,15 +20,53 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const initialScrollDone = useRef(false)
+
+  // Scroll to bottom — instant on first load, smooth for new messages
+  const scrollToBottom = useCallback((instant?: boolean) => {
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' })
+    }, 50)
+  }, [])
 
   useEffect(() => {
     loadChat()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId])
 
+  // Scroll when messages change
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (messages.length === 0) return
+    if (!initialScrollDone.current) {
+      scrollToBottom(true)
+      initialScrollDone.current = true
+    } else {
+      scrollToBottom(false)
+    }
+  }, [messages, scrollToBottom])
+
+  // Realtime subscription — separate effect with proper cleanup
+  useEffect(() => {
+    const channel = supabase
+      .channel(`chat-${conversationId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      }, (payload) => {
+        const newMsg = payload.new as Message
+        setMessages(prev => {
+          if (prev.find(m => m.id === newMsg.id)) return prev
+          return [...prev, newMsg]
+        })
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId])
 
   async function loadChat() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -80,26 +118,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         }
       }
     }
+
     setLoading(false)
-
-    // Realtime
-    const channel = supabase
-      .channel(`chat-${conversationId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`,
-      }, (payload) => {
-        const newMsg = payload.new as Message
-        setMessages(prev => {
-          if (prev.find(m => m.id === newMsg.id)) return prev
-          return [...prev, newMsg]
-        })
-      })
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
+    // Focus input after load
+    setTimeout(() => inputRef.current?.focus(), 100)
   }
 
   async function handleSend(e: React.FormEvent) {
@@ -143,6 +165,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
 
     setSending(false)
+    inputRef.current?.focus()
   }
 
   async function toggleLikeMessage(messageId: string) {
@@ -201,7 +224,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
           {messages.length === 0 && (
             <p className="text-center text-text-muted text-[13px] py-8">No messages yet. Say hi!</p>
           )}
@@ -214,44 +237,39 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             return (
               <div
                 key={msg.id}
-                className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${msgLikeCount > 0 ? 'mb-3' : ''}`}
               >
-                <div className="max-w-[75%]">
-                  <div
-                    className={`relative rounded-2xl px-3.5 py-2 text-[14px] ${
-                      isMine
-                        ? 'bg-accent text-white rounded-br-sm'
-                        : 'bg-bg-card border border-border rounded-bl-sm'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                    <div className={`flex items-center gap-1 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
-                      <span className={`text-[10px] ${isMine ? 'text-white/60' : 'text-text-muted'}`}>
-                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                      </span>
-                      {status && (
-                        status === 'delivered'
-                          ? <CheckCheck size={12} className="text-white/60" />
-                          : <Check size={12} className="text-white/60" />
-                      )}
-                    </div>
-                    {/* Like bubble */}
-                    {msgLikeCount > 0 && (
-                      <div className={`absolute -bottom-2.5 ${isMine ? 'left-1' : 'right-1'} bg-bg-card border border-border rounded-full px-1.5 py-0.5 flex items-center gap-0.5`}>
-                        <Heart size={10} className="text-red-500 fill-red-500" />
-                        {msgLikeCount > 1 && <span className="text-[9px] text-text-muted">{msgLikeCount}</span>}
-                      </div>
+                <div
+                  className={`relative max-w-[75%] rounded-2xl px-3.5 py-2 text-[14px] ${
+                    isMine
+                      ? 'bg-accent text-white rounded-br-sm'
+                      : 'bg-bg-card border border-border rounded-bl-sm'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  <div className={`flex items-center gap-1.5 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
+                    <span className={`text-[10px] ${isMine ? 'text-white/60' : 'text-text-muted'}`}>
+                      {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                    {status && (
+                      status === 'delivered'
+                        ? <CheckCheck size={12} className="text-white/60" />
+                        : <Check size={12} className="text-white/60" />
                     )}
-                  </div>
-                  {/* Like button */}
-                  <div className={`flex ${isMine ? 'justify-start' : 'justify-end'} mt-0.5`}>
                     <button
                       onClick={() => toggleLikeMessage(msg.id)}
-                      className="press p-0.5"
+                      className="press"
                     >
-                      <Heart size={11} className={iLiked ? 'fill-red-500 text-red-500' : 'text-text-muted/40 hover:text-text-muted'} />
+                      <Heart size={10} className={iLiked ? 'fill-red-500 text-red-500' : isMine ? 'text-white/30 hover:text-white/60' : 'text-text-muted/30 hover:text-text-muted'} />
                     </button>
                   </div>
+                  {/* Like count bubble */}
+                  {msgLikeCount > 0 && (
+                    <div className={`absolute -bottom-2.5 ${isMine ? 'left-1' : 'right-1'} bg-bg-card border border-border rounded-full px-1.5 py-0.5 flex items-center gap-0.5`}>
+                      <Heart size={10} className="text-red-500 fill-red-500" />
+                      {msgLikeCount > 1 && <span className="text-[9px] text-text-muted">{msgLikeCount}</span>}
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -262,11 +280,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         {/* Input */}
         <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2 flex-shrink-0 bg-bg">
           <input
+            ref={inputRef}
             type="text"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Type a message..."
             className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
+            autoFocus
           />
           <button
             type="submit"
