@@ -80,6 +80,14 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       user_id: currentUserId,
       role: 'member',
     })
+    // Notify the group creator
+    if (group && group.created_by !== currentUserId) {
+      await supabase.from('notifications').insert({
+        user_id: group.created_by,
+        actor_id: currentUserId,
+        type: 'group_join',
+      })
+    }
     loadGroup()
   }
 

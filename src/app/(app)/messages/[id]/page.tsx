@@ -96,22 +96,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       last_message_at: new Date().toISOString(),
     }).eq('id', conversationId)
 
-    // Notify the other user (only if they don't already have an unseen message notif from us)
+    // Notify the other user
     if (otherUser) {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', otherUser.id)
-        .eq('actor_id', currentUserId)
-        .eq('type', 'message')
-        .eq('seen', false)
-      if (!count) {
-        await supabase.from('notifications').insert({
-          user_id: otherUser.id,
-          actor_id: currentUserId,
-          type: 'message',
-        })
-      }
+      await supabase.from('notifications').insert({
+        user_id: otherUser.id,
+        actor_id: currentUserId,
+        type: 'message',
+      })
     }
 
     setSending(false)
@@ -126,74 +117,76 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-56px)]">
-      {/* Header */}
-      <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3 sticky top-0 z-10 flex-shrink-0">
-        <Link href="/messages" className="press">
-          <ArrowLeft size={20} />
-        </Link>
-        {otherUser && (
-          <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-2.5 press">
-            <div className="w-8 h-8 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
-              {otherUser.avatar_url ? (
-                <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-text-muted">
-                  {otherUser.full_name?.charAt(0)?.toUpperCase() || '?'}
-                </div>
-              )}
-            </div>
-            <span className="text-[15px] font-semibold">{otherUser.full_name}</span>
+    <div className="fixed inset-x-0 top-0 bottom-14 z-10 bg-bg flex flex-col">
+      <div className="max-w-2xl mx-auto w-full flex flex-col flex-1 min-h-0">
+        {/* Header */}
+        <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3 flex-shrink-0">
+          <Link href="/messages" className="press">
+            <ArrowLeft size={20} />
           </Link>
-        )}
-      </div>
+          {otherUser && (
+            <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-2.5 press">
+              <div className="w-8 h-8 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
+                {otherUser.avatar_url ? (
+                  <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-text-muted">
+                    {otherUser.full_name?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </div>
+              <span className="text-[15px] font-semibold">{otherUser.full_name}</span>
+            </Link>
+          )}
+        </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-        {messages.length === 0 && (
-          <p className="text-center text-text-muted text-[13px] py-8">No messages yet. Say hi!</p>
-        )}
-        {messages.map(msg => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-          >
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          {messages.length === 0 && (
+            <p className="text-center text-text-muted text-[13px] py-8">No messages yet. Say hi!</p>
+          )}
+          {messages.map(msg => (
             <div
-              className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-[14px] ${
-                msg.sender_id === currentUserId
-                  ? 'bg-accent text-white rounded-br-sm'
-                  : 'bg-bg-card border border-border rounded-bl-sm'
-              }`}
+              key={msg.id}
+              className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
             >
-              <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-              <p className={`text-[10px] mt-0.5 ${
-                msg.sender_id === currentUserId ? 'text-white/60' : 'text-text-muted'
-              }`}>
-                {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-              </p>
+              <div
+                className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-[14px] ${
+                  msg.sender_id === currentUserId
+                    ? 'bg-accent text-white rounded-br-sm'
+                    : 'bg-bg-card border border-border rounded-bl-sm'
+                }`}
+              >
+                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                <p className={`text-[10px] mt-0.5 ${
+                  msg.sender_id === currentUserId ? 'text-white/60' : 'text-text-muted'
+                }`}>
+                  {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
 
-      {/* Input */}
-      <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2">
-        <input
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Type a message..."
-          className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
-        />
-        <button
-          type="submit"
-          disabled={!content.trim() || sending}
-          className="bg-accent text-white rounded-full p-2.5 press disabled:opacity-50 flex-shrink-0"
-        >
-          {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-        </button>
-      </form>
+        {/* Input */}
+        <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2 flex-shrink-0">
+          <input
+            type="text"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
+          />
+          <button
+            type="submit"
+            disabled={!content.trim() || sending}
+            className="bg-accent text-white rounded-full p-2.5 press disabled:opacity-50 flex-shrink-0"
+          >
+            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

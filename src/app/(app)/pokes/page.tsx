@@ -50,6 +50,13 @@ export default function PokesPage() {
       poked_id: pokerId,
     })
 
+    // Create a persistent notification for the other person
+    await supabase.from('notifications').insert({
+      user_id: pokerId,
+      actor_id: userId,
+      type: 'poke',
+    })
+
     setPokes(pokes.filter(p => p.id !== pokeId))
   }
 

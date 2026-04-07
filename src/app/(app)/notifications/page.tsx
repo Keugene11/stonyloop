@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle } from 'lucide-react'
+import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle, Users } from 'lucide-react'
 import Link from 'next/link'
-import type { Poke, Friendship, Profile } from '@/types'
+import type { Profile } from '@/types'
 
 interface Notification {
   id: string
@@ -23,11 +23,10 @@ interface Notification {
 
 export default function NotificationsPage() {
   const supabase = createClient()
-  const [pokes, setPokes] = useState<(Poke & { poker: Profile })[]>([])
-  const [requests, setRequests] = useState<(Friendship & { requester: Profile })[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
+  const [handledRequests, setHandledRequests] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadData()
@@ -39,30 +38,13 @@ export default function NotificationsPage() {
     if (!user) return
     setUserId(user.id)
 
-    const { data: pokeData } = await supabase
-      .from('pokes')
-      .select('*, poker:profiles!pokes_poker_id_fkey(*)')
-      .eq('poked_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (pokeData) setPokes(pokeData as (Poke & { poker: Profile })[])
-
-    const { data: pending } = await supabase
-      .from('friendships')
-      .select('*, requester:profiles!friendships_requester_id_fkey(*)')
-      .eq('addressee_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-
-    if (pending) setRequests(pending as (Friendship & { requester: Profile })[])
-
-    // Load like/comment/reply notifications with comment content
+    // Load ALL notifications — this is the single source of truth for the inbox
     const { data: notifData } = await supabase
       .from('notifications')
       .select('*, actor:profiles!notifications_actor_id_fkey(*), comment:comments(content)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(100)
 
     if (notifData) {
       const notifs = notifData as Notification[]
@@ -81,15 +63,30 @@ export default function NotificationsPage() {
           }
         })
       }
+
+      // Check which friend_request notifications still have a pending friendship
+      const friendReqNotifs = notifs.filter(n => n.type === 'friend_request')
+      if (friendReqNotifs.length > 0) {
+        const actorIds = [...new Set(friendReqNotifs.map(n => n.actor_id))]
+        const { data: friendships } = await supabase
+          .from('friendships')
+          .select('requester_id, status')
+          .eq('addressee_id', user.id)
+          .in('requester_id', actorIds)
+        const alreadyHandled = new Set<string>()
+        friendships?.forEach(f => {
+          if (f.status !== 'pending') alreadyHandled.add(f.requester_id)
+        })
+        // Also mark as handled if friendship no longer exists (declined)
+        const existingRequesters = new Set(friendships?.map(f => f.requester_id) || [])
+        actorIds.forEach(id => {
+          if (!existingRequesters.has(id)) alreadyHandled.add(id)
+        })
+        setHandledRequests(alreadyHandled)
+      }
+
       setNotifications(notifs)
     }
-
-    // Mark pokes as seen
-    await supabase
-      .from('pokes')
-      .update({ seen: true })
-      .eq('poked_id', user.id)
-      .eq('seen', false)
 
     // Mark notifications as seen
     await supabase
@@ -101,39 +98,49 @@ export default function NotificationsPage() {
     setLoading(false)
   }
 
-  async function pokeBack(pokerId: string, pokeId: string) {
-    await supabase.from('pokes').delete().eq('id', pokeId)
-    await supabase.from('pokes').insert({ poker_id: userId, poked_id: pokerId })
-    setPokes(pokes.filter(p => p.id !== pokeId))
-  }
-
-  async function dismissPoke(pokeId: string) {
-    await supabase.from('pokes').delete().eq('id', pokeId)
-    setPokes(pokes.filter(p => p.id !== pokeId))
-  }
-
-  async function acceptRequest(friendshipId: string) {
-    const request = requests.find(r => r.id === friendshipId)
+  async function acceptRequest(actorId: string) {
+    // Find the pending friendship and accept it
+    const { data: friendship } = await supabase
+      .from('friendships')
+      .select('id')
+      .eq('requester_id', actorId)
+      .eq('addressee_id', userId)
+      .eq('status', 'pending')
+      .maybeSingle()
+    if (!friendship) return
     await supabase.from('friendships')
       .update({ status: 'accepted', updated_at: new Date().toISOString() })
-      .eq('id', friendshipId)
-    // Notify the requester that their request was accepted
-    if (request) {
-      await supabase.from('notifications').insert({
-        user_id: request.requester_id,
-        actor_id: userId,
-        type: 'friend_accept',
-      })
-    }
-    setRequests(requests.filter(r => r.id !== friendshipId))
+      .eq('id', friendship.id)
+    // Notify the requester
+    await supabase.from('notifications').insert({
+      user_id: actorId,
+      actor_id: userId,
+      type: 'friend_accept',
+    })
+    setHandledRequests(prev => new Set([...prev, actorId]))
   }
 
-  async function declineRequest(friendshipId: string) {
-    await supabase.from('friendships').delete().eq('id', friendshipId)
-    setRequests(requests.filter(r => r.id !== friendshipId))
+  async function declineRequest(actorId: string) {
+    await supabase.from('friendships')
+      .delete()
+      .eq('requester_id', actorId)
+      .eq('addressee_id', userId)
+      .eq('status', 'pending')
+    setHandledRequests(prev => new Set([...prev, actorId]))
   }
 
-
+  async function pokeBack(actorId: string) {
+    // Clear any existing pokes between the two users, then create new one
+    await supabase.from('pokes').delete().eq('poker_id', userId).eq('poked_id', actorId)
+    await supabase.from('pokes').delete().eq('poker_id', actorId).eq('poked_id', userId)
+    await supabase.from('pokes').insert({ poker_id: userId, poked_id: actorId })
+    // Create a notification for the other person
+    await supabase.from('notifications').insert({
+      user_id: actorId,
+      actor_id: userId,
+      type: 'poke',
+    })
+  }
 
   if (loading) {
     return (
@@ -143,8 +150,6 @@ export default function NotificationsPage() {
     )
   }
 
-  const empty = pokes.length === 0 && requests.length === 0 && notifications.length === 0
-
   function getNotifIcon(type: string) {
     if (type === 'like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     if (type === 'comment') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
@@ -152,6 +157,8 @@ export default function NotificationsPage() {
     if (type === 'friend_request') return <UserPlus size={12} className="text-accent flex-shrink-0" />
     if (type === 'friend_accept') return <UserCheck size={12} className="text-green-500 flex-shrink-0" />
     if (type === 'message') return <MessageCircle size={12} className="text-accent flex-shrink-0" />
+    if (type === 'poke') return <Hand size={12} className="text-accent flex-shrink-0" />
+    if (type === 'group_join') return <Users size={12} className="text-accent flex-shrink-0" />
     return null
   }
 
@@ -162,6 +169,8 @@ export default function NotificationsPage() {
     if (type === 'friend_request') return 'sent you a friend request'
     if (type === 'friend_accept') return 'accepted your friend request'
     if (type === 'message') return 'sent you a message'
+    if (type === 'poke') return 'poked you'
+    if (type === 'group_join') return 'joined your group'
     return ''
   }
 
@@ -169,97 +178,17 @@ export default function NotificationsPage() {
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
       <h1 className="text-[24px] font-bold tracking-tight mb-4">Inbox</h1>
 
-      {empty ? (
+      {notifications.length === 0 ? (
         <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
           <p className="text-text-muted text-[14px]">Nothing new right now.</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {/* Friend Requests */}
-          {requests.map(r => (
-            <div key={r.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
-              <Link href={`/profile/${r.requester.id}`} className="press flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
-                  {r.requester.avatar_url ? (
-                    <img src={r.requester.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[14px] font-bold text-text-muted">
-                      {r.requester.full_name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                  )}
-                </div>
-              </Link>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <UserPlus size={12} className="text-accent flex-shrink-0" />
-                  <span className="text-[13px]">
-                    <Link href={`/profile/${r.requester.id}`} className="font-semibold hover:underline">{r.requester.full_name}</Link>
-                    <span className="text-text-muted"> sent you a friend request</span>
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={() => acceptRequest(r.id)}
-                  className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => declineRequest(r.id)}
-                  className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press"
-                >
-                  Decline
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {/* Pokes */}
-          {pokes.map(poke => (
-            <div key={poke.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
-              <Link href={`/profile/${poke.poker_id}`} className="press flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
-                  {poke.poker?.avatar_url ? (
-                    <img src={poke.poker.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[14px] font-bold text-text-muted">
-                      {poke.poker?.full_name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                  )}
-                </div>
-              </Link>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <Hand size={12} className="text-accent flex-shrink-0" />
-                  <span className="text-[13px]">
-                    <Link href={`/profile/${poke.poker_id}`} className="font-semibold hover:underline">{poke.poker?.full_name}</Link>
-                    <span className="text-text-muted"> poked you</span>
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={() => pokeBack(poke.poker_id, poke.id)}
-                  className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press flex items-center gap-1"
-                >
-                  <Hand size={12} /> Poke Back
-                </button>
-                <button
-                  onClick={() => dismissPoke(poke.id)}
-                  className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {/* Like / Comment / Reply notifications */}
           {notifications.map(n => {
             const postLink = n.post_type === 'wall_post' && n.wall_owner_id
               ? `/profile/${n.wall_owner_id}`
               : null
+            const showFriendActions = n.type === 'friend_request' && !handledRequests.has(n.actor_id)
 
             return (
               <div key={n.id} className={`bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 ${n.seen ? 'opacity-60' : ''}`}>
@@ -301,6 +230,32 @@ export default function NotificationsPage() {
                     )}
                   </div>
                 </div>
+                {/* Action buttons for friend requests */}
+                {showFriendActions && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => acceptRequest(n.actor_id)}
+                      className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => declineRequest(n.actor_id)}
+                      className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                )}
+                {/* Poke back button */}
+                {n.type === 'poke' && (
+                  <button
+                    onClick={() => pokeBack(n.actor_id)}
+                    className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press flex items-center gap-1 flex-shrink-0"
+                  >
+                    <Hand size={12} /> Poke Back
+                  </button>
+                )}
               </div>
             )
           })}

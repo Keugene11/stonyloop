@@ -24,25 +24,13 @@ export default function NavBar() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { count: pokeCount } = await supabase
-        .from('pokes')
-        .select('*', { count: 'exact', head: true })
-        .eq('poked_id', user.id)
-        .eq('seen', false)
-
-      const { count: requestCount } = await supabase
-        .from('friendships')
-        .select('*', { count: 'exact', head: true })
-        .eq('addressee_id', user.id)
-        .eq('status', 'pending')
-
       const { count: notifCount } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('seen', false)
 
-      setBadgeCount((pokeCount || 0) + (requestCount || 0) + (notifCount || 0))
+      setBadgeCount(notifCount || 0)
     }
     loadCount()
     const interval = setInterval(loadCount, 15000)

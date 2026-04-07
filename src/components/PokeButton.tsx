@@ -45,6 +45,13 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
       poked_id: targetUserId,
     })
 
+    // Create a persistent notification in the inbox
+    await supabase.from('notifications').insert({
+      user_id: targetUserId,
+      actor_id: currentUserId,
+      type: 'poke',
+    })
+
     setTheyPokedMe(false)
     setLoading(false)
     setJustPoked(true)
