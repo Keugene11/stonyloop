@@ -89,12 +89,13 @@ export default function NotificationsPage() {
       setNotifications(notifs)
     }
 
-    // Mark notifications as seen
-    await supabase
+    // Mark notifications as seen in the DB (but keep local state so they render at full opacity this visit)
+    supabase
       .from('notifications')
       .update({ seen: true })
       .eq('user_id', user.id)
       .eq('seen', false)
+      .then()
 
     setLoading(false)
   }
@@ -192,7 +193,7 @@ export default function NotificationsPage() {
             const showFriendActions = n.type === 'friend_request' && !handledRequests.has(n.actor_id)
 
             return (
-              <div key={n.id} className={`bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 ${n.seen ? 'opacity-60' : ''}`}>
+              <div key={n.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
                 <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
                     {n.actor?.avatar_url ? (
