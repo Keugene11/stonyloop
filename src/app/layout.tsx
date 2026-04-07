@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `try{const t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
       <body className="min-h-full"><Providers>{children}</Providers></body>
     </html>
