@@ -61,6 +61,11 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
   if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
+    // Clean up: delete the profile and auth user that were auto-created
+    await supabase.from('profiles').delete().eq('id', user.id)
+    const { createClient } = await import('@supabase/supabase-js')
+    const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    await admin.auth.admin.deleteUser(user.id)
     await supabase.auth.signOut()
     return NextResponse.json(
       { error: 'You must use a @stonybrook.edu email address' },
