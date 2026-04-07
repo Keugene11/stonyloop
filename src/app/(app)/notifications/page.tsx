@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
 
 interface Notification {
@@ -20,10 +21,12 @@ interface Notification {
   actor?: Profile
   comment?: { content: string } | null
   wall_owner_id?: string
+  conversation_id?: string
 }
 
 export default function NotificationsPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
@@ -63,6 +66,27 @@ export default function NotificationsPage() {
             n.wall_owner_id = ownerMap[n.post_id]
           }
         })
+      }
+
+      // Look up conversation IDs for message notifications
+      const msgActorIds = [...new Set(notifs.filter(n => n.type === 'message').map(n => n.actor_id))]
+      if (msgActorIds.length > 0) {
+        const { data: convos } = await supabase
+          .from('conversations')
+          .select('id, user1_id, user2_id')
+          .or(msgActorIds.map(aid =>
+            `and(user1_id.eq.${[user.id, aid].sort()[0]},user2_id.eq.${[user.id, aid].sort()[1]})`
+          ).join(','))
+        if (convos) {
+          const convoMap: Record<string, string> = {}
+          convos.forEach(c => {
+            const other = c.user1_id === user.id ? c.user2_id : c.user1_id
+            convoMap[other] = c.id
+          })
+          notifs.forEach(n => {
+            if (n.type === 'message') n.conversation_id = convoMap[n.actor_id]
+          })
+        }
       }
 
       // Check which friend_request notifications still have a pending friendship
@@ -192,8 +216,14 @@ export default function NotificationsPage() {
               : null
             const showFriendActions = n.type === 'friend_request' && !handledRequests.has(n.actor_id)
 
+            const isMessage = n.type === 'message' && n.conversation_id
+
             return (
-              <div key={n.id} className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+              <div
+                key={n.id}
+                className={`bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 ${isMessage ? 'cursor-pointer hover:bg-bg-card-hover transition-colors' : ''}`}
+                onClick={isMessage ? () => router.push(`/messages/${n.conversation_id}`) : undefined}
+              >
                 <Link href={`/profile/${n.actor_id}`} className="press flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden">
                     {n.actor?.avatar_url ? (
@@ -230,11 +260,6 @@ export default function NotificationsPage() {
                     {postLink && (
                       <Link href={postLink} className="text-[11px] text-accent font-medium press">
                         View post
-                      </Link>
-                    )}
-                    {n.type === 'message' && (
-                      <Link href="/messages" className="text-[11px] text-accent font-medium press">
-                        View messages
                       </Link>
                     )}
                   </div>
