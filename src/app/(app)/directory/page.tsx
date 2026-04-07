@@ -41,6 +41,7 @@ export default function DirectoryPage() {
   const supabase = createClient()
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [allUsers, setAllUsers] = useState<Profile[]>([])
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function DirectoryPage() {
       const friendSet = new Set((friendships || []).map(f =>
         f.requester_id === user.id ? f.addressee_id : f.requester_id
       ))
+      setFriendIds(friendSet)
 
       const { data: profiles } = await supabase
         .from('profiles')
@@ -106,11 +108,35 @@ export default function DirectoryPage() {
             <Loader2 className="animate-spin text-text-muted" size={24} />
           </div>
         ) : displayList.length > 0 ? (
-          <div className="space-y-2">
-            <p className="text-[12px] text-text-muted mb-2">{displayList.length} student{displayList.length !== 1 ? 's' : ''}</p>
-            {displayList.map(profile => (
-              <ProfileCard key={profile.id} profile={profile} />
-            ))}
+          <div className="space-y-4">
+            {(() => {
+              const friendList = displayList.filter(p => friendIds.has(p.id))
+              const otherList = displayList.filter(p => !friendIds.has(p.id))
+              return (
+                <>
+                  {friendList.length > 0 && (
+                    <div>
+                      <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wide mb-2">Friends · {friendList.length}</p>
+                      <div className="space-y-2">
+                        {friendList.map(profile => (
+                          <ProfileCard key={profile.id} profile={profile} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {otherList.length > 0 && (
+                    <div>
+                      <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wide mb-2">Everyone · {otherList.length}</p>
+                      <div className="space-y-2">
+                        {otherList.map(profile => (
+                          <ProfileCard key={profile.id} profile={profile} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </div>
         ) : (
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
