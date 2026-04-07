@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, use, useCallback } from 'react'
+import { useState, useEffect, useRef, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, ArrowLeft, Send, Heart, Check, CheckCheck } from 'lucide-react'
 import Link from 'next/link'
@@ -23,13 +23,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const inputRef = useRef<HTMLInputElement>(null)
   const initialScrollDone = useRef(false)
 
-  // Scroll to bottom — instant on first load, smooth for new messages
-  const scrollToBottom = useCallback((instant?: boolean) => {
-    setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' })
-    }, 50)
-  }, [])
-
   useEffect(() => {
     loadChat()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,13 +31,15 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   // Scroll when messages change
   useEffect(() => {
     if (messages.length === 0) return
-    if (!initialScrollDone.current) {
-      scrollToBottom(true)
-      initialScrollDone.current = true
-    } else {
-      scrollToBottom(false)
-    }
-  }, [messages, scrollToBottom])
+    const instant = !initialScrollDone.current
+    // Use requestAnimationFrame to ensure DOM has rendered
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' })
+        initialScrollDone.current = true
+      })
+    })
+  }, [messages])
 
   // Realtime subscription — separate effect with proper cleanup
   useEffect(() => {
