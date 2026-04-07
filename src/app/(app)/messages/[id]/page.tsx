@@ -15,6 +15,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [amUser1, setAmUser1] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -38,7 +39,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       .single()
 
     if (conv) {
-      setOtherUser((conv.user1_id === user.id ? conv.user2 : conv.user1) as Profile)
+      const isUser1 = conv.user1_id === user.id
+      setAmUser1(isUser1)
+      setOtherUser((isUser1 ? conv.user2 : conv.user1) as Profile)
+
+      // Mark conversation as read
+      await supabase.from('conversations').update(
+        isUser1 ? { user1_read_at: new Date().toISOString() } : { user2_read_at: new Date().toISOString() }
+      ).eq('id', conversationId)
     }
 
     const { data: msgs } = await supabase
@@ -85,23 +93,28 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }).select().single()
 
     if (!error && data) {
-      // Add directly if realtime hasn't already
       setMessages(prev => {
         if (prev.find(m => m.id === data.id)) return prev
         return [...prev, data as Message]
       })
     }
 
+    // Update conversation with last message info
+    const now = new Date().toISOString()
     await supabase.from('conversations').update({
-      last_message_at: new Date().toISOString(),
+      last_message_at: now,
+      last_message_content: text,
+      last_message_sender_id: currentUserId,
+      ...(amUser1 ? { user1_read_at: now } : { user2_read_at: now }),
     }).eq('id', conversationId)
 
-    // Notify the other user
+    // Create inbox notification with message content
     if (otherUser) {
       await supabase.from('notifications').insert({
         user_id: otherUser.id,
         actor_id: currentUserId,
         type: 'message',
+        content: text,
       })
     }
 
@@ -117,7 +130,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-14 z-10 bg-bg flex flex-col">
+    <div className="flex flex-col bg-bg" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: '56px', zIndex: 20 }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
         <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3 flex-shrink-0">
@@ -170,7 +183,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2 flex-shrink-0">
+        <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2 flex-shrink-0 bg-bg">
           <input
             type="text"
             value={content}

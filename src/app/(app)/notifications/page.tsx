@@ -14,6 +14,7 @@ interface Notification {
   post_type: string | null
   post_id: string | null
   comment_id: string | null
+  content: string | null
   seen: boolean
   created_at: string
   actor?: Profile
@@ -214,6 +215,11 @@ export default function NotificationsPage() {
                   {n.comment?.content && (n.type === 'comment' || n.type === 'reply') && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.comment.content}&rdquo;
+                    </p>
+                  )}
+                  {n.content && n.type === 'message' && (
+                    <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
+                      &ldquo;{n.content}&rdquo;
                     </p>
                   )}
                   <div className="flex items-center gap-2 mt-0.5 pl-[18px]">

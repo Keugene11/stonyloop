@@ -75,6 +75,10 @@ export interface Conversation {
   user1_id: string
   user2_id: string
   last_message_at: string
+  last_message_content: string | null
+  last_message_sender_id: string | null
+  user1_read_at: string | null
+  user2_read_at: string | null
   created_at: string
   user1?: Profile
   user2?: Profile
