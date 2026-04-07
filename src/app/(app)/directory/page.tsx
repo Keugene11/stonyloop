@@ -54,7 +54,7 @@ export default function DirectoryPage() {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
-        .order('full_name', { ascending: true })
+        .order('last_seen', { ascending: false, nullsFirst: false })
 
       if (profiles) {
         const filtered = (profiles as Profile[]).filter(p => !blocked.includes(p.id))
