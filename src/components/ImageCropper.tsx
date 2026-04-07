@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { X, ZoomIn, ZoomOut, Check } from 'lucide-react'
 
 interface ImageCropperProps {
@@ -14,103 +14,96 @@ export default function ImageCropper({ file, aspectRatio = 16 / 9, onSave, onCan
   const [imgSrc] = useState(() => URL.createObjectURL(file))
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
-  const [dragging, setDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [imgDims, setImgDims] = useState({ w: 0, h: 0 })
+  const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 })
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
 
-  const WIDTH = 320
+  const WIDTH = Math.min(320, typeof window !== 'undefined' ? window.innerWidth - 48 : 320)
   const HEIGHT = WIDTH / aspectRatio
 
   useEffect(() => {
-    const img = new Image()
-    img.onload = () => setImgDims({ w: img.naturalWidth, h: img.naturalHeight })
+    const img = new window.Image()
+    img.onload = () => setImgNatural({ w: img.naturalWidth, h: img.naturalHeight })
     img.src = imgSrc
+    return () => URL.revokeObjectURL(imgSrc)
   }, [imgSrc])
 
+  const baseScale = imgNatural.w > 0 ? Math.max(WIDTH / imgNatural.w, HEIGHT / imgNatural.h) : 1
+
   function handlePointerDown(e: React.PointerEvent) {
-    setDragging(true)
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y })
+    (e.target as HTMLElement).setPointerCapture(e.pointerId)
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: offset.x, origY: offset.y }
   }
 
   function handlePointerMove(e: React.PointerEvent) {
-    if (!dragging) return
-    setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+    if (!dragRef.current) return
+    const dx = e.clientX - dragRef.current.startX
+    const dy = e.clientY - dragRef.current.startY
+    setOffset({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy })
   }
 
   function handlePointerUp() {
-    setDragging(false)
+    dragRef.current = null
   }
 
-  const handleSave = useCallback(() => {
-    const canvas = canvasRef.current
+  function handleSave() {
     const img = imgRef.current
-    if (!canvas || !img) return
+    if (!img) return
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
+    const canvas = canvasRef.current!
+    const ctx = canvas.getContext('2d')!
     const outW = 800
     const outH = outW / aspectRatio
     canvas.width = outW
     canvas.height = outH
 
-    const scaleX = outW / WIDTH
-    const scaleY = outH / HEIGHT
-    const imgW = img.naturalWidth
-    const imgH = img.naturalHeight
-    const fitScale = Math.max(WIDTH / imgW, HEIGHT / imgH) * zoom
-
-    const drawW = imgW * fitScale * scaleX
-    const drawH = imgH * fitScale * scaleY
-    const drawX = (outW - drawW) / 2 + offset.x * scaleX
-    const drawY = (outH - drawH) / 2 + offset.y * scaleY
+    const s = outW / WIDTH
+    const totalScale = baseScale * zoom
+    const drawW = imgNatural.w * totalScale * s
+    const drawH = imgNatural.h * totalScale * s
+    const drawX = (outW - drawW) / 2 + offset.x * s
+    const drawY = (outH - drawH) / 2 + offset.y * s
 
     ctx.drawImage(img, drawX, drawY, drawW, drawH)
 
     canvas.toBlob((blob) => {
       if (blob) onSave(blob)
     }, 'image/jpeg', 0.9)
-  }, [zoom, offset, onSave, aspectRatio])
+  }
+
+  const dispW = imgNatural.w * baseScale * zoom
+  const dispH = imgNatural.h * baseScale * zoom
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
+    <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center px-6">
       <div className="text-center mb-4">
         <h2 className="text-white text-[16px] font-bold">Adjust your photo</h2>
         <p className="text-white/40 text-[12px]">Drag to reposition, zoom to fit</p>
       </div>
 
       <div
-        className="relative overflow-hidden border-2 border-white/20 rounded-2xl cursor-grab active:cursor-grabbing touch-none"
-        style={{ width: WIDTH, height: HEIGHT }}
+        className="relative overflow-hidden border-2 border-white/20 rounded-2xl cursor-grab active:cursor-grabbing"
+        style={{ width: WIDTH, height: HEIGHT, touchAction: 'none' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
       >
-        {imgDims.w > 0 && (() => {
-          const fitScale = Math.max(WIDTH / imgDims.w, HEIGHT / imgDims.h)
-          const dispW = imgDims.w * fitScale
-          const dispH = imgDims.h * fitScale
-          return (
-            <img
-              ref={imgRef}
-              src={imgSrc}
-              alt=""
-              className="absolute select-none pointer-events-none"
-              draggable={false}
-              style={{
-                width: dispW,
-                height: dispH,
-                left: (WIDTH - dispW) / 2,
-                top: (HEIGHT - dispH) / 2,
-                transformOrigin: 'center center',
-                transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-              }}
-            />
-          )
-        })()}
+        {imgNatural.w > 0 && (
+          <img
+            ref={imgRef}
+            src={imgSrc}
+            alt=""
+            draggable={false}
+            className="absolute select-none pointer-events-none"
+            style={{
+              width: dispW,
+              height: dispH,
+              left: (WIDTH - dispW) / 2 + offset.x,
+              top: (HEIGHT - dispH) / 2 + offset.y,
+            }}
+          />
+        )}
       </div>
 
       <div className="flex items-center gap-4 mt-5">
