@@ -9,6 +9,7 @@ import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
 import Likes from '@/components/Likes'
 import ImageCropper from '@/components/ImageCropper'
+import { notifyFriends } from '@/lib/notifyFriends'
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -131,6 +132,12 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       setPosts([data as (GroupPost & { author: Profile }), ...posts])
       setPostContent('')
       setMediaFile(null)
+      // Notify friends
+      notifyFriends(supabase, currentUserId, 'friend_post', {
+        post_type: 'group_post',
+        post_id: data.id,
+        content: postContent.trim().slice(0, 100) || undefined,
+      })
       setMediaPreview(null)
     }
     setPosting(false)

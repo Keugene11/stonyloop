@@ -185,6 +185,9 @@ export default function NotificationsPage() {
     if (type === 'message') return <MessageCircle size={12} className="text-accent flex-shrink-0" />
     if (type === 'poke') return <Hand size={12} className="text-accent flex-shrink-0" />
     if (type === 'group_join') return <Users size={12} className="text-accent flex-shrink-0" />
+    if (type === 'friend_post') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
+    if (type === 'friend_comment') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
+    if (type === 'friend_like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     return null
   }
 
@@ -197,6 +200,9 @@ export default function NotificationsPage() {
     if (type === 'message') return 'sent you a message'
     if (type === 'poke') return 'poked you'
     if (type === 'group_join') return 'joined your group'
+    if (type === 'friend_post') return 'made a post'
+    if (type === 'friend_comment') return 'commented on a post'
+    if (type === 'friend_like') return 'liked a post'
     return ''
   }
 
@@ -248,6 +254,11 @@ export default function NotificationsPage() {
                   {n.comment?.content && (n.type === 'comment' || n.type === 'reply') && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.comment.content}&rdquo;
+                    </p>
+                  )}
+                  {n.content && (n.type === 'friend_post' || n.type === 'friend_comment') && (
+                    <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
+                      &ldquo;{n.content}&rdquo;
                     </p>
                   )}
                   {n.type === 'message' && n.content && (

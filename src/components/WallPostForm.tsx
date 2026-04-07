@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, Image, X } from 'lucide-react'
 import type { WallPost } from '@/types'
+import { notifyFriends } from '@/lib/notifyFriends'
 
 interface WallPostFormProps {
   wallOwnerId: string
@@ -67,6 +68,12 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
       onPost(data as WallPost)
       setContent('')
       clearMedia()
+      // Notify friends that you posted
+      notifyFriends(supabase, user.id, 'friend_post', {
+        post_type: 'wall_post',
+        post_id: data.id,
+        content: content.trim().slice(0, 100) || undefined,
+      })
     }
     setLoading(false)
   }

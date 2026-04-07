@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Send, Trash2, Pencil, Check, X, Heart } from 'lucide-react'
 import type { Comment } from '@/types'
+import { notifyFriends } from '@/lib/notifyFriends'
 
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
@@ -115,6 +116,14 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
         comment_id: newComment?.id,
       })
     }
+
+    // Notify friends
+    notifyFriends(supabase, userId, 'friend_comment', {
+      post_type: postType,
+      post_id: postId,
+      comment_id: newComment?.id,
+      content: text.slice(0, 100),
+    })
 
     if (parentId) {
       setReplyInput('')

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Heart } from 'lucide-react'
+import { notifyFriends } from '@/lib/notifyFriends'
 
 interface LikesProps {
   postType: string
@@ -58,6 +59,8 @@ export default function Likes({ postType, postId, userId, authorId }: LikesProps
           post_id: postId,
         })
       }
+      // Notify friends
+      notifyFriends(supabase, userId, 'friend_like', { post_type: postType, post_id: postId })
     }
   }
 
