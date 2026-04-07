@@ -1,14 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useGoogleLogin } from '@react-oauth/google'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -17,31 +15,23 @@ export default function LoginPage() {
   }, [])
 
   const googleLogin = useGoogleLogin({
-    flow: 'implicit',
-    onSuccess: async (response) => {
+    flow: 'auth-code',
+    onSuccess: async (codeResponse) => {
       setLoading(true)
       setError('')
       try {
-        // Use the access token to get user info and sign in with Supabase
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: 'google',
-          token: response.access_token,
-          access_token: response.access_token,
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: codeResponse.code }),
         })
-        if (error) {
-          setError(error.message)
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.error || 'Could not authenticate')
           setLoading(false)
           return
         }
-        const { data: { user } } = await supabase.auth.getUser()
-        const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
-        if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
-          await supabase.auth.signOut()
-          setError('You must use a @stonybrook.edu email address')
-          setLoading(false)
-          return
-        }
-        window.location.href = '/directory'
+        window.location.href = data.redirectTo || '/directory'
       } catch {
         setError('Could not authenticate')
         setLoading(false)
@@ -49,6 +39,7 @@ export default function LoginPage() {
     },
     onError: () => {
       setError('Google sign-in failed')
+      setLoading(false)
     },
   })
 
