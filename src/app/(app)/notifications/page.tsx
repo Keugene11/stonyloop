@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle, Users } from 'lucide-react'
+import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle, Users, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
@@ -31,6 +31,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
   const [handledRequests, setHandledRequests] = useState<Set<string>>(new Set())
+  const [pokedBack, setPokedBack] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadData()
@@ -155,7 +156,8 @@ export default function NotificationsPage() {
     setHandledRequests(prev => new Set([...prev, actorId]))
   }
 
-  async function pokeBack(actorId: string) {
+  async function pokeBack(notifId: string, actorId: string) {
+    setPokedBack(prev => new Set([...prev, notifId]))
     // Clear any existing pokes between the two users, then create new one
     await supabase.from('pokes').delete().eq('poker_id', userId).eq('poked_id', actorId)
     await supabase.from('pokes').delete().eq('poker_id', actorId).eq('poked_id', userId)
@@ -294,12 +296,18 @@ export default function NotificationsPage() {
                 )}
                 {/* Poke back button */}
                 {n.type === 'poke' && (
-                  <button
-                    onClick={() => pokeBack(n.actor_id)}
-                    className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press flex items-center gap-1 flex-shrink-0"
-                  >
-                    <Hand size={12} /> Poke Back
-                  </button>
+                  pokedBack.has(n.id) ? (
+                    <span className="bg-accent/10 border border-accent/20 text-accent rounded-xl px-3 py-1.5 text-[12px] font-medium flex items-center gap-1 flex-shrink-0">
+                      <Check size={12} /> Poked!
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => pokeBack(n.id, n.actor_id)}
+                      className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press flex items-center gap-1 flex-shrink-0"
+                    >
+                      <Hand size={12} /> Poke Back
+                    </button>
+                  )
                 )}
               </div>
             )
