@@ -80,8 +80,11 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Continue with Google'}
         </button>
 
-        <p className="text-[12px] text-text-muted mt-4">
-          Sign in with your @stonybrook.edu email. <Link href="/about" className="text-accent press">Learn more</Link>
+        <p className="text-[14px] font-semibold text-text mt-5">
+          Sign in with your @stonybrook.edu email.
+        </p>
+        <p className="text-[12px] text-text-muted mt-1">
+          <Link href="/about" className="text-accent press">Learn more</Link>
         </p>
       </div>
     </div>
