@@ -48,10 +48,10 @@ export default function LoginPage() {
     <div className="max-w-lg mx-auto px-5 pt-10">
       <div className="animate-slide-up">
         <h1 className="text-[20px] font-extrabold tracking-tight text-text">
-          Sign In
+          [ Stonyloop ]
         </h1>
-        <p className="text-[13px] text-text-muted mt-1">
-          Use your @stonybrook.edu Google account to join Stonyloop.
+        <p className="text-[14px] text-text mt-4 leading-relaxed">
+          Find other people at Stony Brook University. See who&apos;s in your classes, who&apos;s in your major, and write posts on each other&apos;s walls.
         </p>
 
         {error && (
