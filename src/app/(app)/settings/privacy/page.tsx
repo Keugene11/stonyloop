@@ -22,6 +22,7 @@ interface FieldConfig {
 }
 
 const PRIVACY_FIELDS: FieldConfig[] = [
+  { field: 'email', label: 'Email', icon: Mail },
   { field: 'major', label: 'Major', icon: GraduationCap, type: 'select', options: SBU_MAJORS, searchable: true },
   { field: 'second_major', label: 'Second Major', icon: GraduationCap, type: 'select', options: SBU_MAJORS, searchable: true },
   { field: 'minor', label: 'Minor', icon: BookOpen, type: 'select', options: SBU_MINORS, searchable: true },
@@ -134,6 +135,9 @@ export default function PrivacySettingsPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-medium">{label}</p>
                   {!isEditing && (
+                    field === 'email' ? (
+                      <p className="text-[12px] text-text-muted truncate mt-0.5">{value}</p>
+                    ) : (
                     <button onClick={() => startEditing(field)} className="press flex items-center gap-1 mt-0.5">
                       {value ? (
                         <p className="text-[12px] text-text-muted truncate">{value}</p>
@@ -142,6 +146,7 @@ export default function PrivacySettingsPage() {
                       )}
                       <Pencil size={10} className="text-text-muted/40 flex-shrink-0" />
                     </button>
+                    )
                   )}
                 </div>
                 <button
