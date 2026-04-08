@@ -81,7 +81,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-[14px] font-semibold text-text mt-5">
-          Sign in with your @stonybrook.edu email.
+          You need a @stonybrook.edu email to sign in.
         </p>
         <p className="text-[12px] text-text-muted mt-1">
           <Link href="/about" className="text-accent press">Learn more</Link>
