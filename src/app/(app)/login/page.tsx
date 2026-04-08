@@ -45,17 +45,26 @@ export default function LoginPage() {
   })
 
   return (
-    <div className="max-w-lg mx-auto px-5 pt-10">
-      <div className="animate-slide-up">
-        <h1 className="text-[20px] font-extrabold tracking-tight text-text">
+    <div className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-5">
+      <div className="w-full max-w-sm animate-slide-up text-center">
+        <h1 className="text-[28px] font-extrabold tracking-tight text-text">
           [ Stonyloop ]
         </h1>
-        <p className="text-[14px] text-text mt-4 leading-relaxed">
-          Find other people at Stony Brook University. See who&apos;s in your classes, who&apos;s in your major, and write posts on each other&apos;s walls.
+        <p className="text-[13px] text-text-muted mt-1">
+          A social network for Stony Brook University.
         </p>
 
+        <div className="text-[14px] text-text mt-6 leading-relaxed text-left space-y-2">
+          <p>
+            Find other students at Stony Brook. See who&apos;s in your classes, who shares your major, and connect with people you&apos;d never run into otherwise.
+          </p>
+          <p>
+            Write posts on each other&apos;s walls, message your classmates, and build your network before you even step on campus.
+          </p>
+        </div>
+
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-[13px] mt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-[13px] mt-6 text-left">
             {error}
           </div>
         )}
