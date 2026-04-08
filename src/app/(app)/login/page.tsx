@@ -45,25 +45,17 @@ export default function LoginPage() {
   })
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 bg-bg">
-      <div className="w-full max-w-sm animate-slide-up">
-        <div className="text-center mb-8">
-          <h1 className="text-[24px] font-extrabold tracking-tight text-text">
-            [ Stonyloop ]
-          </h1>
-          <p className="text-[13px] text-text-muted mt-1">
-            The social network for Stony Brook University.
-          </p>
-          <p className="text-[18px] font-bold text-text mt-5 leading-snug">
-            Sign in with your @stonybrook.edu Google account.
-          </p>
-          <p className="text-[13px] text-text-muted mt-1">
-            Only Stony Brook students can join.
-          </p>
-        </div>
+    <div className="max-w-lg mx-auto px-5 pt-10">
+      <div className="animate-slide-up">
+        <h1 className="text-[20px] font-extrabold tracking-tight text-text">
+          Sign In
+        </h1>
+        <p className="text-[13px] text-text-muted mt-1">
+          Use your @stonybrook.edu Google account to join Stonyloop.
+        </p>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-[13px] mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-[13px] mt-4">
             {error}
           </div>
         )}
@@ -71,7 +63,7 @@ export default function LoginPage() {
         <button
           onClick={() => googleLogin()}
           disabled={loading}
-          className="w-full bg-bg-card border border-border py-3 rounded-2xl font-semibold press flex items-center justify-center gap-3 text-[14px] hover:bg-bg-card-hover transition-colors disabled:opacity-50"
+          className="w-full bg-bg-card border border-border py-3 rounded-2xl font-semibold press flex items-center justify-center gap-3 text-[14px] hover:bg-bg-card-hover transition-colors disabled:opacity-50 mt-6"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -82,8 +74,8 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Continue with Google'}
         </button>
 
-        <p className="text-center text-[12px] text-text-muted mt-5">
-          <Link href="/about" className="text-accent press">Learn more about Stonyloop</Link>
+        <p className="text-[12px] text-text-muted mt-4">
+          Only Stony Brook students can join. <Link href="/about" className="text-accent press">Learn more</Link>
         </p>
       </div>
     </div>
