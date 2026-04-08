@@ -35,6 +35,7 @@ export interface Profile {
   notif_likes: boolean
   notif_comments: boolean
   messages_from: string
+  wall_posts_from: string
   created_at: string
   updated_at: string
 }

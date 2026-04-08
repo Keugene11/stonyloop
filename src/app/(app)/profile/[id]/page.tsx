@@ -466,16 +466,26 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         <div className={`flex-1 min-w-0 ${activeTab === 'wall' ? 'block' : 'hidden'} md:block`}>
           <h2 className="text-[18px] font-bold mb-3 hidden md:block">The Wall</h2>
 
-        {(isFriend || currentUserId === id) ? (
-          <WallPostForm
-            wallOwnerId={id}
-            onPost={(post) => setWallPosts([post, ...wallPosts])}
-          />
-        ) : currentUserId && currentUserId !== id ? (
-          <div className="bg-bg-card border border-border rounded-2xl p-4 text-center mt-0 mb-3">
-            <p className="text-text-muted text-[13px]">Add {profile.full_name?.split(' ')[0]} as a friend to write on their wall.</p>
-          </div>
-        ) : null}
+        {currentUserId && !isBlocked && (() => {
+          const wallSetting = profile.wall_posts_from || 'everyone'
+          const canPost = currentUserId === id || wallSetting === 'everyone' || (wallSetting === 'friends' && isFriend)
+          if (canPost) {
+            return (
+              <WallPostForm
+                wallOwnerId={id}
+                onPost={(post) => setWallPosts([post, ...wallPosts])}
+              />
+            )
+          }
+          if (currentUserId !== id) {
+            return (
+              <div className="bg-bg-card border border-border rounded-2xl p-4 text-center mt-0 mb-3">
+                <p className="text-text-muted text-[13px]">Only friends can write on {profile.full_name?.split(' ')[0]}&apos;s wall.</p>
+              </div>
+            )
+          }
+          return null
+        })()}
 
         {wallPosts.length === 0 ? (
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center mt-3">
@@ -489,7 +499,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
                 post={post}
                 currentUserId={currentUserId}
                 wallOwnerId={id}
-                isFriend={isFriend}
+                isFriend={true}
                 onDelete={(postId) => setWallPosts(wallPosts.filter(p => p.id !== postId))}
               />
             ))}

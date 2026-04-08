@@ -6,7 +6,7 @@ const GOOGLE_CLIENT_ID = '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.goo
 
 export async function POST(request: Request) {
   const { code, redirectTo: rawRedirect } = await request.json()
-  const redirectTo = rawRedirect && typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/feed'
+  const redirectTo = rawRedirect && typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/directory'
 
   // Exchange auth code for tokens with Google
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -79,5 +79,5 @@ export async function POST(request: Request) {
     await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id)
   }
 
-  return NextResponse.json({ ok: true, redirectTo: redirectTo || '/feed' })
+  return NextResponse.json({ ok: true, redirectTo: redirectTo || '/directory' })
 }

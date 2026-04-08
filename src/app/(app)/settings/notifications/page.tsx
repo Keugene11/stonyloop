@@ -19,6 +19,11 @@ const MESSAGE_OPTIONS = [
   { value: 'nobody', label: 'Nobody' },
 ]
 
+const WALL_POST_OPTIONS = [
+  { value: 'everyone', label: 'Everyone' },
+  { value: 'friends', label: 'Friends only' },
+]
+
 export default function NotificationSettingsPage() {
   const supabase = createClient()
   const router = useRouter()
@@ -30,6 +35,7 @@ export default function NotificationSettingsPage() {
     notif_likes: true,
     notif_comments: true,
     messages_from: 'everyone',
+    wall_posts_from: 'everyone',
   })
 
   useEffect(() => {
@@ -38,7 +44,7 @@ export default function NotificationSettingsPage() {
       if (!user) return
       const { data } = await supabase
         .from('profiles')
-        .select('notif_friend_requests, notif_pokes, notif_wall_posts, notif_likes, notif_comments, messages_from')
+        .select('notif_friend_requests, notif_pokes, notif_wall_posts, notif_likes, notif_comments, messages_from, wall_posts_from')
         .eq('id', user.id)
         .single()
       if (data) {
@@ -49,6 +55,7 @@ export default function NotificationSettingsPage() {
           notif_likes: data.notif_likes ?? true,
           notif_comments: data.notif_comments ?? true,
           messages_from: data.messages_from || 'everyone',
+          wall_posts_from: data.wall_posts_from || 'everyone',
         })
       }
       setLoading(false)
@@ -97,6 +104,23 @@ export default function NotificationSettingsPage() {
               <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${settings[field] ? 'left-[22px]' : 'left-0.5'}`} />
             </button>
           </div>
+        ))}
+      </div>
+
+      {/* Wall post preferences */}
+      <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-2 px-1">Who can post on your wall</p>
+      <div className="bg-bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border mb-6">
+        {WALL_POST_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            onClick={() => updateSetting('wall_posts_from', value)}
+            className="press flex items-center justify-between px-4 py-3.5 w-full text-left"
+          >
+            <p className="text-[14px] font-medium">{label}</p>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${settings.wall_posts_from === value ? 'border-accent' : 'border-border'}`}>
+              {settings.wall_posts_from === value && <div className="w-2.5 h-2.5 rounded-full bg-accent" />}
+            </div>
+          </button>
         ))}
       </div>
 
