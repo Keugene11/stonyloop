@@ -424,6 +424,13 @@ export default function ProfilePage() {
 
           {/* Contact */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
+            <div className="flex items-center gap-2.5 py-2.5">
+              <Mail size={14} className="text-text-muted flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium">Email</p>
+                <p className="text-[14px] text-accent break-all">{profile.email}</p>
+              </div>
+            </div>
             <EditableRow icon={Phone} label="Phone" field="phone" value={profile.phone} type="tel" />
             <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
           </div>
