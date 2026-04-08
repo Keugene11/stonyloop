@@ -186,6 +186,10 @@ export default function ProfilePage() {
           <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
             <p className="text-[13px] font-semibold">Contact</p>
             <div>
+              <label className={labelClass}>Email</label>
+              <input type="email" value={profile.email} onChange={(e) => updateField('email', e.target.value)} className={inputClass} placeholder="Your email address" />
+            </div>
+            <div>
               <label className={labelClass}>Phone</label>
               <input type="tel" value={profile.phone} onChange={(e) => updateField('phone', e.target.value)} className={inputClass} placeholder="Phone number" />
             </div>
