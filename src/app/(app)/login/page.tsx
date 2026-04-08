@@ -54,14 +54,11 @@ export default function LoginPage() {
           A social network for Stony Brook University.
         </p>
 
-        <div className="text-[14px] text-text mt-6 leading-relaxed text-left space-y-2">
-          <p>
-            Find other students at Stony Brook. See who&apos;s in your classes, who shares your major, and connect with people you&apos;d never run into otherwise.
-          </p>
-          <p>
-            Write posts on each other&apos;s walls, message your classmates, and build your network before you even step on campus.
-          </p>
-        </div>
+        <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2">
+          <li>Find people in your classes and major</li>
+          <li>Write posts on each other&apos;s walls</li>
+          <li>Message your classmates</li>
+        </ul>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-[13px] mt-6 text-left">
@@ -84,7 +81,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-[12px] text-text-muted mt-4">
-          Only Stony Brook students can join. <Link href="/about" className="text-accent press">Learn more</Link>
+          Sign in with your @stonybrook.edu email. <Link href="/about" className="text-accent press">Learn more</Link>
         </p>
       </div>
     </div>
