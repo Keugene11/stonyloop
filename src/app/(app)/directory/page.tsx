@@ -75,7 +75,7 @@ export default function DirectoryPage() {
 
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, avatar_url, major, class_year, gender, residence_hall, courses, hometown, high_school, fraternity_sorority, clubs, relationship_status, interested_in, last_seen')
         .eq('university', myUniversity)
         .order('last_seen', { ascending: false, nullsFirst: false })
 

@@ -75,7 +75,16 @@ export default function ProfilePage() {
     setLoading(false)
   }
 
+  const SAFE_FIELDS = new Set([
+    'full_name', 'about_me', 'major', 'second_major', 'minor', 'residence_hall',
+    'hometown', 'high_school', 'birthday', 'class_year', 'gender',
+    'relationship_status', 'interested_in', 'looking_for', 'political_views',
+    'email', 'phone', 'websites', 'interests', 'favorite_music', 'favorite_movies',
+    'favorite_quotes', 'courses', 'clubs',
+  ])
+
   const updateField = useCallback((field: string, value: string | number | null) => {
+    if (!SAFE_FIELDS.has(field)) return
     setProfile(prev => prev ? { ...prev, [field]: value } : prev)
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {

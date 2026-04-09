@@ -96,6 +96,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       .single()
 
     if (conv) {
+      // Verify current user is a participant
+      if (conv.user1_id !== user.id && conv.user2_id !== user.id) return
       const isUser1 = conv.user1_id === user.id
       setAmUser1(isUser1)
       setOtherUser((isUser1 ? conv.user2 : conv.user1) as Profile)
