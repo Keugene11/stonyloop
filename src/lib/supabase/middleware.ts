@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isApprovedEmail } from '@/lib/universities'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -33,13 +34,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Enforce @stonybrook.edu email restriction (allow whitelisted emails)
+  // Enforce approved university email restriction (allow whitelisted emails)
   const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
-  if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
+  if (user && !isApprovedEmail(user.email || '') && !ALLOWED_EMAILS.includes(user.email || '')) {
     await supabase.auth.signOut()
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('error', 'You must use a @stonybrook.edu email address')
+    url.searchParams.set('error', 'You must use an approved university email address')
     return NextResponse.redirect(url)
   }
 

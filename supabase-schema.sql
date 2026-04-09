@@ -24,10 +24,13 @@ create table public.profiles (
   notif_wall_posts boolean default true,
   notif_likes boolean default true,
   notif_comments boolean default true,
+  university text default 'stonybrook',
   messages_from text default 'everyone',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+create index idx_profiles_university on profiles(university);
 
 -- Auto-create profile on signup
 create or replace function public.handle_new_user()

@@ -26,6 +26,7 @@ export interface Profile {
   birthday: string
   fraternity_sorority: string
   clubs: string
+  university: string
   onboarding_complete: boolean
   private_fields: string
   last_seen: string | null
@@ -102,6 +103,7 @@ export interface Group {
   description: string
   image_url: string | null
   group_type: 'open' | 'closed'
+  university: string
   created_by: string
   created_at: string
   creator?: Profile

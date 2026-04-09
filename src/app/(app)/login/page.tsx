@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useGoogleLogin } from '@react-oauth/google'
 import Link from 'next/link'
+import { LOGIN_DISPLAY_SCHOOLS } from '@/lib/universities'
 
 export default function LoginPage() {
   const [error, setError] = useState('')
@@ -51,7 +52,7 @@ export default function LoginPage() {
           [ Stonyloop ]
         </h1>
         <p className="text-[13px] text-text-muted mt-1">
-          A social network for Stony Brook University.
+          An exclusive social network for top universities.
         </p>
 
         <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2">
@@ -81,9 +82,12 @@ export default function LoginPage() {
         </button>
 
         <p className="text-[14px] font-semibold text-text mt-5">
-          You need a @stonybrook.edu email to sign in.
+          Sign in with your university email.
         </p>
-        <p className="text-[12px] text-text-muted mt-1">
+        <p className="text-[12px] text-text-muted mt-2 leading-relaxed">
+          {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(' · ')}
+        </p>
+        <p className="text-[12px] text-text-muted mt-2">
           <Link href="/about" className="text-accent press">Learn more</Link>
         </p>
       </div>

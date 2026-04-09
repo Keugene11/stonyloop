@@ -45,6 +45,9 @@ export default function CreateGroupPage() {
       }
     }
 
+    // Get user's university
+    const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
+
     const { data: group, error } = await supabase
       .from('groups')
       .insert({
@@ -53,6 +56,7 @@ export default function CreateGroupPage() {
         group_type: groupType,
         created_by: user.id,
         image_url,
+        university: myProfile?.university || 'stonybrook',
       })
       .select()
       .single()

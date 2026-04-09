@@ -15,6 +15,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'targetUserId required' }, { status: 400 })
   }
 
+  // Verify same university
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, university')
+    .in('id', [user.id, targetUserId])
+
+  if (profiles && profiles.length === 2) {
+    const myUni = profiles.find(p => p.id === user.id)?.university
+    const theirUni = profiles.find(p => p.id === targetUserId)?.university
+    if (myUni && theirUni && myUni !== theirUni) {
+      return NextResponse.json({ error: 'Cannot message users from other universities' }, { status: 403 })
+    }
+  }
+
   // Ensure consistent ordering for unique constraint
   const [user1, user2] = [user.id, targetUserId].sort()
 

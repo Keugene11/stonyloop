@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { isApprovedEmail, getUniversityByEmail } from '@/lib/universities'
 
 const GOOGLE_CLIENT_ID = '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.googleusercontent.com'
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
 
   const { data: { user } } = await supabase.auth.getUser()
   const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
-  if (user && !user.email?.endsWith('@stonybrook.edu') && !ALLOWED_EMAILS.includes(user.email || '')) {
+  if (user && !isApprovedEmail(user.email || '') && !ALLOWED_EMAILS.includes(user.email || '')) {
     // Clean up: delete the profile and auth user that were auto-created
     await supabase.from('profiles').delete().eq('id', user.id)
     const { createClient } = await import('@supabase/supabase-js')
@@ -69,14 +70,18 @@ export async function POST(request: Request) {
     await admin.auth.admin.deleteUser(user.id)
     await supabase.auth.signOut()
     return NextResponse.json(
-      { error: 'You must use a @stonybrook.edu email address' },
+      { error: 'You must use an approved university email address' },
       { status: 403 }
     )
   }
 
-  // Mark onboarding as complete
+  // Detect university from email and mark onboarding as complete
   if (user) {
-    await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id)
+    const university = getUniversityByEmail(user.email || '')
+    await supabase.from('profiles').update({
+      onboarding_complete: true,
+      university: university?.slug || 'stonybrook',
+    }).eq('id', user.id)
   }
 
   return NextResponse.json({ ok: true, redirectTo: redirectTo || '/directory' })

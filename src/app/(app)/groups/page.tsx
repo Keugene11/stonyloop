@@ -32,10 +32,15 @@ export default function GroupsPage() {
 
     const myGroupIds = (memberships || []).map(m => m.group_id)
 
-    // Get all groups
+    // Get current user's university
+    const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
+    const myUniversity = myProfile?.university || 'stonybrook'
+
+    // Get all groups for this university
     const { data: groups } = await supabase
       .from('groups')
       .select('*, creator:profiles!groups_created_by_fkey(*)')
+      .eq('university', myUniversity)
       .order('created_at', { ascending: false })
 
     if (groups) {

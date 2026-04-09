@@ -62,9 +62,14 @@ export default function DirectoryPage() {
       ))
       setFriendIds(friendSet)
 
+      // Get current user's university to filter directory
+      const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
+      const myUniversity = myProfile?.university || 'stonybrook'
+
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
+        .eq('university', myUniversity)
         .order('last_seen', { ascending: false, nullsFirst: false })
 
       if (profiles) {
