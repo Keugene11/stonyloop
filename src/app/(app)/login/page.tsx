@@ -80,7 +80,7 @@ export default function LoginPage() {
         <p className="text-[13px] text-text-muted mt-5 leading-relaxed">
           Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}.
         </p>
-        <p className="text-[13px] text-text-muted mt-1">
+        <p className="text-[18px] font-semibold text-text mt-3">
           Sign in with your university email address.
         </p>
         <p className="text-[12px] text-text-muted mt-2">
