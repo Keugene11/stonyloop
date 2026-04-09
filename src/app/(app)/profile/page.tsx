@@ -210,7 +210,7 @@ export default function ProfilePage() {
     }
 
     return (
-      <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none' }}>
+      <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
           <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">
@@ -225,7 +225,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className={`flex-1 px-4 py-6 ${type === 'select' ? 'overflow-y-auto touch-auto' : 'overflow-hidden'}`}>
+        <div className={`flex-1 min-h-0 px-4 py-6 ${type === 'select' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
           {type === 'select' && options ? (
             <div>
               <input
