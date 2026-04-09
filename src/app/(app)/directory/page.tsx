@@ -116,6 +116,7 @@ export default function DirectoryPage() {
         greekLife={uniData?.GREEK_LIFE}
         clubs={uniData?.CLUBS}
         residenceHalls={uniData?.RESIDENCE_HALLS}
+        hasCourses={Object.keys(uniData?.COURSES || {}).length > 0}
       />
 
       <div className="mt-4">

@@ -27,9 +27,10 @@ interface DirectoryFiltersProps {
   greekLife?: string[]
   clubs?: string[]
   residenceHalls?: { value: string; label: string; group?: string }[]
+  hasCourses?: boolean
 }
 
-export default function DirectoryFilters({ filters, onChange, majors = [], greekLife = [], clubs = [], residenceHalls = [] }: DirectoryFiltersProps) {
+export default function DirectoryFilters({ filters, onChange, majors = [], greekLife = [], clubs = [], residenceHalls = [], hasCourses = false }: DirectoryFiltersProps) {
   const [showMore, setShowMore] = useState(false)
 
   const update = (key: keyof Filters, value: string) => {
@@ -55,16 +56,18 @@ export default function DirectoryFilters({ filters, onChange, majors = [], greek
 
       {/* Primary filters — always visible */}
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Residence Hall</label>
-          <StyledSelect
-            value={filters.residence_hall}
-            onChange={(v) => update('residence_hall', v)}
-            placeholder="Any hall"
-            searchable
-            options={residenceHalls}
-          />
-        </div>
+        {residenceHalls.length > 0 && (
+          <div>
+            <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Residence Hall</label>
+            <StyledSelect
+              value={filters.residence_hall}
+              onChange={(v) => update('residence_hall', v)}
+              placeholder="Any hall"
+              searchable
+              options={residenceHalls}
+            />
+          </div>
+        )}
         <div>
           <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Major</label>
           <StyledSelect
@@ -108,26 +111,30 @@ export default function DirectoryFilters({ filters, onChange, majors = [], greek
       {showMore && (
         <>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Greek Life</label>
-              <StyledSelect
-                value={filters.fraternity_sorority}
-                onChange={(v) => update('fraternity_sorority', v)}
-                placeholder="Any"
-                searchable
-                options={greekLife.map(g => ({ value: g, label: g }))}
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Club</label>
-              <StyledSelect
-                value={filters.clubs}
-                onChange={(v) => update('clubs', v)}
-                placeholder="Any"
-                searchable
-                options={clubs.map(c => ({ value: c, label: c }))}
-              />
-            </div>
+            {greekLife.length > 0 && (
+              <div>
+                <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Greek Life</label>
+                <StyledSelect
+                  value={filters.fraternity_sorority}
+                  onChange={(v) => update('fraternity_sorority', v)}
+                  placeholder="Any"
+                  searchable
+                  options={greekLife.map(g => ({ value: g, label: g }))}
+                />
+              </div>
+            )}
+            {clubs.length > 0 && (
+              <div>
+                <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Club</label>
+                <StyledSelect
+                  value={filters.clubs}
+                  onChange={(v) => update('clubs', v)}
+                  placeholder="Any"
+                  searchable
+                  options={clubs.map(c => ({ value: c, label: c }))}
+                />
+              </div>
+            )}
             <div>
               <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Relationship</label>
               <StyledSelect
@@ -148,16 +155,18 @@ export default function DirectoryFilters({ filters, onChange, majors = [], greek
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Course</label>
-              <input
-                type="text"
-                value={filters.course}
-                onChange={(e) => update('course', e.target.value.toUpperCase())}
-                placeholder="e.g. CSE 214"
-                className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
-              />
-            </div>
+            {hasCourses && (
+              <div>
+                <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Course</label>
+                <input
+                  type="text"
+                  value={filters.course}
+                  onChange={(e) => update('course', e.target.value.toUpperCase())}
+                  placeholder="e.g. CSE 214"
+                  className="w-full bg-bg-card border border-border rounded-xl px-3 py-2 text-[13px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+                />
+              </div>
+            )}
             <div>
               <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Hometown</label>
               <input
