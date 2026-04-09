@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Enforce approved university email restriction (allow whitelisted emails)
-  const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+  const ALLOWED_EMAILS = ['keugenelee11@gmail.com', 'keugenelee9@gmail.com']
   if (user && !isApprovedEmail(user.email || '') && !ALLOWED_EMAILS.includes(user.email || '')) {
     await supabase.auth.signOut()
     const url = request.nextUrl.clone()
