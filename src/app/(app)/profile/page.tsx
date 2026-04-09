@@ -225,7 +225,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className={`flex-1 px-4 py-6 ${type === 'select' ? 'overflow-y-auto touch-auto' : 'overflow-hidden'}`}>
+        <div className={`flex-1 px-4 py-6 pb-24 ${type === 'select' ? 'overflow-y-auto touch-auto' : 'overflow-hidden'}`}>
           {type === 'select' && options ? (
             <div>
               <input
