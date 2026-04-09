@@ -422,7 +422,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             {show('residence_hall', profile.residence_hall) && <div className="flex items-center gap-2 text-[13px] py-0.5"><MapPin size={13} className="text-text-muted flex-shrink-0" /><span>{profile.residence_hall}</span></div>}
             {show('hometown', profile.hometown) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Home size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">From:</span> <span>{profile.hometown}</span></div>}
             {show('high_school', profile.high_school) && <div className="flex items-center gap-2 text-[13px] py-0.5"><School size={13} className="text-text-muted flex-shrink-0" /><span>{profile.high_school}</span></div>}
-            {show('birthday', profile.birthday) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Cake size={13} className="text-text-muted flex-shrink-0" /><span>{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span></div>}
+            {show('birthday', profile.birthday) && !isNaN(new Date(profile.birthday + 'T00:00:00').getTime()) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Cake size={13} className="text-text-muted flex-shrink-0" /><span>{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span></div>}
             {show('relationship_status', profile.relationship_status) && profile.relationship_status !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span>{profile.relationship_status}</span></div>}
             {show('interested_in', profile.interested_in) && profile.interested_in !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Interested in:</span> <span>{profile.interested_in}</span></div>}
             {show('looking_for', profile.looking_for) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Looking for:</span> <span>{profile.looking_for}</span></div>}
@@ -439,20 +439,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Greek Life */}
-          {show('fraternity_sorority', profile.fraternity_sorority) && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
-              <div className="flex items-center gap-2 text-[13px]"><span className="text-text-muted">Greek Life:</span> <span>{profile.fraternity_sorority}</span></div>
-            </div>
-          )}
-
-          {/* Clubs */}
-          {show('clubs', profile.clubs) && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
-              <div className="flex flex-wrap gap-1">{profile.clubs.split(', ').filter(Boolean).map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
-            </div>
-          )}
 
           {/* Courses */}
           {courses.length > 0 && (

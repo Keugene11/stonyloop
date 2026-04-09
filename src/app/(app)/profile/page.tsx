@@ -25,8 +25,6 @@ export default function ProfilePage() {
   const [courseOpen, setCourseOpen] = useState(false)
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
-  const [clubFilter, setClubFilter] = useState('')
-  const [clubOpen, setClubOpen] = useState(false)
   const [friends, setFriends] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
@@ -118,7 +116,6 @@ export default function ProfilePage() {
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
   const musicTags = profile.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
   const movieTags = profile.favorite_movies ? profile.favorite_movies.split(', ').filter(Boolean) : []
-  const clubTags = profile.clubs ? profile.clubs.split(', ').filter(Boolean) : []
   const empty = 'text-text-muted/40 italic cursor-pointer'
   const inputClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none w-full border border-border focus:border-text-muted'
   const selectClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border focus:border-text-muted cursor-pointer'
@@ -152,7 +149,7 @@ export default function ProfilePage() {
         <span className="text-text-muted min-w-[80px] flex-shrink-0">{label}</span>
         <div className="flex-1 min-w-0">
           <span className={value ? (value === 'None' ? 'cursor-pointer hover:underline text-text-muted' : 'cursor-pointer hover:underline') : empty} onClick={() => setEditing(field)}>
-            {field === 'birthday' && value && value !== 'None' ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : value || 'Click to set'}
+            {field === 'birthday' && value && value !== 'None' && !isNaN(new Date(value + 'T00:00:00').getTime()) ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : (field === 'birthday' ? (value && value !== 'None' ? value : 'Click to set') : value || 'Click to set')}
           </span>
         </div>
       </div>
@@ -183,7 +180,6 @@ export default function ProfilePage() {
       email: { label: 'Email', type: 'text' },
       phone: { label: 'Phone', type: 'tel' },
       websites: { label: 'Website', type: 'text' },
-      fraternity_sorority: { label: 'Greek Life', type: 'select', options: (uniData?.GREEK_LIFE || []).map(g => ({ value: g, label: g })) },
       interests: { label: 'Interests', type: 'textarea' },
       favorite_quotes: { label: 'Favorite Quotes', type: 'textarea' },
     }
@@ -410,7 +406,7 @@ export default function ProfilePage() {
             <EditableRow icon={GraduationCap} label="Major" field="major" value={profile.major} options={(uniData?.MAJORS || []).map(m => ({ value: m, label: m }))} />
             <EditableRow icon={GraduationCap} label="2nd Major" field="second_major" value={profile.second_major} options={(uniData?.MAJORS || []).map(m => ({ value: m, label: m }))} />
             <EditableRow icon={BookOpen} label="Minor" field="minor" value={profile.minor} options={(uniData?.MINORS || []).map(m => ({ value: m, label: m }))} />
-            <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={resHalls} />
+            {resHalls.length > 0 && <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={resHalls} />}
             <EditableRow icon={Home} label="From" field="hometown" value={profile.hometown} />
             <EditableRow icon={School} label="High School" field="high_school" value={profile.high_school} />
             <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="birthday" />
@@ -439,76 +435,23 @@ export default function ProfilePage() {
             <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
           </div>
 
-          {/* Greek Life */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <EditableRow icon={Users} label="Greek Life" field="fraternity_sorority" value={profile.fraternity_sorority} options={(uniData?.GREEK_LIFE || []).map(g => ({ value: g, label: g }))} />
-          </div>
-
-          {/* Clubs */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
-            {clubTags.length > 0 && <Tags items={clubTags} field="clubs" />}
-            <input
-              type="text"
-              value={clubFilter}
-              onChange={(e) => { setClubFilter(e.target.value); setClubOpen(true) }}
-              onFocus={() => setClubOpen(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && clubFilter.trim()) {
-                  e.preventDefault()
-                  const val = clubFilter.trim()
-                  if (!clubTags.includes(val)) {
-                    updateField('clubs', [...clubTags, val].join(', '))
-                  }
-                  setClubFilter('')
-                  setClubOpen(false)
-                }
-              }}
-              className={`${inputClass} mt-1.5`}
-              placeholder="Search or type a club name..."
-            />
-            {clubOpen && clubFilter && (
-              <>
-                <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
-                <div className="relative z-20 mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                  {(uniData?.CLUBS || []).filter(c => !clubTags.includes(c) && c.toLowerCase().includes(clubFilter.toLowerCase())).slice(0, 20).map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => { updateField('clubs', [...clubTags, c].join(', ')); setClubFilter(''); setClubOpen(false) }}
-                      className="w-full text-left px-3 py-2 text-[13px] hover:bg-bg-input"
-                    >
-                      {c}
-                    </button>
-                  ))}
-                  {clubFilter.trim() && !(uniData?.CLUBS || []).some(c => c.toLowerCase() === clubFilter.trim().toLowerCase()) && (
-                    <button
-                      type="button"
-                      onClick={() => { updateField('clubs', [...clubTags, clubFilter.trim()].join(', ')); setClubFilter(''); setClubOpen(false) }}
-                      className="w-full text-left px-3 py-2 text-[13px] text-accent hover:bg-bg-input"
-                    >
-                      Add &quot;{clubFilter.trim()}&quot;
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
 
           {/* Courses */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
-            {courses.length > 0 && <Tags items={courses} field="courses" />}
-            <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={`${inputClass} mt-1.5`} placeholder="Search courses (e.g. CSE)" />
-            {courseOpen && (
-              <>
-                <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
-                <select value="" onChange={(e) => { if (e.target.value) { updateField('courses', [...courses, e.target.value].join(', ')); setCourseFilter(''); setCourseOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
-                  {filteredDepts.map(d => <optgroup key={d.code} label={`${d.code} — ${d.name}`}>{d.courses.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>)}
-                </select>
-              </>
-            )}
-          </div>
+          {sortedDepts.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
+              {courses.length > 0 && <Tags items={courses} field="courses" />}
+              <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={`${inputClass} mt-1.5`} placeholder="Search courses (e.g. CSE)" />
+              {courseOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
+                  <select value="" onChange={(e) => { if (e.target.value) { updateField('courses', [...courses, e.target.value].join(', ')); setCourseFilter(''); setCourseOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
+                    {filteredDepts.map(d => <optgroup key={d.code} label={`${d.code} — ${d.name}`}>{d.courses.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>)}
+                  </select>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Interests */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 press" onClick={() => setEditing('interests')}>

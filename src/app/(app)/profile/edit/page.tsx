@@ -153,7 +153,7 @@ export default function ProfilePage() {
             <p className="text-[13px] font-semibold">Basic Info</p>
             <div>
               <label className={labelClass}>Full Name</label>
-              <input type="text" value={profile.full_name} onChange={(e) => updateField('full_name', e.target.value)} className={inputClass} placeholder="Your full name" />
+              <input type="text" value={profile.full_name || ''} onChange={(e) => updateField('full_name', e.target.value)} className={inputClass} placeholder="Your full name" />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -165,7 +165,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className={labelClass}>Gender</label>
-                <select value={profile.gender} onChange={(e) => updateField('gender', e.target.value)} className={selectClass}>
+                <select value={profile.gender || ''} onChange={(e) => updateField('gender', e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
@@ -173,15 +173,15 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className={labelClass}>Birthday</label>
-              <input type="date" value={profile.birthday} onChange={(e) => updateField('birthday', e.target.value)} className={inputClass} />
+              <input type="date" value={profile.birthday || ''} onChange={(e) => updateField('birthday', e.target.value)} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Hometown</label>
-              <input type="text" value={profile.hometown} onChange={(e) => updateField('hometown', e.target.value)} className={inputClass} placeholder="Where are you from?" />
+              <input type="text" value={profile.hometown || ''} onChange={(e) => updateField('hometown', e.target.value)} className={inputClass} placeholder="Where are you from?" />
             </div>
             <div>
               <label className={labelClass}>High School</label>
-              <input type="text" value={profile.high_school} onChange={(e) => updateField('high_school', e.target.value)} className={inputClass} placeholder="Your high school" />
+              <input type="text" value={profile.high_school || ''} onChange={(e) => updateField('high_school', e.target.value)} className={inputClass} placeholder="Your high school" />
             </div>
           </div>
 
@@ -190,15 +190,15 @@ export default function ProfilePage() {
             <p className="text-[13px] font-semibold">Contact</p>
             <div>
               <label className={labelClass}>Email</label>
-              <input type="email" value={profile.email} onChange={(e) => updateField('email', e.target.value)} className={inputClass} placeholder="Your email address" />
+              <input type="email" value={profile.email || ''} onChange={(e) => updateField('email', e.target.value)} className={inputClass} placeholder="Your email address" />
             </div>
             <div>
               <label className={labelClass}>Phone</label>
-              <input type="tel" value={profile.phone} onChange={(e) => updateField('phone', e.target.value)} className={inputClass} placeholder="Phone number" />
+              <input type="tel" value={profile.phone || ''} onChange={(e) => updateField('phone', e.target.value)} className={inputClass} placeholder="Phone number" />
             </div>
             <div>
               <label className={labelClass}>Websites</label>
-              <input type="text" value={profile.websites} onChange={(e) => updateField('websites', e.target.value)} className={inputClass} placeholder="Your website, portfolio, etc." />
+              <input type="text" value={profile.websites || ''} onChange={(e) => updateField('websites', e.target.value)} className={inputClass} placeholder="Your website, portfolio, etc." />
             </div>
           </div>
 
@@ -207,62 +207,66 @@ export default function ProfilePage() {
             <p className="text-[13px] font-semibold">Academics</p>
             <div>
               <label className={labelClass}>Major</label>
-              <select value={profile.major} onChange={(e) => updateField('major', e.target.value)} className={selectClass}>
+              <select value={profile.major || ''} onChange={(e) => updateField('major', e.target.value)} className={selectClass}>
                 <option value="">Select major</option>
                 {(uniData?.MAJORS || []).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Second Major</label>
-              <select value={profile.second_major} onChange={(e) => updateField('second_major', e.target.value)} className={selectClass}>
+              <select value={profile.second_major || ''} onChange={(e) => updateField('second_major', e.target.value)} className={selectClass}>
                 <option value="">None</option>
                 {(uniData?.MAJORS || []).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Minor</label>
-              <select value={profile.minor} onChange={(e) => updateField('minor', e.target.value)} className={selectClass}>
+              <select value={profile.minor || ''} onChange={(e) => updateField('minor', e.target.value)} className={selectClass}>
                 <option value="">None</option>
                 {(uniData?.MINORS || []).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-            <div>
-              <label className={labelClass}>Residence Hall</label>
-              <select value={profile.residence_hall} onChange={(e) => updateField('residence_hall', e.target.value)} className={selectClass}>
-                <option value="">Select</option>
-                {Object.entries(hallGroups).map(([group, halls]) => (
-                  <optgroup key={group} label={group}>
-                    {halls.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Courses</label>
-              {courses.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {courses.map(c => (
-                    <span key={c} className="inline-flex items-center gap-1 bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">
-                      {c}
-                      <button type="button" onClick={() => removeCourse(c)} className="text-text-muted hover:text-text"><X size={10} /></button>
-                    </span>
+            {resHalls.length > 0 && (
+              <div>
+                <label className={labelClass}>Residence Hall</label>
+                <select value={profile.residence_hall || ''} onChange={(e) => updateField('residence_hall', e.target.value)} className={selectClass}>
+                  <option value="">Select</option>
+                  {Object.entries(hallGroups).map(([group, halls]) => (
+                    <optgroup key={group} label={group}>
+                      {halls.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
+                    </optgroup>
                   ))}
-                </div>
-              )}
-              <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={inputClass} placeholder="Search courses (e.g. CSE)" />
-              {courseOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
-                  <select value="" onChange={(e) => { if (e.target.value) { addCourse(e.target.value); setCourseOpen(false) } }} className={`${selectClass} mt-1 relative z-20`} size={5}>
-                    {allCoursesByDept.map(dept => (
-                      <optgroup key={dept.code} label={`${dept.code} — ${dept.name}`}>
-                        {dept.courses.map(c => <option key={c} value={c}>{c}</option>)}
-                      </optgroup>
+                </select>
+              </div>
+            )}
+            {sortedDepts.length > 0 && (
+              <div>
+                <label className={labelClass}>Courses</label>
+                {courses.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {courses.map(c => (
+                      <span key={c} className="inline-flex items-center gap-1 bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">
+                        {c}
+                        <button type="button" onClick={() => removeCourse(c)} className="text-text-muted hover:text-text"><X size={10} /></button>
+                      </span>
                     ))}
-                  </select>
-                </>
-              )}
-            </div>
+                  </div>
+                )}
+                <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={inputClass} placeholder="Search courses (e.g. CSE)" />
+                {courseOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
+                    <select value="" onChange={(e) => { if (e.target.value) { addCourse(e.target.value); setCourseOpen(false) } }} className={`${selectClass} mt-1 relative z-20`} size={5}>
+                      {allCoursesByDept.map(dept => (
+                        <optgroup key={dept.code} label={`${dept.code} — ${dept.name}`}>
+                          {dept.courses.map(c => <option key={c} value={c}>{c}</option>)}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Personal */}
@@ -271,14 +275,14 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelClass}>Relationship</label>
-                <select value={profile.relationship_status} onChange={(e) => updateField('relationship_status', e.target.value)} className={selectClass}>
+                <select value={profile.relationship_status || ''} onChange={(e) => updateField('relationship_status', e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   {RELATIONSHIP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>Interested In</label>
-                <select value={profile.interested_in} onChange={(e) => updateField('interested_in', e.target.value)} className={selectClass}>
+                <select value={profile.interested_in || ''} onChange={(e) => updateField('interested_in', e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   {INTERESTED_IN.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -287,14 +291,14 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelClass}>Looking For</label>
-                <select value={profile.looking_for} onChange={(e) => updateField('looking_for', e.target.value)} className={selectClass}>
+                <select value={profile.looking_for || ''} onChange={(e) => updateField('looking_for', e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   {LOOKING_FOR.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>Political Views</label>
-                <select value={profile.political_views} onChange={(e) => updateField('political_views', e.target.value)} className={selectClass}>
+                <select value={profile.political_views || ''} onChange={(e) => updateField('political_views', e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   {POLITICAL_VIEWS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
@@ -302,11 +306,11 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className={labelClass}>About Me</label>
-              <textarea value={profile.about_me} onChange={(e) => updateField('about_me', e.target.value)} className={`${inputClass} resize-none h-16`} placeholder="Tell people about yourself..." />
+              <textarea value={profile.about_me || ''} onChange={(e) => updateField('about_me', e.target.value)} className={`${inputClass} resize-none h-16`} placeholder="Tell people about yourself..." />
             </div>
             <div>
               <label className={labelClass}>Interests</label>
-              <textarea value={profile.interests} onChange={(e) => updateField('interests', e.target.value)} className={`${inputClass} resize-none h-16`} placeholder="Music, sports, coding..." />
+              <textarea value={profile.interests || ''} onChange={(e) => updateField('interests', e.target.value)} className={`${inputClass} resize-none h-16`} placeholder="Music, sports, coding..." />
             </div>
           </div>
 
@@ -325,7 +329,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className={labelClass}>Favorite Quotes</label>
-              <textarea value={profile.favorite_quotes} onChange={(e) => updateField('favorite_quotes', e.target.value)} className={`${inputClass} resize-none h-16`} placeholder="&quot;Be the change...&quot;" />
+              <textarea value={profile.favorite_quotes || ''} onChange={(e) => updateField('favorite_quotes', e.target.value)} className={`${inputClass} resize-none h-16`} placeholder="&quot;Be the change...&quot;" />
             </div>
           </div>
         </div>
