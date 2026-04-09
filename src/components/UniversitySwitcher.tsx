@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { UNIVERSITIES } from '@/lib/universities'
 import { ChevronDown } from 'lucide-react'
 
-const DEV_EMAILS = ['keugenelee11@gmail.com']
+const DEV_EMAILS = ['keugenelee11@gmail.com', 'keugenelee9@gmail.com']
 
 export default function UniversitySwitcher() {
   const supabase = createClient()

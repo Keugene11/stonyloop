@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
-      const ALLOWED_EMAILS = ['keugenelee11@gmail.com']
+      const ALLOWED_EMAILS = ['keugenelee11@gmail.com', 'keugenelee9@gmail.com']
       if (user && !isApprovedEmail(user.email || '') && !ALLOWED_EMAILS.includes(user.email || '')) {
         // Clean up: delete the profile and auth user that were auto-created
         await supabase.from('profiles').delete().eq('id', user.id)
@@ -44,10 +44,12 @@ export async function GET(request: Request) {
         )
       }
       // Detect university and mark onboarding as complete
+      const TEST_UNIVERSITY_MAP: Record<string, string> = { 'keugenelee9@gmail.com': 'harvard' }
       const university = getUniversityByEmail(user!.email || '')
+      const uniSlug = TEST_UNIVERSITY_MAP[user!.email || ''] || university?.slug || 'stonybrook'
       await supabase.from('profiles').update({
         onboarding_complete: true,
-        university: university?.slug || 'stonybrook',
+        university: uniSlug,
       }).eq('id', user!.id)
       return NextResponse.redirect(`${origin}${next}`)
     }
