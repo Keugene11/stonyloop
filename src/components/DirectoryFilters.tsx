@@ -38,7 +38,7 @@ export default function DirectoryFilters({ filters, onChange, majors = [], greek
   }
 
   const hasFilters = Object.values(filters).some(v => v !== '')
-  const moreCount = [filters.hometown, filters.high_school, filters.fraternity_sorority, filters.clubs, filters.relationship_status, filters.interested_in, filters.course].filter(Boolean).length
+  const moreCount = [filters.gender, filters.hometown, filters.high_school, filters.fraternity_sorority, filters.clubs, filters.relationship_status, filters.interested_in, filters.course].filter(Boolean).length
 
   return (
     <div className="space-y-3">
@@ -87,15 +87,6 @@ export default function DirectoryFilters({ filters, onChange, majors = [], greek
             options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))}
           />
         </div>
-        <div>
-          <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Gender</label>
-          <StyledSelect
-            value={filters.gender}
-            onChange={(v) => update('gender', v)}
-            placeholder="Any"
-            options={GENDERS.map(g => ({ value: g, label: g }))}
-          />
-        </div>
       </div>
 
       {/* More filters toggle */}
@@ -111,6 +102,15 @@ export default function DirectoryFilters({ filters, onChange, majors = [], greek
       {showMore && (
         <>
           <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Gender</label>
+              <StyledSelect
+                value={filters.gender}
+                onChange={(v) => update('gender', v)}
+                placeholder="Any"
+                options={GENDERS.map(g => ({ value: g, label: g }))}
+              />
+            </div>
             {greekLife.length > 0 && (
               <div>
                 <label className="text-[10px] text-text-muted uppercase tracking-wide font-medium mb-0.5 block">Greek Life</label>
