@@ -9,7 +9,7 @@ export default function AboutPage() {
         <h1 className="text-[32px] font-extrabold tracking-tight">[ Stonyloop ]</h1>
         <p className="text-[16px] text-text-muted mt-2">A social network for university students</p>
         <p className="text-[13px] text-text-muted mt-1">
-          Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}, and Stony Brook.
+          Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}.
         </p>
       </div>
 
