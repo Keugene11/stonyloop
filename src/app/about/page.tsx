@@ -1,18 +1,22 @@
 import { Users, MessageCircle, Search, Hand, Shield, Share2, Camera, Bell } from 'lucide-react'
 import Link from 'next/link'
+import { LOGIN_DISPLAY_SCHOOLS } from '@/lib/universities'
 
 export default function AboutPage() {
   return (
     <div className="max-w-2xl mx-auto px-5 pt-16 pb-20">
       <div className="text-center mb-12">
         <h1 className="text-[32px] font-extrabold tracking-tight">[ Stonyloop ]</h1>
-        <p className="text-[16px] text-text-muted mt-2">The social network for Stony Brook University</p>
+        <p className="text-[16px] text-text-muted mt-2">A social network for university students</p>
+        <p className="text-[13px] text-text-muted mt-1">
+          Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}, and Stony Brook.
+        </p>
       </div>
 
       <section className="mb-10">
         <h2 className="text-[20px] font-bold mb-3">What is Stonyloop?</h2>
         <p className="text-[15px] text-text-muted leading-relaxed">
-          Stonyloop is a social network built exclusively for Stony Brook University students. It&apos;s a place to connect with classmates, find people in your dorm, join clubs, and stay in the loop with everything happening on campus. Think of it as the Facebook for SBU — walls, friends, groups, messaging, and more.
+          Stonyloop is a social network built exclusively for university students. Write short updates and posts for your friends to read and like, connect with other students at your university, join and make groups, and message your classmates. You must sign in with your university email address to join.
         </p>
       </section>
 
@@ -23,7 +27,7 @@ export default function AboutPage() {
             <Search size={20} className="text-accent flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="text-[15px] font-semibold mb-1">Student Directory</h3>
-              <p className="text-[13px] text-text-muted leading-relaxed">Browse every student on Stonyloop. Filter by dorm, major, class year, clubs, Greek life, hometown, and more to find people you know or want to meet.</p>
+              <p className="text-[13px] text-text-muted leading-relaxed">Browse every student at your university. Filter by major, class year, hometown, and more to find people you know or want to meet.</p>
             </div>
           </div>
 
@@ -55,7 +59,7 @@ export default function AboutPage() {
             <Users size={20} className="text-accent flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="text-[15px] font-semibold mb-1">Groups</h3>
-              <p className="text-[13px] text-text-muted leading-relaxed">Join groups for your clubs, classes, dorms, or anything else. Groups have their own walls where members can post and discuss.</p>
+              <p className="text-[13px] text-text-muted leading-relaxed">Join or create groups for anything. Groups have their own walls where members can post and discuss.</p>
             </div>
           </div>
 
@@ -95,7 +99,7 @@ export default function AboutPage() {
             <Shield size={20} className="text-accent flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="text-[15px] font-semibold mb-1">Privacy & Safety</h3>
-              <p className="text-[13px] text-text-muted leading-relaxed">Control exactly which profile fields are visible to others. Block and report users who violate community standards. Only @stonybrook.edu emails can join.</p>
+              <p className="text-[13px] text-text-muted leading-relaxed">Control exactly which profile fields are visible to others. Block and report users who violate community standards. Only verified university emails can join.</p>
             </div>
           </div>
         </div>
@@ -106,7 +110,7 @@ export default function AboutPage() {
         <ol className="space-y-3">
           <li className="flex gap-3">
             <span className="bg-accent text-white w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0">1</span>
-            <p className="text-[14px] text-text-muted leading-relaxed"><span className="text-text font-medium">Sign up</span> with your @stonybrook.edu email or Google account.</p>
+            <p className="text-[14px] text-text-muted leading-relaxed"><span className="text-text font-medium">Sign in</span> with your university email address.</p>
           </li>
           <li className="flex gap-3">
             <span className="bg-accent text-white w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0">2</span>
@@ -114,7 +118,7 @@ export default function AboutPage() {
           </li>
           <li className="flex gap-3">
             <span className="bg-accent text-white w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0">3</span>
-            <p className="text-[14px] text-text-muted leading-relaxed"><span className="text-text font-medium">Find people</span> — use the directory to find classmates, dormmates, and club members.</p>
+            <p className="text-[14px] text-text-muted leading-relaxed"><span className="text-text font-medium">Find people</span> — use the directory to find students at your university.</p>
           </li>
           <li className="flex gap-3">
             <span className="bg-accent text-white w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0">4</span>
@@ -122,7 +126,7 @@ export default function AboutPage() {
           </li>
           <li className="flex gap-3">
             <span className="bg-accent text-white w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0">5</span>
-            <p className="text-[14px] text-text-muted leading-relaxed"><span className="text-text font-medium">Join groups</span> — find your clubs, Greek org, or create your own group.</p>
+            <p className="text-[14px] text-text-muted leading-relaxed"><span className="text-text font-medium">Join groups</span> — find groups or create your own.</p>
           </li>
         </ol>
       </section>
