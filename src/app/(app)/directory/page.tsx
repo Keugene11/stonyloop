@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react'
 import DirectoryFilters from '@/components/DirectoryFilters'
 import ProfileCard from '@/components/ProfileCard'
 import { getUniversityData, type UniversityData } from '@/lib/university-data'
+import { getUniversityBySlug } from '@/lib/universities'
 import type { Profile } from '@/types'
 
 interface Filters {
@@ -45,6 +46,7 @@ export default function DirectoryPage() {
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [uniData, setUniData] = useState<UniversityData | null>(null)
+  const [uniName, setUniName] = useState('')
 
   useEffect(() => {
     async function init() {
@@ -69,6 +71,7 @@ export default function DirectoryPage() {
       const myUniversity = myProfile?.university || 'stonybrook'
       const ud = await getUniversityData(myUniversity)
       setUniData(ud)
+      setUniName(getUniversityBySlug(myUniversity)?.name || '')
 
       const { data: profiles } = await supabase
         .from('profiles')
@@ -107,7 +110,8 @@ export default function DirectoryPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
-      <h1 className="text-[24px] font-bold tracking-tight mb-4">Directory</h1>
+      <h1 className="text-[24px] font-bold tracking-tight">Directory</h1>
+      {uniName && <p className="text-[13px] text-text-muted mb-4">{uniName}</p>}
 
       <DirectoryFilters
         filters={filters}
