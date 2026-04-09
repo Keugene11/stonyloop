@@ -43,14 +43,23 @@ export default function Likes({ postType, postId, userId, authorId }: LikesProps
         .eq('user_id', userId)
       setLiked(false)
       setCount(c => c - 1)
+      // Remove like notifications so they don't pile up
+      await supabase.from('notifications').delete()
+        .eq('actor_id', userId)
+        .eq('post_id', postId)
+        .in('type', ['like', 'friend_like'])
     } else {
       await supabase.from('post_likes').insert({
         post_type: postType, post_id: postId, user_id: userId,
       })
       setLiked(true)
       setCount(c => c + 1)
-      // Notify post author
+      // Notify post author (delete old first to avoid duplicates)
       if (authorId !== userId) {
+        await supabase.from('notifications').delete()
+          .eq('actor_id', userId)
+          .eq('post_id', postId)
+          .eq('type', 'like')
         await supabase.from('notifications').insert({
           user_id: authorId,
           actor_id: userId,
@@ -59,7 +68,11 @@ export default function Likes({ postType, postId, userId, authorId }: LikesProps
           post_id: postId,
         })
       }
-      // Notify friends (exclude post author who already got a direct 'like' notification)
+      // Notify friends (delete old first, exclude post author)
+      await supabase.from('notifications').delete()
+        .eq('actor_id', userId)
+        .eq('post_id', postId)
+        .eq('type', 'friend_like')
       notifyFriends(supabase, userId, 'friend_like', { post_type: postType, post_id: postId },
         authorId !== userId ? [authorId] : [])
     }
