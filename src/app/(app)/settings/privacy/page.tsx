@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft, Lock, Unlock, GraduationCap, BookOpen, MapPin, Home, School, Cake, Heart, Globe, Mail, Phone, Users, Pencil } from 'lucide-react'
-import { SBU_MAJORS, SBU_MINORS } from '@/lib/sbu-data'
-import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
-import { SBU_GREEK_LIFE } from '@/lib/sbu-groups'
+import { getUniversityData } from '@/lib/university-data'
 import type { Profile } from '@/types'
 
 type IconType = typeof GraduationCap
@@ -21,25 +19,27 @@ interface FieldConfig {
   searchable?: boolean
 }
 
-const PRIVACY_FIELDS: FieldConfig[] = [
-  { field: 'email', label: 'Email', icon: Mail },
-  { field: 'major', label: 'Major', icon: GraduationCap, type: 'select', options: SBU_MAJORS, searchable: true },
-  { field: 'second_major', label: 'Second Major', icon: GraduationCap, type: 'select', options: SBU_MAJORS, searchable: true },
-  { field: 'minor', label: 'Minor', icon: BookOpen, type: 'select', options: SBU_MINORS, searchable: true },
-  { field: 'residence_hall', label: 'Dorm', icon: MapPin, type: 'select', options: RESIDENCE_HALLS.map(h => typeof h === 'string' ? h : h.value), searchable: true },
-  { field: 'hometown', label: 'Hometown', icon: Home },
-  { field: 'high_school', label: 'High School', icon: School },
-  { field: 'birthday', label: 'Birthday', icon: Cake, type: 'birthday' },
-  { field: 'class_year', label: 'Class Year', icon: GraduationCap, type: 'select', options: CLASS_YEARS.map(String) },
-  { field: 'gender', label: 'Gender', icon: GraduationCap, type: 'select', options: GENDERS },
-  { field: 'relationship_status', label: 'Relationship Status', icon: Heart, type: 'select', options: RELATIONSHIP_STATUSES },
-  { field: 'interested_in', label: 'Interested In', icon: Heart, type: 'select', options: INTERESTED_IN },
-  { field: 'looking_for', label: 'Looking For', icon: Heart, type: 'select', options: LOOKING_FOR },
-  { field: 'political_views', label: 'Political Views', icon: Globe, type: 'select', options: POLITICAL_VIEWS },
-  { field: 'phone', label: 'Phone', icon: Phone, type: 'tel' },
-  { field: 'websites', label: 'Website', icon: Globe },
-  { field: 'fraternity_sorority', label: 'Greek Life', icon: Users, type: 'select', options: SBU_GREEK_LIFE, searchable: true },
-]
+function buildPrivacyFields(majors: string[], minors: string[], residenceHalls: string[], greekLife: string[]): FieldConfig[] {
+  return [
+    { field: 'email', label: 'Email', icon: Mail },
+    { field: 'major', label: 'Major', icon: GraduationCap, type: 'select', options: majors, searchable: true },
+    { field: 'second_major', label: 'Second Major', icon: GraduationCap, type: 'select', options: majors, searchable: true },
+    { field: 'minor', label: 'Minor', icon: BookOpen, type: 'select', options: minors, searchable: true },
+    { field: 'residence_hall', label: 'Dorm', icon: MapPin, type: 'select', options: residenceHalls, searchable: true },
+    { field: 'hometown', label: 'Hometown', icon: Home },
+    { field: 'high_school', label: 'High School', icon: School },
+    { field: 'birthday', label: 'Birthday', icon: Cake, type: 'birthday' },
+    { field: 'class_year', label: 'Class Year', icon: GraduationCap, type: 'select', options: CLASS_YEARS.map(String) },
+    { field: 'gender', label: 'Gender', icon: GraduationCap, type: 'select', options: GENDERS },
+    { field: 'relationship_status', label: 'Relationship Status', icon: Heart, type: 'select', options: RELATIONSHIP_STATUSES },
+    { field: 'interested_in', label: 'Interested In', icon: Heart, type: 'select', options: INTERESTED_IN },
+    { field: 'looking_for', label: 'Looking For', icon: Heart, type: 'select', options: LOOKING_FOR },
+    { field: 'political_views', label: 'Political Views', icon: Globe, type: 'select', options: POLITICAL_VIEWS },
+    { field: 'phone', label: 'Phone', icon: Phone, type: 'tel' },
+    { field: 'websites', label: 'Website', icon: Globe },
+    { field: 'fraternity_sorority', label: 'Greek Life', icon: Users, type: 'select', options: greekLife, searchable: true },
+  ]
+}
 
 export default function PrivacySettingsPage() {
   const supabase = createClient()
@@ -52,6 +52,7 @@ export default function PrivacySettingsPage() {
   const [editValue, setEditValue] = useState('')
   const [searchFilter, setSearchFilter] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [privacyFields, setPrivacyFields] = useState<FieldConfig[]>([])
 
   useEffect(() => {
     async function load() {
@@ -64,6 +65,13 @@ export default function PrivacySettingsPage() {
         if (data.private_fields) {
           setPrivateFields(data.private_fields.split(',').filter(Boolean))
         }
+        const ud = await getUniversityData(data.university || 'stonybrook')
+        setPrivacyFields(buildPrivacyFields(
+          ud.MAJORS,
+          ud.MINORS,
+          ud.RESIDENCE_HALLS.map(h => typeof h === 'string' ? h : h.value),
+          ud.GREEK_LIFE,
+        ))
       }
       setLoading(false)
     }
@@ -122,7 +130,7 @@ export default function PrivacySettingsPage() {
       <p className="text-[13px] text-text-muted mb-5">Tap a value to edit it. Tap the lock to change visibility.</p>
 
       <div className="bg-bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border">
-        {PRIVACY_FIELDS.map((fc) => {
+        {privacyFields.map((fc) => {
           const { field, label, icon: Icon, type, options, searchable } = fc
           const isPrivate = privateFields.includes(field)
           const value = getFieldValue(field)

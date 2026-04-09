@@ -5,10 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2, Users, ArrowLeft } from 'lucide-react'
-import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
-import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
-import { SBU_GREEK_LIFE, SBU_CLUBS } from '@/lib/sbu-groups'
+import { getUniversityData, type UniversityData } from '@/lib/university-data'
 import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 import AvatarCropper from '@/components/AvatarCropper'
@@ -35,6 +33,7 @@ export default function ProfilePage() {
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [activeTab, setActiveTab] = useState<'wall' | 'info'>('wall')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [uniData, setUniData] = useState<UniversityData | null>(null)
 
   useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -43,7 +42,11 @@ export default function ProfilePage() {
     if (!user) return
     setUserId(user.id)
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    if (data) setProfile(data as Profile)
+    if (data) {
+      setProfile(data as Profile)
+      const ud = await getUniversityData(data.university || 'stonybrook')
+      setUniData(ud)
+    }
     const { data: posts } = await supabase.from('wall_posts').select('*, author:profiles!wall_posts_author_id_fkey(*)').eq('wall_owner_id', user.id).order('created_at', { ascending: false }).limit(50)
     if (posts) setWallPosts(posts as WallPost[])
     // Load friends
@@ -121,11 +124,12 @@ export default function ProfilePage() {
   const selectClass = 'bg-bg-input rounded-lg px-2 py-1 text-[13px] outline-none border border-border focus:border-text-muted cursor-pointer'
 
   // Hall groups for select
-  const hallGroups: Record<string, typeof RESIDENCE_HALLS> = {}
-  for (const h of RESIDENCE_HALLS) { const g = h.group || 'Other'; if (!hallGroups[g]) hallGroups[g] = []; hallGroups[g].push(h) }
+  const resHalls = uniData?.RESIDENCE_HALLS || []
+  const hallGroups: Record<string, typeof resHalls> = {}
+  for (const h of resHalls) { const g = h.group || 'Other'; if (!hallGroups[g]) hallGroups[g] = []; hallGroups[g].push(h) }
 
   // Course helpers
-  const sortedDepts = Object.entries(SBU_COURSES).sort((a, b) => a[0].localeCompare(b[0]))
+  const sortedDepts = uniData ? Object.entries(uniData.COURSES).sort((a, b) => a[0].localeCompare(b[0])) : []
   const filteredDepts = sortedDepts.map(([code, dept]) => ({
     code, name: dept.name,
     courses: dept.courses.map(n => `${code} ${n}`).filter(c => !courses.includes(c)).filter(c => {
@@ -163,10 +167,10 @@ export default function ProfilePage() {
     const fieldConfigs: Record<string, { label: string; type: string; options?: { value: string; label: string; group?: string }[] }> = {
       full_name: { label: 'Name', type: 'text' },
       about_me: { label: 'About', type: 'textarea' },
-      major: { label: 'Major', type: 'select', options: SBU_MAJORS.map(m => ({ value: m, label: m })) },
-      second_major: { label: 'Second Major', type: 'select', options: SBU_MAJORS.map(m => ({ value: m, label: m })) },
-      minor: { label: 'Minor', type: 'select', options: SBU_MINORS.map(m => ({ value: m, label: m })) },
-      residence_hall: { label: 'Dorm', type: 'select', options: RESIDENCE_HALLS },
+      major: { label: 'Major', type: 'select', options: (uniData?.MAJORS || []).map(m => ({ value: m, label: m })) },
+      second_major: { label: 'Second Major', type: 'select', options: (uniData?.MAJORS || []).map(m => ({ value: m, label: m })) },
+      minor: { label: 'Minor', type: 'select', options: (uniData?.MINORS || []).map(m => ({ value: m, label: m })) },
+      residence_hall: { label: 'Dorm', type: 'select', options: resHalls },
       hometown: { label: 'Hometown', type: 'text' },
       high_school: { label: 'High School', type: 'text' },
       birthday: { label: 'Birthday', type: 'birthday' },
@@ -179,7 +183,7 @@ export default function ProfilePage() {
       email: { label: 'Email', type: 'text' },
       phone: { label: 'Phone', type: 'tel' },
       websites: { label: 'Website', type: 'text' },
-      fraternity_sorority: { label: 'Greek Life', type: 'select', options: SBU_GREEK_LIFE.map(g => ({ value: g, label: g })) },
+      fraternity_sorority: { label: 'Greek Life', type: 'select', options: (uniData?.GREEK_LIFE || []).map(g => ({ value: g, label: g })) },
       interests: { label: 'Interests', type: 'textarea' },
       favorite_quotes: { label: 'Favorite Quotes', type: 'textarea' },
     }
@@ -403,10 +407,10 @@ export default function ProfilePage() {
 
           {/* Details */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <EditableRow icon={GraduationCap} label="Major" field="major" value={profile.major} options={SBU_MAJORS.map(m => ({ value: m, label: m }))} />
-            <EditableRow icon={GraduationCap} label="2nd Major" field="second_major" value={profile.second_major} options={SBU_MAJORS.map(m => ({ value: m, label: m }))} />
-            <EditableRow icon={BookOpen} label="Minor" field="minor" value={profile.minor} options={SBU_MINORS.map(m => ({ value: m, label: m }))} />
-            <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={RESIDENCE_HALLS} />
+            <EditableRow icon={GraduationCap} label="Major" field="major" value={profile.major} options={(uniData?.MAJORS || []).map(m => ({ value: m, label: m }))} />
+            <EditableRow icon={GraduationCap} label="2nd Major" field="second_major" value={profile.second_major} options={(uniData?.MAJORS || []).map(m => ({ value: m, label: m }))} />
+            <EditableRow icon={BookOpen} label="Minor" field="minor" value={profile.minor} options={(uniData?.MINORS || []).map(m => ({ value: m, label: m }))} />
+            <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={resHalls} />
             <EditableRow icon={Home} label="From" field="hometown" value={profile.hometown} />
             <EditableRow icon={School} label="High School" field="high_school" value={profile.high_school} />
             <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="birthday" />
@@ -437,7 +441,7 @@ export default function ProfilePage() {
 
           {/* Greek Life */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
-            <EditableRow icon={Users} label="Greek Life" field="fraternity_sorority" value={profile.fraternity_sorority} options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))} />
+            <EditableRow icon={Users} label="Greek Life" field="fraternity_sorority" value={profile.fraternity_sorority} options={(uniData?.GREEK_LIFE || []).map(g => ({ value: g, label: g }))} />
           </div>
 
           {/* Clubs */}
@@ -467,7 +471,7 @@ export default function ProfilePage() {
               <>
                 <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
                 <div className="relative z-20 mt-1 bg-bg-card border border-border rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                  {SBU_CLUBS.filter(c => !clubTags.includes(c) && c.toLowerCase().includes(clubFilter.toLowerCase())).slice(0, 20).map(c => (
+                  {(uniData?.CLUBS || []).filter(c => !clubTags.includes(c) && c.toLowerCase().includes(clubFilter.toLowerCase())).slice(0, 20).map(c => (
                     <button
                       key={c}
                       type="button"
@@ -477,7 +481,7 @@ export default function ProfilePage() {
                       {c}
                     </button>
                   ))}
-                  {clubFilter.trim() && !SBU_CLUBS.some(c => c.toLowerCase() === clubFilter.trim().toLowerCase()) && (
+                  {clubFilter.trim() && !(uniData?.CLUBS || []).some(c => c.toLowerCase() === clubFilter.trim().toLowerCase()) && (
                     <button
                       type="button"
                       onClick={() => { updateField('clubs', [...clubTags, clubFilter.trim()].join(', ')); setClubFilter(''); setClubOpen(false) }}

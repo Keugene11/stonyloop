@@ -2,15 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { searchCourses } from '@/lib/sbu-data'
+import { searchCoursesFromData } from '@/lib/university-data'
 
 interface CourseSelectProps {
   value: string
   onChange: (value: string) => void
   className?: string
+  courses?: Record<string, { name: string; courses: string[] }>
 }
 
-export default function CourseSelect({ value, onChange, className }: CourseSelectProps) {
+export default function CourseSelect({ value, onChange, className, courses: courseData = {} }: CourseSelectProps) {
   const [input, setInput] = useState('')
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState<string[]>([])
@@ -20,7 +21,7 @@ export default function CourseSelect({ value, onChange, className }: CourseSelec
 
   useEffect(() => {
     if (input.length >= 2) {
-      setResults(searchCourses(input).filter(c => !courses.includes(c)))
+      setResults(searchCoursesFromData(courseData, input).filter(c => !courses.includes(c)))
     } else {
       setResults([])
     }

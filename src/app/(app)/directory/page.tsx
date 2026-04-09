@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 import DirectoryFilters from '@/components/DirectoryFilters'
 import ProfileCard from '@/components/ProfileCard'
+import { getUniversityData, type UniversityData } from '@/lib/university-data'
 import type { Profile } from '@/types'
 
 interface Filters {
@@ -43,6 +44,7 @@ export default function DirectoryPage() {
   const [allUsers, setAllUsers] = useState<Profile[]>([])
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const [uniData, setUniData] = useState<UniversityData | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -65,6 +67,8 @@ export default function DirectoryPage() {
       // Get current user's university to filter directory
       const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
       const myUniversity = myProfile?.university || 'stonybrook'
+      const ud = await getUniversityData(myUniversity)
+      setUniData(ud)
 
       const { data: profiles } = await supabase
         .from('profiles')
@@ -105,7 +109,14 @@ export default function DirectoryPage() {
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
       <h1 className="text-[24px] font-bold tracking-tight mb-4">Directory</h1>
 
-      <DirectoryFilters filters={filters} onChange={setFilters} />
+      <DirectoryFilters
+        filters={filters}
+        onChange={setFilters}
+        majors={uniData?.MAJORS}
+        greekLife={uniData?.GREEK_LIFE}
+        clubs={uniData?.CLUBS}
+        residenceHalls={uniData?.RESIDENCE_HALLS}
+      />
 
       <div className="mt-4">
         {loading ? (

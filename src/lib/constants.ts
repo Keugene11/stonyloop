@@ -19,9 +19,7 @@ export const RELATIONSHIP_STATUSES = [
 
 export const LOOKING_FOR = [
   'Friendship',
-  'Dating',
   'A Relationship',
-  'Networking',
   'Random Play',
   'Whatever I can get',
 ]

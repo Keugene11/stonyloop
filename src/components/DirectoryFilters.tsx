@@ -3,10 +3,7 @@
 import { useState } from 'react'
 import { Search, X, ChevronDown, ChevronUp } from 'lucide-react'
 import StyledSelect from '@/components/StyledSelect'
-import { SBU_MAJORS } from '@/lib/sbu-data'
-import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, INTERESTED_IN } from '@/lib/constants'
-import { SBU_GREEK_LIFE, SBU_CLUBS } from '@/lib/sbu-groups'
 
 interface Filters {
   name: string
@@ -26,9 +23,13 @@ interface Filters {
 interface DirectoryFiltersProps {
   filters: Filters
   onChange: (filters: Filters) => void
+  majors?: string[]
+  greekLife?: string[]
+  clubs?: string[]
+  residenceHalls?: { value: string; label: string; group?: string }[]
 }
 
-export default function DirectoryFilters({ filters, onChange }: DirectoryFiltersProps) {
+export default function DirectoryFilters({ filters, onChange, majors = [], greekLife = [], clubs = [], residenceHalls = [] }: DirectoryFiltersProps) {
   const [showMore, setShowMore] = useState(false)
 
   const update = (key: keyof Filters, value: string) => {
@@ -61,7 +62,7 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
             onChange={(v) => update('residence_hall', v)}
             placeholder="Any hall"
             searchable
-            options={RESIDENCE_HALLS}
+            options={residenceHalls}
           />
         </div>
         <div>
@@ -71,7 +72,7 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
             onChange={(v) => update('major', v)}
             placeholder="Any major"
             searchable
-            options={SBU_MAJORS.map(m => ({ value: m, label: m }))}
+            options={majors.map(m => ({ value: m, label: m }))}
           />
         </div>
         <div>
@@ -114,7 +115,7 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
                 onChange={(v) => update('fraternity_sorority', v)}
                 placeholder="Any"
                 searchable
-                options={SBU_GREEK_LIFE.map(g => ({ value: g, label: g }))}
+                options={greekLife.map(g => ({ value: g, label: g }))}
               />
             </div>
             <div>
@@ -124,7 +125,7 @@ export default function DirectoryFilters({ filters, onChange }: DirectoryFilters
                 onChange={(v) => update('clubs', v)}
                 placeholder="Any"
                 searchable
-                options={SBU_CLUBS.map(c => ({ value: c, label: c }))}
+                options={clubs.map(c => ({ value: c, label: c }))}
               />
             </div>
             <div>

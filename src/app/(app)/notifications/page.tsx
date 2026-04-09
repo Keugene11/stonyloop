@@ -20,6 +20,7 @@ interface Notification {
   created_at: string
   actor?: Profile
   comment?: { content: string } | null
+  post_content?: string
   wall_owner_id?: string
   conversation_id?: string
   group_id?: string
@@ -85,6 +86,31 @@ export default function NotificationsPage() {
           }
         })
       }
+
+      // Fetch post content for like notifications so we can show what was liked
+      const likeNotifs = notifs.filter(n => (n.type === 'like' || n.type === 'friend_like') && n.post_id)
+      const likeWallIds = [...new Set(likeNotifs.filter(n => n.post_type === 'wall_post').map(n => n.post_id!))]
+      const likeGroupIds = [...new Set(likeNotifs.filter(n => n.post_type === 'group_post').map(n => n.post_id!))]
+      const postContentMap: Record<string, string> = {}
+      if (likeWallIds.length > 0) {
+        const { data: wallPosts } = await supabase
+          .from('wall_posts')
+          .select('id, content')
+          .in('id', likeWallIds)
+        wallPosts?.forEach(wp => { if (wp.content) postContentMap[wp.id] = wp.content })
+      }
+      if (likeGroupIds.length > 0) {
+        const { data: groupPosts } = await supabase
+          .from('group_posts')
+          .select('id, content')
+          .in('id', likeGroupIds)
+        groupPosts?.forEach(gp => { if (gp.content) postContentMap[gp.id] = gp.content })
+      }
+      likeNotifs.forEach(n => {
+        if (n.post_id && postContentMap[n.post_id]) {
+          n.post_content = postContentMap[n.post_id]
+        }
+      })
 
       // Look up conversation IDs for message notifications
       const msgActorIds = [...new Set(notifs.filter(n => n.type === 'message').map(n => n.actor_id))]
@@ -276,6 +302,11 @@ export default function NotificationsPage() {
                   {n.comment?.content && (n.type === 'comment' || n.type === 'reply') && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.comment.content}&rdquo;
+                    </p>
+                  )}
+                  {n.post_content && (n.type === 'like' || n.type === 'friend_like') && (
+                    <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
+                      &ldquo;{n.post_content}&rdquo;
                     </p>
                   )}
                   {n.content && (n.type === 'friend_post' || n.type === 'friend_comment') && (

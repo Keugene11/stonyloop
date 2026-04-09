@@ -5,9 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Camera, Loader2, LogOut, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { SBU_MAJORS, SBU_MINORS, SBU_COURSES } from '@/lib/sbu-data'
-import { RESIDENCE_HALLS } from '@/lib/residence-halls'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
+import { getUniversityData, type UniversityData } from '@/lib/university-data'
 import type { Profile } from '@/types'
 
 export default function ProfilePage() {
@@ -23,6 +22,7 @@ export default function ProfilePage() {
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [uniData, setUniData] = useState<UniversityData | null>(null)
 
   useEffect(() => {
     loadProfile()
@@ -38,6 +38,8 @@ export default function ProfilePage() {
     if (data) {
       setProfile(data as Profile)
       setAvatarUrl(data.avatar_url || '')
+      const ud = await getUniversityData(data.university || 'stonybrook')
+      setUniData(ud)
     }
 
     setLoading(false)
@@ -80,7 +82,7 @@ export default function ProfilePage() {
 
   // Course helpers
   const courses = profile?.courses ? profile.courses.split(', ').filter(Boolean) : []
-  const sortedDepts = Object.entries(SBU_COURSES).sort((a, b) => a[0].localeCompare(b[0]))
+  const sortedDepts = uniData ? Object.entries(uniData.COURSES).sort((a, b) => a[0].localeCompare(b[0])) : []
   const allCoursesByDept = sortedDepts
     .map(([code, dept]) => ({
       code, name: dept.name,
@@ -111,8 +113,9 @@ export default function ProfilePage() {
   }
 
   // Hall groups
-  const hallGroups: Record<string, typeof RESIDENCE_HALLS> = {}
-  for (const h of RESIDENCE_HALLS) { const g = h.group || 'Other'; if (!hallGroups[g]) hallGroups[g] = []; hallGroups[g].push(h) }
+  const resHalls = uniData?.RESIDENCE_HALLS || []
+  const hallGroups: Record<string, typeof resHalls> = {}
+  for (const h of resHalls) { const g = h.group || 'Other'; if (!hallGroups[g]) hallGroups[g] = []; hallGroups[g].push(h) }
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-text-muted" size={24} /></div>
   if (!profile) return null
@@ -206,21 +209,21 @@ export default function ProfilePage() {
               <label className={labelClass}>Major</label>
               <select value={profile.major} onChange={(e) => updateField('major', e.target.value)} className={selectClass}>
                 <option value="">Select major</option>
-                {SBU_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
+                {(uniData?.MAJORS || []).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Second Major</label>
               <select value={profile.second_major} onChange={(e) => updateField('second_major', e.target.value)} className={selectClass}>
                 <option value="">None</option>
-                {SBU_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
+                {(uniData?.MAJORS || []).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Minor</label>
               <select value={profile.minor} onChange={(e) => updateField('minor', e.target.value)} className={selectClass}>
                 <option value="">None</option>
-                {SBU_MINORS.map(m => <option key={m} value={m}>{m}</option>)}
+                {(uniData?.MINORS || []).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
