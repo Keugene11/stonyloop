@@ -52,9 +52,10 @@ export default function LoginPage() {
           [ Stonyloop ]
         </h1>
 
-        <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2">
-          <li>Write short updates and essays for your friends to read and like</li>
+        <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2 list-disc pl-5">
+          <li>Write short updates and posts for your friends to read and like</li>
           <li>Connect with other students at your university</li>
+          <li>Join and make groups</li>
         </ul>
 
         {error && (
@@ -78,7 +79,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-[18px] font-semibold text-text mt-5">
-          Sign in with your university email address.
+          You must sign in with your university email address.
         </p>
         <p className="text-[13px] text-text-muted mt-2 leading-relaxed">
           Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}.
