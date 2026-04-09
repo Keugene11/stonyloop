@@ -51,9 +51,6 @@ export default function LoginPage() {
         <h1 className="text-[28px] font-extrabold tracking-tight text-text">
           [ Stonyloop ]
         </h1>
-        <p className="text-[13px] text-text-muted mt-1">
-          An exclusive social network for top universities.
-        </p>
 
         <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2">
           <li>Write posts on each other&apos;s walls</li>
