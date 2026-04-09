@@ -56,7 +56,6 @@ export default function LoginPage() {
         </p>
 
         <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2">
-          <li>Find people in your classes and major</li>
           <li>Write posts on each other&apos;s walls</li>
           <li>Message your classmates</li>
         </ul>
@@ -81,11 +80,11 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Continue with Google'}
         </button>
 
-        <p className="text-[14px] font-semibold text-text mt-5">
-          Sign in with your university email.
+        <p className="text-[13px] text-text-muted mt-5 leading-relaxed">
+          Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}.
         </p>
-        <p className="text-[12px] text-text-muted mt-2 leading-relaxed">
-          {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(' · ')}
+        <p className="text-[13px] text-text-muted mt-1">
+          Sign in with your university email address.
         </p>
         <p className="text-[12px] text-text-muted mt-2">
           <Link href="/about" className="text-accent press">Learn more</Link>
