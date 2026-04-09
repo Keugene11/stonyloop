@@ -10,10 +10,7 @@ export const GENDERS = [
 export const RELATIONSHIP_STATUSES = [
   'Single',
   'In a Relationship',
-  'Engaged',
-  'Married',
   "It's Complicated",
-  'In an Open Relationship',
   'Prefer not to say',
 ]
 
