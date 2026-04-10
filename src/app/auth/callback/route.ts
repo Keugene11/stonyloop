@@ -33,21 +33,31 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
       const ALLOWED_EMAILS = ['keugenelee11@gmail.com', 'keugenelee9@gmail.com']
       if (user && !isApprovedEmail(user.email || '') && !ALLOWED_EMAILS.includes(user.email || '')) {
-        // Clean up: delete the profile and auth user that were auto-created
-        await supabase.from('profiles').delete().eq('id', user.id)
-        const { createClient } = await import('@supabase/supabase-js')
-        const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-        await admin.auth.admin.deleteUser(user.id)
-        await supabase.auth.signOut()
-        return NextResponse.redirect(
-          `${origin}/login?error=You must use an approved university email address`
-        )
+        // Check if this is an existing user (has a profile already)
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle()
+        if (!existingProfile) {
+          // New signup from non-approved domain — clean up
+          await supabase.from('profiles').delete().eq('id', user.id)
+          const { createClient } = await import('@supabase/supabase-js')
+          const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+          await admin.auth.admin.deleteUser(user.id)
+          await supabase.auth.signOut()
+          return NextResponse.redirect(
+            `${origin}/login?error=You must use an approved university email address`
+          )
+        }
+        // Existing user from another university — let them through
       }
       // Mark onboarding as complete
-      await supabase.from('profiles').update({
-        onboarding_complete: true,
-        university: 'stonybrook',
-      }).eq('id', user!.id)
+      if (user) {
+        await supabase.from('profiles').update({
+          onboarding_complete: true,
+        }).eq('id', user.id)
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
