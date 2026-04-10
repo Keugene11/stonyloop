@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useGoogleLogin } from '@react-oauth/google'
 import Link from 'next/link'
-import { LOGIN_DISPLAY_SCHOOLS } from '@/lib/universities'
 
 export default function LoginPage() {
   const [error, setError] = useState('')
@@ -79,10 +78,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-[18px] font-semibold text-text mt-5">
-          You must sign in with your university email address.
-        </p>
-        <p className="text-[13px] text-text-muted mt-2 leading-relaxed">
-          Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}.
+          You must sign in with your Stony Brook email address.
         </p>
         <p className="text-[12px] text-text-muted mt-2">
           <Link href="/about" className="text-accent press">Learn more</Link>

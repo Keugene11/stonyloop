@@ -1,16 +1,12 @@
 import { Users, MessageCircle, Search, Hand, Shield, Share2, Camera, Bell } from 'lucide-react'
 import Link from 'next/link'
-import { LOGIN_DISPLAY_SCHOOLS } from '@/lib/universities'
 
 export default function AboutPage() {
   return (
     <div className="max-w-2xl mx-auto px-5 pt-16 pb-20">
       <div className="text-center mb-12">
         <h1 className="text-[32px] font-extrabold tracking-tight">[ Stonyloop ]</h1>
-        <p className="text-[16px] text-text-muted mt-2">A social network for university students</p>
-        <p className="text-[13px] text-text-muted mt-1">
-          Available at {LOGIN_DISPLAY_SCHOOLS.map(s => s.shortName).join(', ')}.
-        </p>
+        <p className="text-[16px] text-text-muted mt-2">A social network for Stony Brook students</p>
       </div>
 
       <section className="mb-10">

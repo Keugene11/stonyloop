@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { isApprovedEmail, getUniversityByEmail } from '@/lib/universities'
+import { isApprovedEmail } from '@/lib/universities'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -43,13 +43,10 @@ export async function GET(request: Request) {
           `${origin}/login?error=You must use an approved university email address`
         )
       }
-      // Detect university and mark onboarding as complete
-      const TEST_UNIVERSITY_MAP: Record<string, string> = { 'keugenelee9@gmail.com': 'harvard' }
-      const university = getUniversityByEmail(user!.email || '')
-      const uniSlug = TEST_UNIVERSITY_MAP[user!.email || ''] || university?.slug || 'stonybrook'
+      // Mark onboarding as complete
       await supabase.from('profiles').update({
         onboarding_complete: true,
-        university: uniSlug,
+        university: 'stonybrook',
       }).eq('id', user!.id)
       return NextResponse.redirect(`${origin}${next}`)
     }

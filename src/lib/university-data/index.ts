@@ -15,23 +15,7 @@ const cache: Record<string, UniversityData> = {}
 export async function getUniversityData(slug: string): Promise<UniversityData> {
   if (cache[slug]) return cache[slug]
 
-  let mod: UniversityData
-  switch (slug) {
-    case 'harvard': mod = await import('./harvard'); break
-    case 'yale': mod = await import('./yale'); break
-    case 'princeton': mod = await import('./princeton'); break
-    case 'columbia': mod = await import('./columbia'); break
-    case 'upenn': mod = await import('./upenn'); break
-    case 'brown': mod = await import('./brown'); break
-    case 'dartmouth': mod = await import('./dartmouth'); break
-    case 'cornell': mod = await import('./cornell'); break
-    case 'stanford': mod = await import('./stanford'); break
-    case 'caltech': mod = await import('./caltech'); break
-    case 'stonybrook':
-    default:
-      mod = await import('./stonybrook')
-      break
-  }
+  const mod: UniversityData = await import('./stonybrook')
 
   const data: UniversityData = {
     MAJORS: mod.MAJORS,

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { isApprovedEmail, getUniversityByEmail } from '@/lib/universities'
+import { isApprovedEmail } from '@/lib/universities'
 
 const GOOGLE_CLIENT_ID = '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.googleusercontent.com'
 
@@ -75,14 +75,11 @@ export async function POST(request: Request) {
     )
   }
 
-  // Detect university from email and mark onboarding as complete
+  // Mark onboarding as complete
   if (user) {
-    const TEST_UNIVERSITY_MAP: Record<string, string> = { 'keugenelee9@gmail.com': 'harvard' }
-    const university = getUniversityByEmail(user.email || '')
-    const uniSlug = TEST_UNIVERSITY_MAP[user.email || ''] || university?.slug || 'stonybrook'
     await supabase.from('profiles').update({
       onboarding_complete: true,
-      university: uniSlug,
+      university: 'stonybrook',
     }).eq('id', user.id)
   }
 
