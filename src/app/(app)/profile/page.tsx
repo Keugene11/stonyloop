@@ -333,26 +333,6 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-10 pb-28 animate-slide-up">
-      {/* Avatar Section */}
-      <div className="flex flex-col items-center mb-6">
-        <label className="relative cursor-pointer press">
-          <div className="w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-bg-input border-[3px] border-border overflow-hidden shadow-lg">
-            {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[56px] md:text-[64px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
-          </div>
-          <div className="absolute bottom-2 right-2 bg-accent text-white rounded-xl p-2"><Camera size={16} /></div>
-          <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
-        </label>
-        <h1 className="text-[24px] font-bold tracking-tight mt-4 cursor-pointer hover:underline text-center" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
-        <p className="text-[14px] text-text-muted mt-0.5">
-          {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
-          {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
-        </p>
-        <div className="flex items-center gap-3 mt-2">
-          <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
-          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
-        </div>
-      </div>
-
       {/* Mobile tabs */}
       <div className="flex gap-0 mb-4 md:hidden border-b border-border">
         <button
@@ -372,6 +352,26 @@ export default function ProfilePage() {
       <div className="flex flex-col md:flex-row md:gap-5 md:items-start">
         {/* LEFT — details */}
         <div className={`md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3 ${activeTab === 'info' ? 'block' : 'hidden'} md:block`}>
+
+          {/* Avatar & Name */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-4">
+            <label className="relative cursor-pointer press block w-full">
+              <div className="w-full aspect-square rounded-xl bg-bg-input border border-border overflow-hidden">
+                {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-text-muted text-[64px] font-bold">{profile.full_name?.charAt(0)?.toUpperCase() || '?'}</div>}
+              </div>
+              <div className="absolute bottom-3 right-3 bg-accent text-white rounded-xl p-2"><Camera size={16} /></div>
+              <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
+            </label>
+            <h1 className="text-[22px] font-bold tracking-tight mt-3 cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
+            <p className="text-[13px] text-text-muted mt-0.5">
+              {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
+              {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
+            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
+              <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
+            </div>
+          </div>
 
           {/* Profile Views */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">

@@ -60,9 +60,6 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
     const drawH = imgNatural.h * totalScale * s
     const drawX = (outSize - drawW) / 2 + offset.x * s
     const drawY = (outSize - drawH) / 2 + offset.y * s
-    ctx.beginPath()
-    ctx.arc(outSize / 2, outSize / 2, outSize / 2, 0, Math.PI * 2)
-    ctx.clip()
     ctx.drawImage(img, drawX, drawY, drawW, drawH)
     canvas.toBlob((blob) => { if (blob) onSave(blob) }, 'image/jpeg', 0.9)
   }
@@ -78,7 +75,7 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
       </div>
 
       <div
-        className="relative rounded-full overflow-hidden border border-border cursor-grab active:cursor-grabbing bg-bg-input"
+        className="relative rounded-2xl overflow-hidden border border-border cursor-grab active:cursor-grabbing bg-bg-input"
         style={{ width: SIZE, height: SIZE, touchAction: 'none' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
