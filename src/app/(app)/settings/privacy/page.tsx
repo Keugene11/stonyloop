@@ -120,7 +120,7 @@ export default function PrivacySettingsPage() {
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-text-muted" size={24} /></div>
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-10 pb-28 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-10 pb-28 ">
       <button onClick={() => router.back()} className="press flex items-center gap-1.5 text-[13px] text-text-muted mb-4">
         <ArrowLeft size={14} />
         Back

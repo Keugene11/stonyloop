@@ -202,7 +202,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-4xl mx-auto px-4 pt-12 pb-28 ">
 
       <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
 

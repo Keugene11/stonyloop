@@ -332,7 +332,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-10 pb-28 animate-slide-up">
+    <div className="max-w-5xl mx-auto px-4 pt-10 pb-28">
       {/* Mobile tabs */}
       <div className="flex gap-0 mb-4 md:hidden border-b border-border">
         <button

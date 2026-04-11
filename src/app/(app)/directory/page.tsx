@@ -109,7 +109,7 @@ export default function DirectoryPage() {
   })
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 ">
       <h1 className="text-[24px] font-bold tracking-tight">Directory</h1>
       {uniName && <p className="text-[13px] text-text-muted mb-4">{uniName}</p>}
 

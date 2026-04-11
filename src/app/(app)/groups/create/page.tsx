@@ -77,7 +77,7 @@ export default function CreateGroupPage() {
   const selectClass = 'w-full bg-bg-card border border-border rounded-xl px-3 py-2.5 text-[14px] outline-none focus:border-text-muted transition-colors cursor-pointer'
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 ">
       <h1 className="text-[24px] font-bold tracking-tight mb-6">Create a Group</h1>
 
       <form onSubmit={handleCreate} className="space-y-4">

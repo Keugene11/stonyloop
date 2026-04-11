@@ -252,7 +252,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 ">
       <h1 className="text-[24px] font-bold tracking-tight mb-4">Inbox</h1>
 
       {notifications.length === 0 ? (

@@ -74,7 +74,7 @@ export default function PokesPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 ">
       <h1 className="text-[24px] font-bold tracking-tight mb-4">
         <Hand size={24} className="inline mr-2" />
         Pokes

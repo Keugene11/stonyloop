@@ -75,7 +75,7 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 pt-12 pb-28 ">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[24px] font-bold tracking-tight">Groups</h1>
         <Link href="/groups/create" className="press bg-accent text-white rounded-xl px-4 py-2 text-[13px] font-medium flex items-center gap-1.5">

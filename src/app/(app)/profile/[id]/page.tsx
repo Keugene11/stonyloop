@@ -198,7 +198,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
+    <div className="max-w-5xl mx-auto px-4 pt-12 pb-28">
       {/* Action buttons */}
       {currentUserId && currentUserId !== id && !isBlocked && (
         <div className="flex gap-2 mb-4">
