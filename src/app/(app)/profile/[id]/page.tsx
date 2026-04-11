@@ -199,32 +199,30 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-12 pb-28 animate-slide-up">
-      {/* Profile header — always on top */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-bg-input border-2 border-border overflow-hidden flex-shrink-0">
+      {/* Profile header — avatar as hero */}
+      <div className="flex flex-col items-center mb-5">
+        <div className="w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-bg-input border-[3px] border-border overflow-hidden shadow-lg">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-text-muted text-[24px] font-bold">
+            <div className="w-full h-full flex items-center justify-center text-text-muted text-[56px] md:text-[64px] font-bold">
               {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-[22px] font-bold tracking-tight truncate">{profile.full_name}</h1>
-          <div className="text-[13px] text-text-muted space-y-0.5 mt-1">
-            {profile.major && <p>{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>}
-            {profile.residence_hall && (
-              <p className="flex items-center gap-1">
-                <MapPin size={12} /> {profile.residence_hall}
-              </p>
-            )}
-            {profile.last_seen && (
-              <p className="flex items-center gap-1">
-                <Clock size={12} /> {getLastSeen(profile.last_seen)}
-              </p>
-            )}
-          </div>
+        <h1 className="text-[24px] font-bold tracking-tight mt-4 text-center">{profile.full_name}</h1>
+        <div className="text-[14px] text-text-muted space-y-0.5 mt-1 text-center">
+          {profile.major && <p>{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>}
+          {profile.residence_hall && (
+            <p className="flex items-center justify-center gap-1">
+              <MapPin size={12} /> {profile.residence_hall}
+            </p>
+          )}
+          {profile.last_seen && (
+            <p className="flex items-center justify-center gap-1">
+              <Clock size={12} /> {getLastSeen(profile.last_seen)}
+            </p>
+          )}
         </div>
       </div>
 
