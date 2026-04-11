@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, ZoomIn, ZoomOut, Check } from 'lucide-react'
+import { ArrowLeft, ZoomIn, ZoomOut, Check } from 'lucide-react'
 
 interface AvatarCropperProps {
   file: File
@@ -17,8 +17,8 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
-
-  const SIZE = Math.min(300, typeof window !== 'undefined' ? window.innerWidth - 48 : 300)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [cropSize, setCropSize] = useState(300)
 
   useEffect(() => {
     const img = new window.Image()
@@ -27,7 +27,26 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
     return () => URL.revokeObjectURL(imgSrc)
   }, [imgSrc])
 
-  const baseScale = imgNatural.w > 0 ? Math.max(SIZE / imgNatural.w, SIZE / imgNatural.h) : 1
+  // Size the crop area to fit available space
+  useEffect(() => {
+    function updateSize() {
+      if (!containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const s = Math.min(rect.width - 32, rect.height - 32, 400)
+      setCropSize(Math.max(200, s))
+    }
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    return () => window.removeEventListener('resize', updateSize)
+  }, [])
+
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  const baseScale = imgNatural.w > 0 ? Math.max(cropSize / imgNatural.w, cropSize / imgNatural.h) : 1
 
   function handlePointerDown(e: React.PointerEvent) {
     (e.target as HTMLElement).setPointerCapture(e.pointerId)
@@ -54,7 +73,7 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
     const outSize = 512
     canvas.width = outSize
     canvas.height = outSize
-    const s = outSize / SIZE
+    const s = outSize / cropSize
     const totalScale = baseScale * zoom
     const drawW = imgNatural.w * totalScale * s
     const drawH = imgNatural.h * totalScale * s
@@ -68,38 +87,48 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
   const dispH = imgNatural.h * baseScale * zoom
 
   return (
-    <div className="fixed inset-0 bg-bg/95 z-50 flex flex-col items-center justify-center px-4">
-      <div className="text-center mb-5">
-        <h2 className="text-text text-[18px] font-bold">Adjust photo</h2>
-        <p className="text-text-muted text-[13px] mt-1">Drag to reposition</p>
+    <div className="fixed inset-0 bg-bg z-[60] flex flex-col" style={{ height: '100dvh', overscrollBehavior: 'none' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
+        <button onClick={onCancel} className="press text-text-muted">
+          <ArrowLeft size={20} />
+        </button>
+        <h3 className="text-[17px] font-bold">Adjust Photo</h3>
+        <button onClick={handleSave} className="press text-[14px] font-semibold text-accent flex items-center gap-1.5">
+          <Check size={16} /> Save
+        </button>
       </div>
 
-      <div
-        className="relative rounded-2xl overflow-hidden border border-border cursor-grab active:cursor-grabbing bg-bg-input"
-        style={{ width: SIZE, height: SIZE, touchAction: 'none' }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        {imgNatural.w > 0 && (
-          <img
-            ref={imgRef}
-            src={imgSrc}
-            alt=""
-            draggable={false}
-            className="absolute select-none pointer-events-none"
-            style={{
-              width: dispW,
-              height: dispH,
-              left: (SIZE - dispW) / 2 + offset.x,
-              top: (SIZE - dispH) / 2 + offset.y,
-            }}
-          />
-        )}
+      {/* Crop area — fills available space */}
+      <div ref={containerRef} className="flex-1 min-h-0 flex items-center justify-center bg-black/5">
+        <div
+          className="relative rounded-xl overflow-hidden border border-border cursor-grab active:cursor-grabbing bg-bg-input"
+          style={{ width: cropSize, height: cropSize, touchAction: 'none' }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
+          {imgNatural.w > 0 && (
+            <img
+              ref={imgRef}
+              src={imgSrc}
+              alt=""
+              draggable={false}
+              className="absolute select-none pointer-events-none"
+              style={{
+                width: dispW,
+                height: dispH,
+                left: (cropSize - dispW) / 2 + offset.x,
+                top: (cropSize - dispH) / 2 + offset.y,
+              }}
+            />
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 mt-4">
-        <ZoomOut size={16} className="text-text-muted" />
+      {/* Zoom controls */}
+      <div className="flex items-center justify-center gap-3 px-4 py-5 border-t border-border flex-shrink-0">
+        <ZoomOut size={18} className="text-text-muted" />
         <input
           type="range"
           min="0.5"
@@ -107,18 +136,9 @@ export default function AvatarCropper({ file, onSave, onCancel }: AvatarCropperP
           step="0.05"
           value={zoom}
           onChange={(e) => setZoom(parseFloat(e.target.value))}
-          className="w-48 accent-accent"
+          className="w-56 accent-accent"
         />
-        <ZoomIn size={16} className="text-text-muted" />
-      </div>
-
-      <div className="flex gap-3 mt-5">
-        <button onClick={onCancel} className="press flex items-center gap-2 bg-bg-card border border-border rounded-2xl px-6 py-2.5 text-[14px] font-medium">
-          <X size={16} /> Cancel
-        </button>
-        <button onClick={handleSave} className="press flex items-center gap-2 bg-accent text-white rounded-2xl px-6 py-2.5 text-[14px] font-medium">
-          <Check size={16} /> Save
-        </button>
+        <ZoomIn size={18} className="text-text-muted" />
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
