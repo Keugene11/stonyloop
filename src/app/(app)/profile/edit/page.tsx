@@ -50,7 +50,7 @@ export default function ProfilePage() {
     'hometown', 'high_school', 'birthday', 'class_year', 'gender',
     'relationship_status', 'interested_in', 'looking_for', 'political_views',
     'email', 'phone', 'websites', 'interests', 'favorite_music', 'favorite_movies',
-    'favorite_quotes', 'courses', 'clubs',
+    'favorite_quotes', 'courses', 'clubs', 'fraternity_sorority',
   ])
 
   const updateField = useCallback((field: string, value: string | number | null) => {
@@ -277,6 +277,20 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
+
+          {/* Greek Life */}
+          {(uniData?.GREEK_LIFE || []).length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
+              <p className="text-[13px] font-semibold">Greek Life</p>
+              <div>
+                <label className={labelClass}>Fraternity / Sorority</label>
+                <select value={profile.fraternity_sorority || ''} onChange={(e) => updateField('fraternity_sorority', e.target.value)} className={selectClass}>
+                  <option value="">None</option>
+                  {(uniData?.GREEK_LIFE || []).map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Personal */}
           <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
