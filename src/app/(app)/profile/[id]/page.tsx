@@ -196,6 +196,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const isOwn = currentUserId === id
   const show = (field: string, value: string | null | undefined) => isOwn || (!privateFields.includes(field) && !!value && value !== 'None')
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
+  const clubs = profile.clubs ? profile.clubs.split(', ').filter(Boolean) : []
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-12 pb-28">
@@ -444,6 +445,14 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
               <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
               <div className="flex flex-wrap gap-1">{courses.map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
+            </div>
+          )}
+
+          {/* Clubs */}
+          {clubs.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
+              <div className="flex flex-wrap gap-1">{clubs.map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
             </div>
           )}
 

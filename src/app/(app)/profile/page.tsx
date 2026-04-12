@@ -23,6 +23,8 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState<string | null>(null)
   const [courseFilter, setCourseFilter] = useState('')
   const [courseOpen, setCourseOpen] = useState(false)
+  const [clubFilter, setClubFilter] = useState('')
+  const [clubOpen, setClubOpen] = useState(false)
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const [friends, setFriends] = useState<Profile[]>([])
@@ -123,6 +125,7 @@ export default function ProfilePage() {
   if (!profile) return null
 
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
+  const clubs = profile.clubs ? profile.clubs.split(', ').filter(Boolean) : []
   const musicTags = profile.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
   const movieTags = profile.favorite_movies ? profile.favorite_movies.split(', ').filter(Boolean) : []
   const empty = 'text-text-muted/40 italic cursor-pointer'
@@ -146,6 +149,10 @@ export default function ProfilePage() {
       return dept.name.toLowerCase().includes(courseFilter.toLowerCase())
     })
   })).filter(d => d.courses.length > 0)
+
+  // Club helpers
+  const allClubs = (uniData?.CLUBS || []).filter(c => !clubs.includes(c))
+  const filteredClubs = allClubs.filter(c => !clubFilter || c.toLowerCase().includes(clubFilter.toLowerCase()))
 
   // Editable row: click to open edit sheet
   function EditableRow({ icon: Icon, label, field, value, type = 'text', options }: {
@@ -456,6 +463,23 @@ export default function ProfilePage() {
                   <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
                   <select value="" onChange={(e) => { if (e.target.value) { updateField('courses', [...courses, e.target.value].join(', ')); setCourseFilter(''); setCourseOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
                     {filteredDepts.map(d => <optgroup key={d.code} label={`${d.code} — ${d.name}`}>{d.courses.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>)}
+                  </select>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Clubs */}
+          {allClubs.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
+              {clubs.length > 0 && <Tags items={clubs} field="clubs" />}
+              <input type="text" value={clubFilter} onChange={(e) => { setClubFilter(e.target.value); setClubOpen(true) }} onFocus={() => setClubOpen(true)} className={`${inputClass} mt-1.5`} placeholder="Search clubs..." />
+              {clubOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
+                  <select value="" onChange={(e) => { if (e.target.value) { updateField('clubs', [...clubs, e.target.value].join(', ')); setClubFilter(''); setClubOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
+                    {filteredClubs.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </>
               )}

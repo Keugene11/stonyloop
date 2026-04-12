@@ -19,6 +19,8 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('')
   const [courseFilter, setCourseFilter] = useState('')
   const [courseOpen, setCourseOpen] = useState(false)
+  const [clubFilter, setClubFilter] = useState('')
+  const [clubOpen, setClubOpen] = useState(false)
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -107,6 +109,13 @@ export default function ProfilePage() {
 
   function addCourse(course: string) { updateField('courses', [...courses, course].join(', ')); setCourseFilter('') }
   function removeCourse(course: string) { updateField('courses', courses.filter(c => c !== course).join(', ')) }
+
+  // Club helpers
+  const clubs = profile?.clubs ? profile.clubs.split(', ').filter(Boolean) : []
+  const allClubs = (uniData?.CLUBS || []).filter(c => !clubs.includes(c))
+  const filteredClubs = allClubs.filter(c => !clubFilter || c.toLowerCase().includes(clubFilter.toLowerCase()))
+  function addClub(club: string) { updateField('clubs', [...clubs, club].join(', ')); setClubFilter('') }
+  function removeClub(club: string) { updateField('clubs', clubs.filter(c => c !== club).join(', ')) }
 
   // Tag helpers
   const musicTags = profile?.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
@@ -288,6 +297,35 @@ export default function ProfilePage() {
                   <option value="">None</option>
                   {(uniData?.GREEK_LIFE || []).map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
+              </div>
+            </div>
+          )}
+
+          {/* Clubs */}
+          {allClubs.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
+              <p className="text-[13px] font-semibold">Clubs</p>
+              <div>
+                <label className={labelClass}>Clubs</label>
+                {clubs.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {clubs.map(c => (
+                      <span key={c} className="inline-flex items-center gap-1 bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">
+                        {c}
+                        <button type="button" onClick={() => removeClub(c)} className="text-text-muted hover:text-text"><X size={10} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <input type="text" value={clubFilter} onChange={(e) => { setClubFilter(e.target.value); setClubOpen(true) }} onFocus={() => setClubOpen(true)} className={inputClass} placeholder="Search clubs..." />
+                {clubOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
+                    <select value="" onChange={(e) => { if (e.target.value) { addClub(e.target.value); setClubOpen(false) } }} className={`${selectClass} mt-1 relative z-20`} size={5}>
+                      {filteredClubs.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </>
+                )}
               </div>
             </div>
           )}
