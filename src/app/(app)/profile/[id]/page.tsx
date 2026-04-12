@@ -443,16 +443,16 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           {/* Courses */}
           {courses.length > 0 && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
-              <div className="flex flex-wrap gap-1">{courses.map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Courses</p>
+              <p className="text-[13px]">{courses.join(', ')}</p>
             </div>
           )}
 
           {/* Clubs */}
           {clubs.length > 0 && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
-              <div className="flex flex-wrap gap-1">{clubs.map(c => <span key={c} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{c}</span>)}</div>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Clubs</p>
+              <p className="text-[13px]">{clubs.join(', ')}</p>
             </div>
           )}
 
@@ -460,8 +460,8 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           {(profile.favorite_music || profile.favorite_movies || profile.interests || profile.favorite_quotes) && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-2">
               {profile.interests && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Interests</p><p className="text-[13px]">{profile.interests}</p></div>}
-              {profile.favorite_music && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Music</p><div className="flex flex-wrap gap-1">{profile.favorite_music.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
-              {profile.favorite_movies && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1">Favorite Movies</p><div className="flex flex-wrap gap-1">{profile.favorite_movies.split(', ').filter(Boolean).map(t => <span key={t} className="bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">{t}</span>)}</div></div>}
+              {profile.favorite_music && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Music</p><p className="text-[13px]">{profile.favorite_music}</p></div>}
+              {profile.favorite_movies && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Favorite Movies</p><p className="text-[13px]">{profile.favorite_movies}</p></div>}
               {profile.favorite_quotes && <div><p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Quotes</p><p className="text-[13px] italic">&ldquo;{profile.favorite_quotes}&rdquo;</p></div>}
             </div>
           )}

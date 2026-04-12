@@ -17,10 +17,8 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [courseFilter, setCourseFilter] = useState('')
-  const [courseOpen, setCourseOpen] = useState(false)
-  const [clubFilter, setClubFilter] = useState('')
-  const [clubOpen, setClubOpen] = useState(false)
+  const [editingMulti, setEditingMulti] = useState<string | null>(null)
+  const [multiSearch, setMultiSearch] = useState('')
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -94,28 +92,23 @@ export default function ProfilePage() {
   // Course helpers
   const courses = profile?.courses ? profile.courses.split(', ').filter(Boolean) : []
   const sortedDepts = uniData ? Object.entries(uniData.COURSES).sort((a, b) => a[0].localeCompare(b[0])) : []
-  const allCoursesByDept = sortedDepts
-    .map(([code, dept]) => ({
-      code, name: dept.name,
-      courses: dept.courses.map(n => `${code} ${n}`).filter(c => !courses.includes(c)).filter(c => {
-        if (!courseFilter) return true
-        const q = courseFilter.trim().toUpperCase()
-        if (/^[A-Z]{2,4}$/.test(q)) return code === q
-        if (/^[A-Z]{2,4}\s/.test(q)) return c.toUpperCase().startsWith(q)
-        return dept.name.toLowerCase().includes(courseFilter.toLowerCase())
-      })
-    }))
-    .filter(d => d.courses.length > 0)
-
-  function addCourse(course: string) { updateField('courses', [...courses, course].join(', ')); setCourseFilter('') }
-  function removeCourse(course: string) { updateField('courses', courses.filter(c => c !== course).join(', ')) }
+  const courseOptions = sortedDepts.flatMap(([code, dept]) => dept.courses.map(n => ({ value: `${code} ${n}`, label: `${code} ${n}`, group: `${code} — ${dept.name}` })))
 
   // Club helpers
   const clubs = profile?.clubs ? profile.clubs.split(', ').filter(Boolean) : []
-  const allClubs = (uniData?.CLUBS || []).filter(c => !clubs.includes(c))
-  const filteredClubs = allClubs.filter(c => !clubFilter || c.toLowerCase().includes(clubFilter.toLowerCase()))
-  function addClub(club: string) { updateField('clubs', [...clubs, club].join(', ')); setClubFilter('') }
-  function removeClub(club: string) { updateField('clubs', clubs.filter(c => c !== club).join(', ')) }
+  const clubOptions = (uniData?.CLUBS || []).map(c => ({ value: c, label: c, group: '' }))
+
+  // Multi-select helpers
+  function getMultiItems(field: string) { return field === 'courses' ? courses : clubs }
+  function getMultiOptions(field: string) { return field === 'courses' ? courseOptions : clubOptions }
+  function addMultiItem(field: string, val: string) {
+    const items = getMultiItems(field)
+    updateField(field, [...items, val].join(', '))
+  }
+  function removeMultiItem(field: string, val: string) {
+    const items = getMultiItems(field)
+    updateField(field, items.filter(i => i !== val).join(', '))
+  }
 
   // Tag helpers
   const musicTags = profile?.favorite_music ? profile.favorite_music.split(', ').filter(Boolean) : []
@@ -143,7 +136,7 @@ export default function ProfilePage() {
   const labelClass = 'text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block'
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-12 pb-28 ">
+    <><div className="max-w-5xl mx-auto px-4 pt-12 pb-28 ">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -257,78 +250,26 @@ export default function ProfilePage() {
                 </select>
               </div>
             )}
-            {sortedDepts.length > 0 && (
-              <div>
-                <label className={labelClass}>Courses</label>
-                {courses.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {courses.map(c => (
-                      <span key={c} className="inline-flex items-center gap-1 bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">
-                        {c}
-                        <button type="button" onClick={() => removeCourse(c)} className="text-text-muted hover:text-text"><X size={10} /></button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={inputClass} placeholder="Search courses (e.g. CSE)" />
-                {courseOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
-                    <select value="" onChange={(e) => { if (e.target.value) { addCourse(e.target.value); setCourseOpen(false) } }} className={`${selectClass} mt-1 relative z-20`} size={5}>
-                      {allCoursesByDept.map(dept => (
-                        <optgroup key={dept.code} label={`${dept.code} — ${dept.name}`}>
-                          {dept.courses.map(c => <option key={c} value={c}>{c}</option>)}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </>
-                )}
-              </div>
-            )}
+            <div>
+              <label className={labelClass}>Courses</label>
+              <button type="button" onClick={() => { setEditingMulti('courses'); setMultiSearch('') }} className={`${inputClass} text-left press`}>
+                {courses.length > 0 ? <span className="text-text">{courses.length} course{courses.length !== 1 ? 's' : ''} — tap to edit</span> : <span className="text-text-muted">Tap to add courses</span>}
+              </button>
+            </div>
+            <div>
+              <label className={labelClass}>Fraternity / Sorority</label>
+              <select value={profile.fraternity_sorority || ''} onChange={(e) => updateField('fraternity_sorority', e.target.value)} className={selectClass}>
+                <option value="">None</option>
+                {(uniData?.GREEK_LIFE || []).map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Clubs</label>
+              <button type="button" onClick={() => { setEditingMulti('clubs'); setMultiSearch('') }} className={`${inputClass} text-left press`}>
+                {clubs.length > 0 ? <span className="text-text">{clubs.length} club{clubs.length !== 1 ? 's' : ''} — tap to edit</span> : <span className="text-text-muted">Tap to add clubs</span>}
+              </button>
+            </div>
           </div>
-
-          {/* Greek Life */}
-          {(uniData?.GREEK_LIFE || []).length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
-              <p className="text-[13px] font-semibold">Greek Life</p>
-              <div>
-                <label className={labelClass}>Fraternity / Sorority</label>
-                <select value={profile.fraternity_sorority || ''} onChange={(e) => updateField('fraternity_sorority', e.target.value)} className={selectClass}>
-                  <option value="">None</option>
-                  {(uniData?.GREEK_LIFE || []).map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Clubs */}
-          {allClubs.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
-              <p className="text-[13px] font-semibold">Clubs</p>
-              <div>
-                <label className={labelClass}>Clubs</label>
-                {clubs.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {clubs.map(c => (
-                      <span key={c} className="inline-flex items-center gap-1 bg-bg-input text-[11px] font-medium px-2 py-0.5 rounded-full">
-                        {c}
-                        <button type="button" onClick={() => removeClub(c)} className="text-text-muted hover:text-text"><X size={10} /></button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <input type="text" value={clubFilter} onChange={(e) => { setClubFilter(e.target.value); setClubOpen(true) }} onFocus={() => setClubOpen(true)} className={inputClass} placeholder="Search clubs..." />
-                {clubOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
-                    <select value="" onChange={(e) => { if (e.target.value) { addClub(e.target.value); setClubOpen(false) } }} className={`${selectClass} mt-1 relative z-20`} size={5}>
-                      {filteredClubs.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Personal */}
           <div className="bg-bg-card border border-border rounded-2xl p-4 space-y-3">
@@ -395,5 +336,62 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen multi-select overlay for courses/clubs */}
+      {editingMulti && (() => {
+        const field = editingMulti
+        const items = getMultiItems(field)
+        const options = getMultiOptions(field).filter(o => !items.includes(o.value))
+        const filtered = options.filter(o => !multiSearch || o.label.toLowerCase().includes(multiSearch.toLowerCase()))
+        const grouped: Record<string, typeof options> = {}
+        const ungrouped: typeof options = []
+        filtered.forEach(o => {
+          if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
+          else ungrouped.push(o)
+        })
+        return (
+          <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
+            <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
+              <button onClick={() => setEditingMulti(null)} className="press text-[14px] text-text-muted"><ArrowLeft size={20} /></button>
+              <h3 className="text-[17px] font-bold">{field === 'courses' ? 'Courses' : 'Clubs'}</h3>
+              <button onClick={() => setEditingMulti(null)} className="press text-[14px] font-semibold text-accent">Done</button>
+            </div>
+            <div className="flex-1 min-h-0 px-4 py-6 overflow-y-auto touch-auto">
+              {items.length > 0 && (
+                <div className="mb-4 space-y-1">
+                  {items.map(item => (
+                    <div key={item} className="flex items-center justify-between px-4 py-3 bg-bg-input rounded-xl">
+                      <span className="text-[15px]">{item}</span>
+                      <button type="button" onClick={() => removeMultiItem(field, item)} className="press text-text-muted hover:text-text"><X size={16} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input
+                type="text"
+                value={multiSearch}
+                onChange={(e) => setMultiSearch(e.target.value)}
+                placeholder={`Search ${field}...`}
+                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted mb-4"
+                autoFocus
+              />
+              <div className="space-y-0.5">
+                {ungrouped.map(o => (
+                  <button key={o.value} type="button" onClick={() => addMultiItem(field, o.value)} className="press w-full text-left px-4 py-3.5 rounded-xl text-[15px] hover:bg-bg-input">{o.label}</button>
+                ))}
+                {Object.entries(grouped).map(([g, opts]) => (
+                  <div key={g}>
+                    <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-text-muted font-semibold">{g}</div>
+                    {opts.map(o => (
+                      <button key={o.value} type="button" onClick={() => addMultiItem(field, o.value)} className="press w-full text-left px-4 py-3.5 rounded-xl text-[15px] hover:bg-bg-input">{o.label}</button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+    </>
   )
 }

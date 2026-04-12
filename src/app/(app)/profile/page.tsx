@@ -194,6 +194,8 @@ export default function ProfilePage() {
       looking_for: { label: 'Looking For', type: 'select', options: LOOKING_FOR.map(s => ({ value: s, label: s })) },
       political_views: { label: 'Political Views', type: 'select', options: POLITICAL_VIEWS.map(p => ({ value: p, label: p })) },
       fraternity_sorority: { label: 'Fraternity / Sorority', type: 'select', options: (uniData?.GREEK_LIFE || []).map(g => ({ value: g, label: g })) },
+      courses: { label: 'Courses', type: 'multiselect', options: sortedDepts.flatMap(([code, dept]) => dept.courses.map(n => ({ value: `${code} ${n}`, label: `${code} ${n}`, group: `${code} — ${dept.name}` }))) },
+      clubs: { label: 'Clubs', type: 'multiselect', options: (uniData?.CLUBS || []).map(c => ({ value: c, label: c })) },
       email: { label: 'Email', type: 'text' },
       phone: { label: 'Phone', type: 'tel' },
       websites: { label: 'Website', type: 'text' },
@@ -226,6 +228,26 @@ export default function ProfilePage() {
       setEditing(null)
     }
 
+    const selected = type === 'multiselect' ? (currentValue ? currentValue.split(', ').filter(Boolean) : []) : []
+    const [multiSelected, setMultiSelected] = useState<string[]>(selected)
+
+    const filteredMultiOptions = options?.filter(o => {
+      if (multiSelected.includes(o.value)) return false
+      if (!search) return true
+      return o.label.toLowerCase().includes(search.toLowerCase())
+    })
+
+    function addItem(val: string) {
+      const next = [...multiSelected, val]
+      setMultiSelected(next)
+      updateField(field, next.join(', '))
+    }
+    function removeItem(val: string) {
+      const next = multiSelected.filter(v => v !== val)
+      setMultiSelected(next)
+      updateField(field, next.join(', '))
+    }
+
     return (
       <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
         {/* Header */}
@@ -234,7 +256,9 @@ export default function ProfilePage() {
             <ArrowLeft size={20} />
           </button>
           <h3 className="text-[17px] font-bold">{label}</h3>
-          {type !== 'select' ? (
+          {type === 'multiselect' ? (
+            <button onClick={() => setEditing(null)} className="press text-[14px] font-semibold text-accent">Done</button>
+          ) : type !== 'select' ? (
             <button onClick={() => save()} className="press text-[14px] font-semibold text-accent">Save</button>
           ) : (
             <div className="w-[32px]" />
@@ -242,8 +266,54 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className={`flex-1 min-h-0 px-4 py-6 ${type === 'select' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
-          {type === 'select' && options ? (
+        <div className={`flex-1 min-h-0 px-4 py-6 ${type === 'select' || type === 'multiselect' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
+          {type === 'multiselect' && options ? (
+            <div>
+              {multiSelected.length > 0 && (
+                <div className="mb-4 space-y-1">
+                  {multiSelected.map(item => (
+                    <div key={item} className="flex items-center justify-between px-4 py-3 bg-bg-input rounded-xl">
+                      <span className="text-[15px]">{item}</span>
+                      <button type="button" onClick={() => removeItem(item)} className="press text-text-muted hover:text-text"><X size={16} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search ${label.toLowerCase()}...`}
+                className="w-full bg-bg-input rounded-xl px-4 py-3 text-[15px] outline-none border border-border focus:border-text-muted mb-4"
+                autoFocus
+              />
+              <div className="space-y-0.5">
+                {(() => {
+                  const grouped: Record<string, typeof options> = {}
+                  const ungrouped: typeof options = []
+                  filteredMultiOptions?.forEach(o => {
+                    if (o.group) { if (!grouped[o.group]) grouped[o.group] = []; grouped[o.group].push(o) }
+                    else ungrouped.push(o)
+                  })
+                  return (
+                    <>
+                      {ungrouped.map(o => (
+                        <button key={o.value} type="button" onClick={() => addItem(o.value)} className="press w-full text-left px-4 py-3.5 rounded-xl text-[15px] hover:bg-bg-input">{o.label}</button>
+                      ))}
+                      {Object.entries(grouped).map(([g, opts]) => (
+                        <div key={g}>
+                          <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-text-muted font-semibold">{g}</div>
+                          {opts.map(o => (
+                            <button key={o.value} type="button" onClick={() => addItem(o.value)} className="press w-full text-left px-4 py-3.5 rounded-xl text-[15px] hover:bg-bg-input">{o.label}</button>
+                          ))}
+                        </div>
+                      ))}
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+          ) : type === 'select' && options ? (
             <div>
               <input
                 type="text"
@@ -420,22 +490,34 @@ export default function ProfilePage() {
             <p className={`text-[13px] cursor-pointer ${profile.about_me ? 'hover:underline' : empty}`}>{profile.about_me || 'Click to add...'}</p>
           </div>
 
-          {/* Details */}
+          {/* Academics & Background */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
             <EditableRow icon={GraduationCap} label="Major" field="major" value={profile.major} options={(uniData?.MAJORS || []).map(m => ({ value: m, label: m }))} />
             <EditableRow icon={GraduationCap} label="2nd Major" field="second_major" value={profile.second_major} options={(uniData?.MAJORS || []).map(m => ({ value: m, label: m }))} />
             <EditableRow icon={BookOpen} label="Minor" field="minor" value={profile.minor} options={(uniData?.MINORS || []).map(m => ({ value: m, label: m }))} />
-            {resHalls.length > 0 && <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={resHalls} />}
-            <EditableRow icon={Home} label="From" field="hometown" value={profile.hometown} />
-            <EditableRow icon={School} label="High School" field="high_school" value={profile.high_school} />
-            <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="birthday" />
             <EditableRow icon={GraduationCap} label="Class Year" field="class_year" value={profile.class_year?.toString()} options={CLASS_YEARS.map(y => ({ value: y.toString(), label: y.toString() }))} />
-            <EditableRow icon={GraduationCap} label="Gender" field="gender" value={profile.gender} options={GENDERS.map(g => ({ value: g, label: g }))} />
+            {resHalls.length > 0 && <EditableRow icon={MapPin} label="Dorm" field="residence_hall" value={profile.residence_hall} options={resHalls} />}
             <EditableRow icon={Users} label="Greek Life" field="fraternity_sorority" value={profile.fraternity_sorority} options={(uniData?.GREEK_LIFE || []).map(g => ({ value: g, label: g }))} />
+          </div>
+
+          {/* Courses */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 press" onClick={() => setEditing('courses')}>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Courses</p>
+            <p className={`text-[13px] cursor-pointer ${courses.length > 0 ? 'hover:underline' : empty}`}>{courses.length > 0 ? courses.join(', ') : 'Click to add...'}</p>
+          </div>
+
+          {/* Clubs */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 press" onClick={() => setEditing('clubs')}>
+            <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Clubs</p>
+            <p className={`text-[13px] cursor-pointer ${clubs.length > 0 ? 'hover:underline' : empty}`}>{clubs.length > 0 ? clubs.join(', ') : 'Click to add...'}</p>
           </div>
 
           {/* Personal */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-2.5">
+            <EditableRow icon={Home} label="From" field="hometown" value={profile.hometown} />
+            <EditableRow icon={School} label="High School" field="high_school" value={profile.high_school} />
+            <EditableRow icon={Cake} label="Birthday" field="birthday" value={profile.birthday} type="birthday" />
+            <EditableRow icon={GraduationCap} label="Gender" field="gender" value={profile.gender} options={GENDERS.map(g => ({ value: g, label: g }))} />
             <EditableRow icon={Heart} label="Status" field="relationship_status" value={profile.relationship_status} options={RELATIONSHIP_STATUSES.map(s => ({ value: s, label: s }))} />
             <EditableRow icon={Heart} label="Interested In" field="interested_in" value={profile.interested_in} options={INTERESTED_IN.map(s => ({ value: s, label: s }))} />
             <EditableRow icon={Heart} label="Looking For" field="looking_for" value={profile.looking_for} options={LOOKING_FOR.map(s => ({ value: s, label: s }))} />
@@ -454,41 +536,6 @@ export default function ProfilePage() {
             <EditableRow icon={Phone} label="Phone" field="phone" value={profile.phone} type="tel" />
             <EditableRow icon={Globe} label="Website" field="websites" value={profile.websites} />
           </div>
-
-
-          {/* Courses */}
-          {sortedDepts.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Courses</p>
-              {courses.length > 0 && <Tags items={courses} field="courses" />}
-              <input type="text" value={courseFilter} onChange={(e) => { setCourseFilter(e.target.value); setCourseOpen(true) }} onFocus={() => setCourseOpen(true)} className={`${inputClass} mt-1.5`} placeholder="Search courses (e.g. CSE)" />
-              {courseOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setCourseOpen(false)} />
-                  <select value="" onChange={(e) => { if (e.target.value) { updateField('courses', [...courses, e.target.value].join(', ')); setCourseFilter(''); setCourseOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
-                    {filteredDepts.map(d => <optgroup key={d.code} label={`${d.code} — ${d.name}`}>{d.courses.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>)}
-                  </select>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Clubs */}
-          {allClubs.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Clubs</p>
-              {clubs.length > 0 && <Tags items={clubs} field="clubs" />}
-              <input type="text" value={clubFilter} onChange={(e) => { setClubFilter(e.target.value); setClubOpen(true) }} onFocus={() => setClubOpen(true)} className={`${inputClass} mt-1.5`} placeholder="Search clubs..." />
-              {clubOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" style={{ bottom: '56px' }} onClick={() => setClubOpen(false)} />
-                  <select value="" onChange={(e) => { if (e.target.value) { updateField('clubs', [...clubs, e.target.value].join(', ')); setClubFilter(''); setClubOpen(false) } }} className={`${selectClass} w-full mt-1 relative z-20`} size={5}>
-                    {filteredClubs.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </>
-              )}
-            </div>
-          )}
 
           {/* Interests */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 press" onClick={() => setEditing('interests')}>
