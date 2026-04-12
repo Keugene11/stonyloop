@@ -19,6 +19,10 @@ export default function NavBar() {
   const [badgeCount, setBadgeCount] = useState(0)
 
   useEffect(() => {
+    if (pathname === '/notifications') {
+      setBadgeCount(0)
+      return
+    }
     const supabase = createClient()
     async function loadCount() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -35,7 +39,7 @@ export default function NavBar() {
     loadCount()
     const interval = setInterval(loadCount, 15000)
     return () => clearInterval(interval)
-  }, [])
+  }, [pathname])
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-bg-card border-t border-border z-50">

@@ -142,8 +142,12 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   }
 
   async function handleDelete(commentId: string) {
-    // Nullify notification references before deleting so notifications don't cascade-delete
-    await supabase.from('notifications').update({ comment_id: null }).eq('comment_id', commentId)
+    // Nullify notification references via server route (uses service role for cross-user updates)
+    await fetch('/api/cleanup-notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment_id: commentId }),
+    })
     await supabase.from('comments').delete().eq('id', commentId)
     loadComments()
   }
