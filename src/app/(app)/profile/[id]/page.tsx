@@ -309,18 +309,9 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         {/* LEFT COLUMN — Profile info */}
         <div className={`md:w-[340px] md:flex-shrink-0 md:sticky md:top-4 ${activeTab === 'info' ? 'block' : 'hidden'} md:block`}>
 
-          {/* Avatar & Name */}
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-4">
-            <div className="w-full aspect-square rounded-xl bg-bg-input border border-border overflow-hidden">
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-text-muted text-[64px] font-bold">
-                  {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
-                </div>
-              )}
-            </div>
-            <h1 className="text-[22px] font-bold tracking-tight mt-3">{profile.full_name}</h1>
+          {/* Name & subtitle */}
+          <div className="mb-3">
+            <h1 className="text-[22px] font-bold tracking-tight">{profile.full_name}</h1>
             <div className="text-[13px] text-text-muted space-y-0.5 mt-0.5">
               {profile.major && <p>{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>}
               {profile.residence_hall && (
@@ -332,6 +323,19 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
                 <p className="flex items-center gap-1">
                   <Clock size={12} /> {getLastSeen(profile.last_seen)}
                 </p>
+              )}
+            </div>
+          </div>
+
+          {/* Avatar */}
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-4">
+            <div className="w-full aspect-square rounded-xl bg-bg-input border border-border overflow-hidden">
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-text-muted text-[64px] font-bold">
+                  {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
               )}
             </div>
           </div>
