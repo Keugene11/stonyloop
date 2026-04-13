@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useGoogleLogin } from '@react-oauth/google'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -52,19 +51,29 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+      const { AppleSignIn, SignInScope } = await import('@capawesome/capacitor-apple-sign-in')
+      const result = await AppleSignIn.signIn({
+        scopes: [SignInScope.Email, SignInScope.FullName],
       })
-      if (error) {
-        setError(error.message)
+      const res = await fetch('/api/auth/apple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: result.idToken }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Could not authenticate')
         setLoading(false)
+        return
       }
-    } catch {
-      setError('Apple sign-in failed')
+      window.location.href = data.redirectTo || '/directory'
+    } catch (err: unknown) {
+      const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : ''
+      if (code === 'SIGN_IN_CANCELED') {
+        setLoading(false)
+        return
+      }
+      setError('Apple sign-in is not available on this device')
       setLoading(false)
     }
   }

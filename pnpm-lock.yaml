@@ -17,6 +17,9 @@ importers:
       '@capacitor/ios':
         specifier: ^8.3.0
         version: 8.3.0(@capacitor/core@8.3.0)
+      '@capawesome/capacitor-apple-sign-in':
+        specifier: ^0.1.0
+        version: 0.1.0(@capacitor/core@8.3.0)
       '@react-oauth/google':
         specifier: ^0.13.4
         version: 0.13.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -173,6 +176,11 @@ packages:
     resolution: {integrity: sha512-5Rtwv8SITKlYTt8lAZG+khnVIdzPtqbocH3eP+JkEmX1vpSMwx4TOKtT8OBz8gpQ+pUJDRp7DBYOv3U6l/obCw==}
     peerDependencies:
       '@capacitor/core': ^8.3.0
+
+  '@capawesome/capacitor-apple-sign-in@0.1.0':
+    resolution: {integrity: sha512-/iSFHj2ZEJa1TYfEkgtAhwLIqMB/sr1ntr/HfXNz3fdssmh/j00mWgDK7sFXUSIj5G8ArpVBzaK2hJKFBWoDUQ==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3645,6 +3653,10 @@ snapshots:
       tslib: 2.8.1
 
   '@capacitor/ios@8.3.0(@capacitor/core@8.3.0)':
+    dependencies:
+      '@capacitor/core': 8.3.0
+
+  '@capawesome/capacitor-apple-sign-in@0.1.0(@capacitor/core@8.3.0)':
     dependencies:
       '@capacitor/core': 8.3.0
 
