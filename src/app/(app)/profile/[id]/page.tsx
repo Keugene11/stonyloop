@@ -6,6 +6,7 @@ import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
+import { REVIEWER_EMAIL } from '@/lib/constants'
 import FriendButton from '@/components/FriendButton'
 import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
@@ -48,6 +49,11 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       .single()
 
     if (profileData) {
+      // Hide reviewer account from other users
+      if (profileData.email === REVIEWER_EMAIL && user && user.id !== id) {
+        setLoading(false)
+        return
+      }
       // Check if same university
       if (user) {
         const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
@@ -89,7 +95,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       .eq('addressee_id', id)
 
     if (followerData) {
-      setFriends(followerData.map(f => f.requester as Profile))
+      setFriends(followerData.map(f => f.requester as Profile).filter(p => p.email !== REVIEWER_EMAIL))
     }
 
     // Load user's groups
@@ -135,7 +141,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         .eq('profile_id', id)
         .order('created_at', { ascending: false })
         .limit(50)
-      if (views) setProfileViews(views.map((v: { viewer: Profile }) => v.viewer))
+      if (views) setProfileViews(views.map((v: { viewer: Profile }) => v.viewer).filter(p => p.email !== REVIEWER_EMAIL))
     }
 
     setLoading(false)

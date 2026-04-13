@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import type { Profile } from '@/types'
+import { REVIEWER_EMAIL } from '@/lib/constants'
 
 interface Node {
   id: string
@@ -48,7 +49,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         .eq('addressee_id', id)
 
       if (followerData) {
-        setFriends(followerData.map(f => f.requester as Profile))
+        setFriends(followerData.map(f => f.requester as Profile).filter(p => p.email !== REVIEWER_EMAIL))
       }
       setLoading(false)
     }

@@ -1,3 +1,5 @@
+export const REVIEWER_EMAIL = 'reviewer@stonyloop.app'
+
 export const CLASS_YEARS = [2025, 2026, 2027, 2028, 2029]
 
 export const GENDERS = [
