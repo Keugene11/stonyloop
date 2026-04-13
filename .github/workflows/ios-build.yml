@@ -62,9 +62,11 @@ jobs:
       - name: Resolve Swift packages
         run: |
           cd ios/App
-          xcodebuild -resolvePackageDependencies \
-            -project App.xcodeproj \
-            -scheme App
+          for i in 1 2 3; do
+            xcodebuild -resolvePackageDependencies \
+              -project App.xcodeproj \
+              -scheme App && break || echo "Retry $i..."
+          done
 
       - name: Build archive
         run: |
