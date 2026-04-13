@@ -43,14 +43,14 @@ jobs:
 
           # Import certificate
           CERT_PATH=$RUNNER_TEMP/certificate.p12
-          echo -n "$CERTIFICATE_P12" | base64 -d > $CERT_PATH
+          python3 -c "import base64,os,sys; open(os.environ['RUNNER_TEMP']+'/certificate.p12','wb').write(base64.b64decode(os.environ['CERTIFICATE_P12']))"
           security import $CERT_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH
 
           # Install provisioning profile
           PP_PATH=$RUNNER_TEMP/profile.mobileprovision
-          echo -n "$PROVISIONING_PROFILE" | base64 -d > $PP_PATH
+          python3 -c "import base64,os; open(os.environ['RUNNER_TEMP']+'/profile.mobileprovision','wb').write(base64.b64decode(os.environ['PROVISIONING_PROFILE']))"
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i $PP_PATH))
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
