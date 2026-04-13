@@ -193,23 +193,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 onToggleLike={() => toggleLikeComment(c.id)}
               />
 
-              {c.replies && c.replies.length > 0 && (
-                <div className="ml-6 space-y-1.5 mt-1.5">
-                  {c.replies.map(r => (
-                    <CommentItem
-                      key={r.id}
-                      comment={r}
-                      userId={userId}
-                      onDelete={handleDelete}
-                      onEdit={handleEdit}
-                      liked={likedComments.has(r.id)}
-                      likeCount={likeCounts[r.id] || 0}
-                      onToggleLike={() => toggleLikeComment(r.id)}
-                    />
-                  ))}
-                </div>
-              )}
-
               {replyTo === c.id && (
                 <div className="ml-6 mt-1.5">
                   <div className="flex items-center gap-1.5 mb-1 px-1">
@@ -238,6 +221,23 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                       <Send size={14} />
                     </button>
                   </div>
+                </div>
+              )}
+
+              {c.replies && c.replies.length > 0 && (
+                <div className="ml-6 space-y-1.5 mt-1.5">
+                  {c.replies.map(r => (
+                    <CommentItem
+                      key={r.id}
+                      comment={r}
+                      userId={userId}
+                      onDelete={handleDelete}
+                      onEdit={handleEdit}
+                      liked={likedComments.has(r.id)}
+                      likeCount={likeCounts[r.id] || 0}
+                      onToggleLike={() => toggleLikeComment(r.id)}
+                    />
+                  ))}
                 </div>
               )}
             </div>
