@@ -28,33 +28,9 @@ jobs:
         run: |
           ICON=ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
           sips -z 1024 1024 $ICON
-          # Remove alpha channel by flattening onto dark background using CoreGraphics via python
-          python3 << 'PYEOF'
-          import subprocess
-          icon = "ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
-          # Use macOS built-in CoreImage via objc bridge
-          subprocess.run(["sips", "-s", "format", "png", icon, "--out", icon], check=True)
-          # Use ImageMagick if available, otherwise cgimage
-          try:
-              subprocess.run(["magick", icon, "-background", "#1a1a1a", "-flatten", "-alpha", "off", icon], check=True)
-          except FileNotFoundError:
-              # Fallback: use Quartz/CoreGraphics
-              import Quartz
-              from CoreFoundation import CFDataGetBytes, CFDataGetLength
-              url = Quartz.CFURLCreateWithFileSystemPath(None, icon, Quartz.kCFURLPOSIXPathStyle, False)
-              src = Quartz.CGImageSourceCreateWithURL(url, None)
-              img = Quartz.CGImageSourceCreateImageAtIndex(src, 0, None)
-              w, h = Quartz.CGImageGetWidth(img), Quartz.CGImageGetHeight(img)
-              cs = Quartz.CGColorSpaceCreateDeviceRGB()
-              ctx = Quartz.CGBitmapContextCreate(None, w, h, 8, w*4, cs, Quartz.kCGImageAlphaNoneSkipLast)
-              Quartz.CGContextSetRGBFillColor(ctx, 26/255, 26/255, 26/255, 1)
-              Quartz.CGContextFillRect(ctx, ((0,0),(w,h)))
-              Quartz.CGContextDrawImage(ctx, ((0,0),(w,h)), img)
-              out = Quartz.CGBitmapContextCreateImage(ctx)
-              dest = Quartz.CGImageDestinationCreateWithURL(url, "public.png", 1, None)
-              Quartz.CGImageDestinationAddImage(dest, out, None)
-              Quartz.CGImageDestinationFinalize(dest)
-          PYEOF
+          # Convert to JPEG then back to PNG to strip alpha channel
+          sips -s format jpeg -s formatOptions 100 $ICON --out /tmp/icon_noalpha.jpg
+          sips -s format png /tmp/icon_noalpha.jpg --out $ICON
 
       - name: Install Apple certificate and provisioning profile
         env:
