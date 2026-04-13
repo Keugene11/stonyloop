@@ -8,18 +8,12 @@ importers:
 
   .:
     dependencies:
-      '@capacitor/browser':
-        specifier: ^8.0.3
-        version: 8.0.3(@capacitor/core@8.3.0)
       '@capacitor/core':
         specifier: ^8.3.0
         version: 8.3.0
       '@capacitor/ios':
         specifier: ^8.3.0
         version: 8.3.0(@capacitor/core@8.3.0)
-      '@capacitor/push-notifications':
-        specifier: ^8.0.3
-        version: 8.0.3(@capacitor/core@8.3.0)
       '@react-oauth/google':
         specifier: ^0.13.4
         version: 0.13.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -154,11 +148,6 @@ packages:
     engines: {node: '>=10.3.0'}
     hasBin: true
 
-  '@capacitor/browser@8.0.3':
-    resolution: {integrity: sha512-WJWPHEPbweiFoHYmVlCbZf5yrqJ2Rchx2Xvbmd+3Lf+Zkpq3nXBThThY2CF69lYEg1NINGF9BcHThIOEU1gZlQ==}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.0'
-
   '@capacitor/cli@5.7.8':
     resolution: {integrity: sha512-qN8LDlREMhrYhOvVXahoJVNkP8LP55/YPRJrzTAFrMqlNJC18L3CzgWYIblFPnuwfbH/RxbfoZT/ydkwgVpMrw==}
     engines: {node: '>=16.0.0'}
@@ -176,11 +165,6 @@ packages:
     resolution: {integrity: sha512-5Rtwv8SITKlYTt8lAZG+khnVIdzPtqbocH3eP+JkEmX1vpSMwx4TOKtT8OBz8gpQ+pUJDRp7DBYOv3U6l/obCw==}
     peerDependencies:
       '@capacitor/core': ^8.3.0
-
-  '@capacitor/push-notifications@8.0.3':
-    resolution: {integrity: sha512-jmBBoJvOzmzem8YoO9dQJBPFiM1bksTNAoV7yksCBN10BybAOtmBF19vFPt/jr2KGAirnPZz0ne2X0OH/rRGtg==}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.0'
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3600,10 +3584,6 @@ snapshots:
       - supports-color
       - typescript
 
-  '@capacitor/browser@8.0.3(@capacitor/core@8.3.0)':
-    dependencies:
-      '@capacitor/core': 8.3.0
-
   '@capacitor/cli@5.7.8':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
@@ -3653,10 +3633,6 @@ snapshots:
       tslib: 2.8.1
 
   '@capacitor/ios@8.3.0(@capacitor/core@8.3.0)':
-    dependencies:
-      '@capacitor/core': 8.3.0
-
-  '@capacitor/push-notifications@8.0.3(@capacitor/core@8.3.0)':
     dependencies:
       '@capacitor/core': 8.3.0
 
