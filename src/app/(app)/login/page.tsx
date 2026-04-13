@@ -7,6 +7,9 @@ import Link from 'next/link'
 export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showEmailLogin, setShowEmailLogin] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -44,6 +47,29 @@ export default function LoginPage() {
     },
   })
 
+  async function handleEmailLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Could not sign in')
+        setLoading(false)
+        return
+      }
+      window.location.href = data.redirectTo || '/directory'
+    } catch {
+      setError('Could not sign in')
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-5">
       <div className="w-full max-w-sm animate-slide-up text-center">
@@ -80,7 +106,44 @@ export default function LoginPage() {
         <p className="text-[18px] font-semibold text-text mt-5">
           You must sign in with your Stony Brook email address.
         </p>
-        <p className="text-[12px] text-text-muted mt-2">
+
+        {/* Email/password login toggle */}
+        <button
+          onClick={() => setShowEmailLogin(!showEmailLogin)}
+          className="text-[12px] text-text-muted mt-4 press hover:underline"
+        >
+          {showEmailLogin ? 'Hide' : 'Sign in with email & password'}
+        </button>
+
+        {showEmailLogin && (
+          <form onSubmit={handleEmailLogin} className="mt-3 space-y-2 text-left">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full bg-bg-input border border-border rounded-xl px-4 py-3 text-[14px] outline-none focus:border-text-muted"
+              required
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full bg-bg-input border border-border rounded-xl px-4 py-3 text-[14px] outline-none focus:border-text-muted"
+              required
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-accent text-white py-3 rounded-2xl font-semibold press text-[14px] disabled:opacity-50"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+        )}
+
+        <p className="text-[12px] text-text-muted mt-4">
           <Link href="/about" className="text-accent press">Learn more</Link>
         </p>
       </div>
