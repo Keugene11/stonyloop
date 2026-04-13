@@ -23,6 +23,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [isFriend, setIsFriend] = useState(false)
   const [userGroups, setUserGroups] = useState<Group[]>([])
   const [friends, setFriends] = useState<Profile[]>([])
+  const [following, setFollowing] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
@@ -96,6 +97,16 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
     if (followerData) {
       setFriends(followerData.map(f => f.requester as Profile).filter(p => p.email !== REVIEWER_EMAIL))
+    }
+
+    // Load following (people this user follows)
+    const { data: followingData } = await supabase
+      .from('friendships')
+      .select('*, addressee:profiles!friendships_addressee_id_fkey(*)')
+      .eq('requester_id', id)
+
+    if (followingData) {
+      setFollowing(followingData.map(f => f.addressee as Profile).filter(p => p.email !== REVIEWER_EMAIL))
     }
 
     // Load user's groups
@@ -199,7 +210,13 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   const privateFields = profile.private_fields ? profile.private_fields.split(',').filter(Boolean) : []
   const isOwn = currentUserId === id
-  const show = (field: string, value: string | null | undefined) => isOwn || (!privateFields.includes(field) && !!value && value !== 'None')
+  const show = (field: string, value: string | null | undefined) => {
+    if (isOwn) return true
+    if (!value || value === 'None') return false
+    if (privateFields.includes(field)) return false
+    if (privateFields.includes(`${field}:followers`)) return isFriend
+    return true
+  }
   const courses = profile.courses ? profile.courses.split(', ').filter(Boolean) : []
   const clubs = profile.clubs ? profile.clubs.split(', ').filter(Boolean) : []
 
@@ -405,6 +422,29 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {friends.map(f => (
+                  <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1.5">
+                    <div className="w-16 h-16 rounded-full bg-bg-input border-2 border-border overflow-hidden">
+                      {f.avatar_url ? (
+                        <img src={f.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[18px] font-bold text-text-muted">
+                          {f.full_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[12px] font-medium text-center truncate w-full">{f.full_name?.split(' ')[0]}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Following */}
+          {following.length > 0 && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
+              <p className="text-[13px] font-semibold mb-3">Following ({following.length})</p>
+              <div className="grid grid-cols-3 gap-3">
+                {following.map(f => (
                   <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1.5">
                     <div className="w-16 h-16 rounded-full bg-bg-input border-2 border-border overflow-hidden">
                       {f.avatar_url ? (
