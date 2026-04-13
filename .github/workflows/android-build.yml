@@ -1,0 +1,50 @@
+name: Android Build & Upload to Google Play
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > android/app/stonyloop-release.keystore
+
+      - name: Build release AAB
+        working-directory: android
+        env:
+          KEYSTORE_PATH: stonyloop-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: com.stonyloop.app
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: production
+          status: completed

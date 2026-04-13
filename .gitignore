@@ -46,3 +46,11 @@ next-env.d.ts
 # capacitor / ios
 ios/App/Pods/
 ios/App/output/
+
+# capacitor / android
+android/app/build/
+android/build/
+android/capacitor-android/build/
+android/capacitor-cordova-android-plugins/build/
+android/.gradle/
+*.keystore
