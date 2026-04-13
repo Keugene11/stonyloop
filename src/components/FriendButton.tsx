@@ -2,93 +2,64 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { UserPlus, UserCheck, Clock, Loader2 } from 'lucide-react'
+import { UserPlus, UserCheck, Loader2 } from 'lucide-react'
 
-interface FriendButtonProps {
+interface FollowButtonProps {
   targetUserId: string
   currentUserId: string
 }
 
-type FriendState = 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'loading'
-
-export default function FriendButton({ targetUserId, currentUserId }: FriendButtonProps) {
+export default function FollowButton({ targetUserId, currentUserId }: FollowButtonProps) {
   const supabase = createClient()
-  const [state, setState] = useState<FriendState>('loading')
-  const [friendshipId, setFriendshipId] = useState('')
-  const [confirmUnfriend, setConfirmUnfriend] = useState(false)
+  const [following, setFollowing] = useState<boolean | null>(null)
+  const [followId, setFollowId] = useState('')
 
   useEffect(() => {
-    checkFriendship()
+    checkFollow()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetUserId])
 
-  async function checkFriendship() {
+  async function checkFollow() {
     const { data } = await supabase
       .from('friendships')
-      .select('*')
-      .or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${currentUserId})`)
+      .select('id')
+      .eq('requester_id', currentUserId)
+      .eq('addressee_id', targetUserId)
       .maybeSingle()
 
-    if (!data) {
-      setState('none')
-      return
-    }
-
-    setFriendshipId(data.id)
-
-    if (data.status === 'accepted') {
-      setState('friends')
-    } else if (data.status === 'pending') {
-      setState(data.requester_id === currentUserId ? 'pending_sent' : 'pending_received')
+    if (data) {
+      setFollowing(true)
+      setFollowId(data.id)
     } else {
-      setState('none')
+      setFollowing(false)
     }
   }
 
-  async function sendRequest() {
-    setState('loading')
-    await supabase.from('friendships').insert({
+  async function follow() {
+    setFollowing(null)
+    const { data } = await supabase.from('friendships').insert({
       requester_id: currentUserId,
       addressee_id: targetUserId,
-    })
-    // Notify the recipient of the friend request
+      status: 'accepted',
+    }).select('id').single()
+    if (data) setFollowId(data.id)
+    // Notify the person being followed
     await supabase.from('notifications').insert({
       user_id: targetUserId,
       actor_id: currentUserId,
-      type: 'friend_request',
+      type: 'follow',
     })
-    await checkFriendship()
+    setFollowing(true)
   }
 
-  async function acceptRequest() {
-    setState('loading')
-    await supabase.from('friendships')
-      .update({ status: 'accepted', updated_at: new Date().toISOString() })
-      .eq('id', friendshipId)
-    // Notify the requester that their request was accepted
-    const { data: friendship } = await supabase
-      .from('friendships')
-      .select('requester_id')
-      .eq('id', friendshipId)
-      .single()
-    if (friendship) {
-      await supabase.from('notifications').insert({
-        user_id: friendship.requester_id,
-        actor_id: currentUserId,
-        type: 'friend_accept',
-      })
-    }
-    setState('friends')
+  async function unfollow() {
+    setFollowing(null)
+    await supabase.from('friendships').delete().eq('id', followId)
+    setFollowId('')
+    setFollowing(false)
   }
 
-  async function removeFriendship() {
-    setState('loading')
-    await supabase.from('friendships').delete().eq('id', friendshipId)
-    setState('none')
-    setFriendshipId('')
-  }
-
-  if (state === 'loading') {
+  if (following === null) {
     return (
       <button disabled className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium flex items-center justify-center gap-2">
         <Loader2 size={14} className="animate-spin" />
@@ -96,71 +67,23 @@ export default function FriendButton({ targetUserId, currentUserId }: FriendButt
     )
   }
 
-  if (state === 'friends') {
-    if (confirmUnfriend) {
-      return (
-        <div className="flex gap-2">
-          <button
-            onClick={removeFriendship}
-            className="bg-red-500 text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
-          >
-            Unfriend
-          </button>
-          <button
-            onClick={() => setConfirmUnfriend(false)}
-            className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press"
-          >
-            Cancel
-          </button>
-        </div>
-      )
-    }
+  if (following) {
     return (
       <button
-        onClick={() => setConfirmUnfriend(true)}
+        onClick={unfollow}
         className="bg-bg-input border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
       >
-        <UserCheck size={14} /> Friends
+        <UserCheck size={14} /> Following
       </button>
-    )
-  }
-
-  if (state === 'pending_sent') {
-    return (
-      <button
-        onClick={removeFriendship}
-        className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 text-text-muted"
-      >
-        <Clock size={14} /> Request Sent
-      </button>
-    )
-  }
-
-  if (state === 'pending_received') {
-    return (
-      <div className="flex gap-2">
-        <button
-          onClick={acceptRequest}
-          className="bg-accent text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
-        >
-          Accept
-        </button>
-        <button
-          onClick={removeFriendship}
-          className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
-        >
-          Decline
-        </button>
-      </div>
     )
   }
 
   return (
     <button
-      onClick={sendRequest}
+      onClick={follow}
       className="bg-accent text-white rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2"
     >
-      <UserPlus size={14} /> Add Friend
+      <UserPlus size={14} /> Follow
     </button>
   )
 }

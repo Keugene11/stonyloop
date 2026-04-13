@@ -7,25 +7,24 @@ export async function notifyFriends(
   extra?: { post_type?: string; post_id?: string; comment_id?: string; content?: string },
   exclude?: string[]
 ) {
-  // Get all accepted friends
-  const { data: friendships } = await supabase
+  // Get all followers (people who follow the actor)
+  const { data: follows } = await supabase
     .from('friendships')
-    .select('requester_id, addressee_id')
-    .or(`requester_id.eq.${actorId},addressee_id.eq.${actorId}`)
-    .eq('status', 'accepted')
+    .select('requester_id')
+    .eq('addressee_id', actorId)
 
-  if (!friendships || friendships.length === 0) return
+  if (!follows || follows.length === 0) return
 
   const excludeSet = new Set(exclude || [])
-  const friendIds = friendships
-    .map(f => f.requester_id === actorId ? f.addressee_id : f.requester_id)
+  const followerIds = follows
+    .map(f => f.requester_id)
     .filter(id => !excludeSet.has(id))
 
-  if (friendIds.length === 0) return
+  if (followerIds.length === 0) return
 
-  // Batch insert notifications for all friends
-  const notifications = friendIds.map(friendId => ({
-    user_id: friendId,
+  // Batch insert notifications for all followers
+  const notifications = followerIds.map(followerId => ({
+    user_id: followerId,
     actor_id: actorId,
     type,
     post_type: extra?.post_type || null,

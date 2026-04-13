@@ -26,6 +26,8 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const [editContent, setEditContent] = useState(post.content)
   const [content, setContent] = useState(post.content)
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   async function handleDelete() {
     // Nullify notification references via server route (uses service role for cross-user updates)
     await fetch('/api/cleanup-notifications', {
@@ -78,10 +80,16 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
               <Pencil size={13} />
             </button>
           )}
-          {canDelete && (
-            <button onClick={handleDelete} className="press text-text-muted hover:text-red-500 p-1">
+          {canDelete && !showDeleteConfirm && (
+            <button onClick={() => setShowDeleteConfirm(true)} className="press text-text-muted hover:text-red-500 p-1">
               <Trash2 size={14} />
             </button>
+          )}
+          {showDeleteConfirm && (
+            <div className="flex items-center gap-1.5">
+              <button onClick={handleDelete} className="press text-red-500 text-[11px] font-medium">Delete</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="press text-text-muted text-[11px] font-medium">Cancel</button>
+            </div>
           )}
         </div>
       </div>

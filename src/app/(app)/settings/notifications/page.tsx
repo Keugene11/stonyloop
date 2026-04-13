@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
 const NOTIF_TOGGLES = [
-  { field: 'notif_friend_requests', label: 'Friend requests', description: 'When someone sends you a friend request' },
+  { field: 'notif_friend_requests', label: 'New followers', description: 'When someone follows you' },
   { field: 'notif_pokes', label: 'Pokes', description: 'When someone pokes you' },
   { field: 'notif_wall_posts', label: 'Wall posts', description: 'When someone writes on your wall' },
   { field: 'notif_likes', label: 'Likes', description: 'When someone likes your post' },
@@ -15,13 +15,13 @@ const NOTIF_TOGGLES = [
 
 const MESSAGE_OPTIONS = [
   { value: 'everyone', label: 'Everyone' },
-  { value: 'friends', label: 'Friends only' },
+  { value: 'friends', label: 'Followers only' },
   { value: 'nobody', label: 'Nobody' },
 ]
 
 const WALL_POST_OPTIONS = [
   { value: 'everyone', label: 'Everyone' },
-  { value: 'friends', label: 'Friends only' },
+  { value: 'friends', label: 'Followers only' },
 ]
 
 export default function NotificationSettingsPage() {

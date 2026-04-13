@@ -41,14 +41,14 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       const { data: profileData } = await supabase.from('profiles').select('*').eq('id', id).single()
       if (profileData) setProfile(profileData as Profile)
 
-      const { data: friendships } = await supabase
+      // Load followers (people who follow this profile)
+      const { data: followerData } = await supabase
         .from('friendships')
-        .select('*, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
-        .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
-        .eq('status', 'accepted')
+        .select('*, requester:profiles!friendships_requester_id_fkey(*)')
+        .eq('addressee_id', id)
 
-      if (friendships) {
-        setFriends(friendships.map(f => (f.requester_id === id ? f.addressee : f.requester) as Profile))
+      if (followerData) {
+        setFriends(followerData.map(f => f.requester as Profile))
       }
       setLoading(false)
     }
@@ -339,7 +339,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
         </button>
         <div>
           <h1 className="text-white text-[15px] font-bold">{profile.full_name}&apos;s Network</h1>
-          <p className="text-white/30 text-[11px]">{friends.length} friend{friends.length !== 1 ? 's' : ''} &middot; drag to pan &middot; scroll to zoom &middot; tap to visit</p>
+          <p className="text-white/30 text-[11px]">{friends.length} follower{friends.length !== 1 ? 's' : ''} &middot; drag to pan &middot; scroll to zoom &middot; tap to visit</p>
         </div>
       </div>
 

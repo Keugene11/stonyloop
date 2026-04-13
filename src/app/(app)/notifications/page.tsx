@@ -225,8 +225,9 @@ export default function NotificationsPage() {
     if (type === 'like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     if (type === 'comment') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
     if (type === 'reply') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
+    if (type === 'follow') return <UserPlus size={12} className="text-accent flex-shrink-0" />
     if (type === 'friend_request') return <UserPlus size={12} className="text-accent flex-shrink-0" />
-    if (type === 'friend_accept') return <UserCheck size={12} className="text-green-500 flex-shrink-0" />
+    if (type === 'friend_accept') return <UserPlus size={12} className="text-accent flex-shrink-0" />
     if (type === 'message') return <MessageCircle size={12} className="text-accent flex-shrink-0" />
     if (type === 'poke') return <Hand size={12} className="text-accent flex-shrink-0" />
     if (type === 'group_join') return <Users size={12} className="text-accent flex-shrink-0" />
@@ -240,8 +241,9 @@ export default function NotificationsPage() {
     if (type === 'like') return 'liked your post'
     if (type === 'comment') return 'commented on your post'
     if (type === 'reply') return 'replied to your comment'
-    if (type === 'friend_request') return 'sent you a friend request'
-    if (type === 'friend_accept') return 'accepted your friend request'
+    if (type === 'follow') return 'started following you'
+    if (type === 'friend_request') return 'started following you'
+    if (type === 'friend_accept') return 'started following you'
     if (type === 'message') return 'sent you a message'
     if (type === 'poke') return 'poked you'
     if (type === 'group_join') return 'joined your group'
@@ -323,23 +325,7 @@ export default function NotificationsPage() {
                     <span className="text-[11px] text-text-muted">{getTimeAgo(new Date(n.created_at))}</span>
                   </div>
                 </div>
-                {/* Action buttons for friend requests */}
-                {showFriendActions && (
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => acceptRequest(n.actor_id)}
-                      className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press"
-                    >
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => declineRequest(n.actor_id)}
-                      className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                )}
+                {/* Follow notifications don't need action buttons */}
                 {/* Poke back button */}
                 {n.type === 'poke' && (
                   pokedBack.has(n.id) ? (

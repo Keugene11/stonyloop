@@ -49,14 +49,13 @@ export default function ProfilePage() {
     }
     const { data: posts } = await supabase.from('wall_posts').select('*, author:profiles!wall_posts_author_id_fkey(*)').eq('wall_owner_id', user.id).order('created_at', { ascending: false }).limit(50)
     if (posts) setWallPosts(posts as WallPost[])
-    // Load friends
-    const { data: friendships } = await supabase
+    // Load followers (people who follow me)
+    const { data: followerData } = await supabase
       .from('friendships')
-      .select('*, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
-      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
-      .eq('status', 'accepted')
-    if (friendships) {
-      setFriends(friendships.map(f => (f.requester_id === user.id ? f.addressee : f.requester) as Profile))
+      .select('*, requester:profiles!friendships_requester_id_fkey(*)')
+      .eq('addressee_id', user.id)
+    if (followerData) {
+      setFriends(followerData.map(f => f.requester as Profile))
     }
 
     const { data: memberships } = await supabase.from('group_members').select('group_id').eq('user_id', user.id)
@@ -564,7 +563,7 @@ export default function ProfilePage() {
           {/* Friends */}
           <div className="bg-bg-card border border-border rounded-2xl px-4 py-4">
             <div className="flex items-center justify-between mb-3">
-              <Link href="/friends" className="press text-[13px] font-semibold hover:underline">Friends ({friends.length})</Link>
+              <Link href="/friends" className="press text-[13px] font-semibold hover:underline">Followers ({friends.length})</Link>
               {friends.length > 0 && (
                 <Link
                   href={`/profile/${userId}/network`}

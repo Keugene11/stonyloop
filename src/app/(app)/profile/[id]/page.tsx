@@ -60,16 +60,16 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       setProfile(profileData as Profile)
     }
 
-    // Check friendship
+    // Check if current user follows this profile
     if (user) {
-      const { data: friendship } = await supabase
+      const { data: followData } = await supabase
         .from('friendships')
-        .select('status')
-        .or(`and(requester_id.eq.${user.id},addressee_id.eq.${id}),and(requester_id.eq.${id},addressee_id.eq.${user.id})`)
-        .eq('status', 'accepted')
+        .select('id')
+        .eq('requester_id', user.id)
+        .eq('addressee_id', id)
         .maybeSingle()
 
-      setIsFriend(!!friendship)
+      setIsFriend(!!followData)
     }
 
     // Load wall posts
@@ -82,15 +82,14 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
     if (posts) setWallPosts(posts as WallPost[])
 
-    // Load friends
-    const { data: friendships } = await supabase
+    // Load followers (people who follow this profile)
+    const { data: followerData } = await supabase
       .from('friendships')
-      .select('*, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
-      .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
-      .eq('status', 'accepted')
+      .select('*, requester:profiles!friendships_requester_id_fkey(*)')
+      .eq('addressee_id', id)
 
-    if (friendships) {
-      setFriends(friendships.map(f => (f.requester_id === id ? f.addressee : f.requester) as Profile))
+    if (followerData) {
+      setFriends(followerData.map(f => f.requester as Profile))
     }
 
     // Load user's groups
@@ -148,9 +147,9 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       setIsBlocked(false)
     } else {
       await supabase.from('blocks').insert({ blocker_id: currentUserId, blocked_id: id })
-      // Also remove friendship
-      await supabase.from('friendships').delete()
-        .or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${id}),and(requester_id.eq.${id},addressee_id.eq.${currentUserId})`)
+      // Also remove follows in both directions
+      await supabase.from('friendships').delete().eq('requester_id', currentUserId).eq('addressee_id', id)
+      await supabase.from('friendships').delete().eq('requester_id', id).eq('addressee_id', currentUserId)
       setIsBlocked(true)
       setIsFriend(false)
     }
@@ -200,27 +199,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-12 pb-28">
-      {/* Action buttons */}
-      {currentUserId && currentUserId !== id && !isBlocked && (
-        <div className="flex gap-2 mb-4">
-          <FriendButton targetUserId={id} currentUserId={currentUserId} />
-          <PokeButton targetUserId={id} currentUserId={currentUserId} />
-          <button
-            onClick={async () => {
-              const res = await fetch('/api/conversations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetUserId: id }),
-              })
-              const conv = await res.json()
-              if (conv.id) router.push(`/messages/${conv.id}`)
-            }}
-            className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 hover:bg-bg-card-hover"
-          >
-            <MessageCircle size={14} /> Message
-          </button>
-        </div>
-      )}
+      {/* Action buttons moved below avatar card */}
 
       {/* Block / Report */}
       {currentUserId && currentUserId !== id && (
@@ -340,6 +319,28 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
+          {/* Action buttons */}
+          {currentUserId && currentUserId !== id && !isBlocked && (
+            <div className="flex gap-2 mb-4">
+              <FriendButton targetUserId={id} currentUserId={currentUserId} />
+              <PokeButton targetUserId={id} currentUserId={currentUserId} />
+              <button
+                onClick={async () => {
+                  const res = await fetch('/api/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetUserId: id }),
+                  })
+                  const conv = await res.json()
+                  if (conv.id) router.push(`/messages/${conv.id}`)
+                }}
+                className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 hover:bg-bg-card-hover"
+              >
+                <MessageCircle size={14} /> Message
+              </button>
+            </div>
+          )}
+
           {/* Profile views (own profile only) */}
           {isOwn && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-4">
@@ -385,11 +386,11 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Friends */}
+          {/* Followers */}
           {friends.length > 0 && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
+                <p className="text-[13px] font-semibold">Followers ({friends.length})</p>
                 <Link
                   href={`/profile/${id}/network`}
                   className="press flex items-center gap-1.5 text-[11px] font-semibold text-accent bg-accent/10 rounded-full px-3 py-1"
