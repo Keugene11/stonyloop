@@ -5,6 +5,11 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Stonyloop",
   description: "The social network for Stony Brook University students",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "StonyLoop",
+  },
 };
 
 export const viewport: Viewport = {
