@@ -199,27 +199,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-12 pb-28">
-      {/* Action buttons moved below avatar card */}
-
-      {/* Block / Report */}
-      {currentUserId && currentUserId !== id && (
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={toggleBlock}
-            className={`press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border ${isBlocked ? 'border-red-500/30 text-red-500' : 'border-border text-text-muted hover:text-text'}`}
-          >
-            <Ban size={13} />
-            {isBlocked ? 'Unblock' : 'Block'}
-          </button>
-          <button
-            onClick={() => setShowReport(true)}
-            className="press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border border-border text-text-muted hover:text-text"
-          >
-            <Flag size={13} />
-            Report
-          </button>
-        </div>
-      )}
 
       {/* Report modal */}
       {showReport && (
@@ -337,6 +316,26 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
                 className="bg-bg-card border border-border rounded-xl py-2 px-4 text-[13px] font-medium press flex items-center justify-center gap-2 hover:bg-bg-card-hover"
               >
                 <MessageCircle size={14} /> Message
+              </button>
+            </div>
+          )}
+
+          {/* Block / Report */}
+          {currentUserId && currentUserId !== id && (
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={toggleBlock}
+                className={`press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border ${isBlocked ? 'border-red-500/30 text-red-500' : 'border-border text-text-muted hover:text-text'}`}
+              >
+                <Ban size={13} />
+                {isBlocked ? 'Unblock' : 'Block'}
+              </button>
+              <button
+                onClick={() => setShowReport(true)}
+                className="press flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-[12px] font-medium border border-border text-text-muted hover:text-text"
+              >
+                <Flag size={13} />
+                Report
               </button>
             </div>
           )}

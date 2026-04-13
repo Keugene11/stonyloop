@@ -350,7 +350,7 @@ export default function ProfilePage() {
           else ungrouped.push(o)
         })
         return (
-          <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
+          <div className="fixed inset-0 bg-bg z-[60] flex flex-col overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
             <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
               <button onClick={() => setEditingMulti(null)} className="press text-[14px] text-text-muted"><ArrowLeft size={20} /></button>
               <h3 className="text-[17px] font-bold">{field === 'courses' ? 'Courses' : 'Clubs'}</h3>
