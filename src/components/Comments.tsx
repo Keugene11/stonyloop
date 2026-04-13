@@ -211,24 +211,33 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
               )}
 
               {replyTo === c.id && (
-                <div className="ml-6 mt-1.5 flex gap-2">
-                  <input
-                    type="text"
-                    value={replyInput}
-                    onChange={(e) => setReplyInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handlePost(c.id) }}
-                    maxLength={2000}
-                    placeholder="Write a reply..."
-                    className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => handlePost(c.id)}
-                    disabled={!replyInput.trim()}
-                    className="text-accent disabled:opacity-30 press"
-                  >
-                    <Send size={14} />
-                  </button>
+                <div className="ml-6 mt-1.5">
+                  <div className="flex items-center gap-1.5 mb-1 px-1">
+                    <span className="text-[10px] text-text-muted">Replying to</span>
+                    <span className="text-[10px] font-semibold">{c.author?.full_name || 'Unknown'}</span>
+                    <button onClick={() => { setReplyTo(null); setReplyInput('') }} className="press ml-auto">
+                      <X size={10} className="text-text-muted" />
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={replyInput}
+                      onChange={(e) => setReplyInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handlePost(c.id) }}
+                      maxLength={2000}
+                      placeholder={`Reply to ${c.author?.full_name || 'Unknown'}...`}
+                      className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50 border border-border"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handlePost(c.id)}
+                      disabled={!replyInput.trim()}
+                      className="text-accent disabled:opacity-30 press"
+                    >
+                      <Send size={14} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
