@@ -416,33 +416,18 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Details — compact icon rows, respects privacy */}
-          {(show('major', profile.major) || show('second_major', profile.second_major) || show('minor', profile.minor) || show('residence_hall', profile.residence_hall) || show('hometown', profile.hometown) || show('high_school', profile.high_school) || show('birthday', profile.birthday) || (show('relationship_status', profile.relationship_status) && profile.relationship_status !== 'Prefer not to say') || (show('interested_in', profile.interested_in) && profile.interested_in !== 'Prefer not to say') || show('looking_for', profile.looking_for) || show('political_views', profile.political_views) || show('fraternity_sorority', profile.fraternity_sorority)) && (
-          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
-            {show('major', profile.major) && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span>{profile.major}</span></div>}
-            {show('second_major', profile.second_major) && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span>{profile.second_major}</span></div>}
-            {show('minor', profile.minor) && <div className="flex items-center gap-2 text-[13px] py-0.5"><BookOpen size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Minor:</span> <span>{profile.minor}</span></div>}
-            {show('residence_hall', profile.residence_hall) && <div className="flex items-center gap-2 text-[13px] py-0.5"><MapPin size={13} className="text-text-muted flex-shrink-0" /><span>{profile.residence_hall}</span></div>}
-            {show('hometown', profile.hometown) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Home size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">From:</span> <span>{profile.hometown}</span></div>}
-            {show('high_school', profile.high_school) && <div className="flex items-center gap-2 text-[13px] py-0.5"><School size={13} className="text-text-muted flex-shrink-0" /><span>{profile.high_school}</span></div>}
-            {show('birthday', profile.birthday) && !isNaN(new Date(profile.birthday + 'T00:00:00').getTime()) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Cake size={13} className="text-text-muted flex-shrink-0" /><span>{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span></div>}
-            {show('relationship_status', profile.relationship_status) && profile.relationship_status !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span>{profile.relationship_status}</span></div>}
-            {show('interested_in', profile.interested_in) && profile.interested_in !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Interested in:</span> <span>{profile.interested_in}</span></div>}
-            {show('looking_for', profile.looking_for) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Looking for:</span> <span>{profile.looking_for}</span></div>}
-            {show('political_views', profile.political_views) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Political Views:</span> <span>{profile.political_views}</span></div>}
-            {show('fraternity_sorority', profile.fraternity_sorority) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Users size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Greek Life:</span> <span>{profile.fraternity_sorority}</span></div>}
-          </div>
-          )}
-
-          {/* Contact */}
-          {(show('email', profile.email) || show('phone', profile.phone) || show('websites', profile.websites)) && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
-              {show('email', profile.email) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Mail size={13} className="text-text-muted flex-shrink-0" /><span className="text-accent break-all">{profile.email}</span></div>}
-              {show('phone', profile.phone) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Phone size={13} className="text-text-muted flex-shrink-0" /><span>{profile.phone}</span></div>}
-              {show('websites', profile.websites) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-accent break-all">{profile.websites}</span></div>}
+          {/* Academics */}
+          {(show('major', profile.major) || show('second_major', profile.second_major) || show('minor', profile.minor) || profile.class_year) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Academics</p>
+              <div className="space-y-0.5">
+                {show('major', profile.major) && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span>{profile.major}</span></div>}
+                {show('second_major', profile.second_major) && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">2nd Major:</span> <span>{profile.second_major}</span></div>}
+                {show('minor', profile.minor) && <div className="flex items-center gap-2 text-[13px] py-0.5"><BookOpen size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Minor:</span> <span>{profile.minor}</span></div>}
+                {profile.class_year && <div className="flex items-center gap-2 text-[13px] py-0.5"><GraduationCap size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Class of</span> <span>{profile.class_year}</span></div>}
+              </div>
             </div>
           )}
-
 
           {/* Courses */}
           {courses.length > 0 && (
@@ -452,11 +437,37 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Clubs */}
-          {clubs.length > 0 && (
+          {/* Campus */}
+          {(show('residence_hall', profile.residence_hall) || show('fraternity_sorority', profile.fraternity_sorority) || clubs.length > 0) && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3">
-              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-0.5">Clubs</p>
-              <p className="text-[13px]">{clubs.join(', ')}</p>
+              <p className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5">Campus</p>
+              <div className="space-y-0.5">
+                {show('residence_hall', profile.residence_hall) && <div className="flex items-center gap-2 text-[13px] py-0.5"><MapPin size={13} className="text-text-muted flex-shrink-0" /><span>{profile.residence_hall}</span></div>}
+                {show('fraternity_sorority', profile.fraternity_sorority) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Users size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Greek Life:</span> <span>{profile.fraternity_sorority}</span></div>}
+                {clubs.length > 0 && <div className="flex items-start gap-2 text-[13px] py-0.5"><Users size={13} className="text-text-muted flex-shrink-0 mt-0.5" /><span>{clubs.join(', ')}</span></div>}
+              </div>
+            </div>
+          )}
+
+          {/* Personal */}
+          {(show('hometown', profile.hometown) || show('high_school', profile.high_school) || show('birthday', profile.birthday) || (show('relationship_status', profile.relationship_status) && profile.relationship_status !== 'Prefer not to say') || (show('interested_in', profile.interested_in) && profile.interested_in !== 'Prefer not to say') || show('looking_for', profile.looking_for) || show('political_views', profile.political_views)) && (
+          <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
+            {show('hometown', profile.hometown) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Home size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">From:</span> <span>{profile.hometown}</span></div>}
+            {show('high_school', profile.high_school) && <div className="flex items-center gap-2 text-[13px] py-0.5"><School size={13} className="text-text-muted flex-shrink-0" /><span>{profile.high_school}</span></div>}
+            {show('birthday', profile.birthday) && !isNaN(new Date(profile.birthday + 'T00:00:00').getTime()) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Cake size={13} className="text-text-muted flex-shrink-0" /><span>{new Date(profile.birthday + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span></div>}
+            {show('relationship_status', profile.relationship_status) && profile.relationship_status !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span>{profile.relationship_status}</span></div>}
+            {show('interested_in', profile.interested_in) && profile.interested_in !== 'Prefer not to say' && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Interested in:</span> <span>{profile.interested_in}</span></div>}
+            {show('looking_for', profile.looking_for) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Heart size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Looking for:</span> <span>{profile.looking_for}</span></div>}
+            {show('political_views', profile.political_views) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-text-muted">Political Views:</span> <span>{profile.political_views}</span></div>}
+          </div>
+          )}
+
+          {/* Contact */}
+          {(show('email', profile.email) || show('phone', profile.phone) || show('websites', profile.websites)) && (
+            <div className="bg-bg-card border border-border rounded-2xl px-4 py-3 mb-3 space-y-0.5">
+              {show('email', profile.email) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Mail size={13} className="text-text-muted flex-shrink-0" /><span className="text-accent break-all">{profile.email}</span></div>}
+              {show('phone', profile.phone) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Phone size={13} className="text-text-muted flex-shrink-0" /><span>{profile.phone}</span></div>}
+              {show('websites', profile.websites) && <div className="flex items-center gap-2 text-[13px] py-0.5"><Globe size={13} className="text-text-muted flex-shrink-0" /><span className="text-accent break-all">{profile.websites}</span></div>}
             </div>
           )}
 
