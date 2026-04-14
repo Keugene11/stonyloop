@@ -268,6 +268,27 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
+      {/* Mobile profile header (visible on wall tab) */}
+      {!isOwn && (
+        <div className="flex items-center gap-3 mb-4 md:hidden">
+          <div className="w-10 h-10 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[14px] font-bold text-text-muted">
+                {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-[16px] font-bold tracking-tight truncate">{profile.full_name}</h1>
+            {profile.major && (
+              <p className="text-[12px] text-text-muted truncate">{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Mobile tabs */}
       <div className="flex gap-0 mb-4 md:hidden border-b border-border">
         <button
