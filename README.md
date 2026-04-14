@@ -2,7 +2,7 @@
 
 A social network for Stony Brook University students. Think early Facebook — profiles, wall posts, friends, pokes, and messaging — built exclusively for the SBU community.
 
-**[stonyloop.vercel.app](https://stonyloop.vercel.app)**
+**[stonyloop.com](https://stonyloop.com)**
 
 ## Features
 
