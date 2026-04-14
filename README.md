@@ -2,6 +2,8 @@
 
 A social network for Stony Brook University students. Think early Facebook — profiles, wall posts, friends, pokes, and messaging — built exclusively for the SBU community.
 
+**[stonyloop.vercel.app](https://stonyloop.vercel.app)**
+
 ## Features
 
 - **Google OAuth** — Sign in with your @stonybrook.edu email
@@ -20,23 +22,3 @@ A social network for Stony Brook University students. Think early Facebook — p
 - **Auth**: Google OAuth 2.0
 - **Styling**: Tailwind CSS
 - **Icons**: lucide-react
-
-## Getting Started
-
-```bash
-pnpm install
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see the app.
-
-## Environment Variables
-
-Create a `.env.local` file with:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-GOOGLE_CLIENT_SECRET=
-```
