@@ -201,11 +201,11 @@ export default function NotificationsPage() {
 
   async function pokeBack(notifId: string, actorId: string) {
     setPokedBack(prev => new Set([...prev, notifId]))
-    // Clear any existing pokes between the two users, then create new one
-    await supabase.from('pokes').delete().eq('poker_id', userId).eq('poked_id', actorId)
+    // Clear their poke to me, upsert my poke back
     await supabase.from('pokes').delete().eq('poker_id', actorId).eq('poked_id', userId)
+    await supabase.from('pokes').delete().eq('poker_id', userId).eq('poked_id', actorId)
     await supabase.from('pokes').insert({ poker_id: userId, poked_id: actorId })
-    // Create a notification for the other person
+    // Always create a new notification so repeated pokes show up
     await supabase.from('notifications').insert({
       user_id: actorId,
       actor_id: userId,

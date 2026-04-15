@@ -41,23 +41,22 @@ export default function PokesPage() {
   }
 
   async function pokeBack(pokerId: string, pokeId: string) {
-    // Delete their poke
+    // Delete their poke to me
     await supabase.from('pokes').delete().eq('id', pokeId)
 
-    // Create new poke back
-    const { error: pokeErr } = await supabase.from('pokes').insert({
+    // Delete any existing poke from me, then re-insert
+    await supabase.from('pokes').delete().eq('poker_id', userId).eq('poked_id', pokerId)
+    await supabase.from('pokes').insert({
       poker_id: userId,
       poked_id: pokerId,
     })
-    if (pokeErr) console.error('Poke back insert failed:', pokeErr)
 
-    // Create a persistent notification for the other person
-    const { error: notifErr } = await supabase.from('notifications').insert({
+    // Always create a new notification so repeated pokes show up
+    await supabase.from('notifications').insert({
       user_id: pokerId,
       actor_id: userId,
       type: 'poke',
     })
-    if (notifErr) console.error('Poke back notification failed:', notifErr)
 
     setPokes(pokes.filter(p => p.id !== pokeId))
   }
