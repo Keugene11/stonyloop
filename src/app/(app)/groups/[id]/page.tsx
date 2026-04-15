@@ -419,7 +419,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       {groupCropFile && (
         <ImageCropper
           file={groupCropFile}
-          aspectRatio={2}
+          aspectRatio={4/3}
           onSave={handleGroupImageSave}
           onCancel={() => setGroupCropFile(null)}
         />

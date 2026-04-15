@@ -159,7 +159,7 @@ export default function CreateGroupPage() {
       {cropFile && (
         <ImageCropper
           file={cropFile}
-          aspectRatio={2}
+          aspectRatio={4/3}
           onSave={handleCropSave}
           onCancel={() => setCropFile(null)}
         />

@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
   const [editingMulti, setEditingMulti] = useState<string | null>(null)
+  const [multiItems, setMultiItems] = useState<string[]>([])
   const [multiSearch, setMultiSearch] = useState('')
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
@@ -98,13 +99,20 @@ export default function ProfilePage() {
   // Multi-select helpers
   function getMultiItems(field: string) { return field === 'courses' ? courses : clubs }
   function getMultiOptions(field: string) { return field === 'courses' ? courseOptions : clubOptions }
+  function openMultiEdit(field: string) {
+    setEditingMulti(field)
+    setMultiItems(getMultiItems(field))
+    setMultiSearch('')
+  }
   function addMultiItem(field: string, val: string) {
-    const items = getMultiItems(field)
-    updateField(field, [...items, val].join(', '))
+    const next = [...multiItems, val]
+    setMultiItems(next)
+    updateField(field, next.join(', '))
   }
   function removeMultiItem(field: string, val: string) {
-    const items = getMultiItems(field)
-    updateField(field, items.filter(i => i !== val).join(', '))
+    const next = multiItems.filter(i => i !== val)
+    setMultiItems(next)
+    updateField(field, next.join(', '))
   }
 
   // Tag helpers
@@ -248,7 +256,7 @@ export default function ProfilePage() {
             )}
             <div>
               <label className={labelClass}>Courses</label>
-              <button type="button" onClick={() => { setEditingMulti('courses'); setMultiSearch('') }} className={`${inputClass} text-left press`}>
+              <button type="button" onClick={() => openMultiEdit('courses')} className={`${inputClass} text-left press`}>
                 {courses.length > 0 ? <span className="text-text">{courses.length} course{courses.length !== 1 ? 's' : ''} — tap to edit</span> : <span className="text-text-muted">Tap to add courses</span>}
               </button>
             </div>
@@ -261,7 +269,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className={labelClass}>Clubs</label>
-              <button type="button" onClick={() => { setEditingMulti('clubs'); setMultiSearch('') }} className={`${inputClass} text-left press`}>
+              <button type="button" onClick={() => openMultiEdit('clubs')} className={`${inputClass} text-left press`}>
                 {clubs.length > 0 ? <span className="text-text">{clubs.length} club{clubs.length !== 1 ? 's' : ''} — tap to edit</span> : <span className="text-text-muted">Tap to add clubs</span>}
               </button>
             </div>
@@ -336,7 +344,7 @@ export default function ProfilePage() {
       {/* Fullscreen multi-select overlay for courses/clubs */}
       {editingMulti && (() => {
         const field = editingMulti
-        const items = getMultiItems(field)
+        const items = multiItems
         const options = getMultiOptions(field).filter(o => !items.includes(o.value))
         const filtered = options.filter(o => !multiSearch || o.label.toLowerCase().includes(multiSearch.toLowerCase()))
         const grouped: Record<string, typeof options> = {}
