@@ -13,7 +13,6 @@ export default function ProfilePage() {
   const supabase = createClient()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -58,9 +57,7 @@ export default function ProfilePage() {
     setProfile(prev => prev ? { ...prev, [field]: value } : prev)
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
-      setSaving(true)
       await supabase.from('profiles').update({ [field]: value, updated_at: new Date().toISOString() }).eq('id', userId)
-      setSaving(false)
     }, 800)
   }, [userId, supabase])
 
@@ -149,7 +146,6 @@ export default function ProfilePage() {
           </label>
           <div>
             <h1 className="text-[22px] font-bold tracking-tight">Edit Profile</h1>
-            {saving && <span className="text-[11px] text-text-muted">Saving...</span>}
           </div>
         </div>
         <Link href="/profile" className="press bg-accent text-white rounded-xl px-4 py-2 text-[13px] font-medium flex items-center gap-1.5">
