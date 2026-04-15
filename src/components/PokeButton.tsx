@@ -40,17 +40,19 @@ export default function PokeButton({ targetUserId, currentUserId }: PokeButtonPr
       await supabase.from('pokes').delete().eq('poker_id', targetUserId).eq('poked_id', currentUserId)
     }
 
-    await supabase.from('pokes').insert({
+    const { error: pokeErr } = await supabase.from('pokes').insert({
       poker_id: currentUserId,
       poked_id: targetUserId,
     })
+    if (pokeErr) console.error('Poke insert failed:', pokeErr)
 
     // Create a persistent notification in the inbox
-    await supabase.from('notifications').insert({
+    const { error: notifErr } = await supabase.from('notifications').insert({
       user_id: targetUserId,
       actor_id: currentUserId,
       type: 'poke',
     })
+    if (notifErr) console.error('Poke notification insert failed:', notifErr)
 
     setTheyPokedMe(false)
     setLoading(false)

@@ -45,17 +45,19 @@ export default function PokesPage() {
     await supabase.from('pokes').delete().eq('id', pokeId)
 
     // Create new poke back
-    await supabase.from('pokes').insert({
+    const { error: pokeErr } = await supabase.from('pokes').insert({
       poker_id: userId,
       poked_id: pokerId,
     })
+    if (pokeErr) console.error('Poke back insert failed:', pokeErr)
 
     // Create a persistent notification for the other person
-    await supabase.from('notifications').insert({
+    const { error: notifErr } = await supabase.from('notifications').insert({
       user_id: pokerId,
       actor_id: userId,
       type: 'poke',
     })
+    if (notifErr) console.error('Poke back notification failed:', notifErr)
 
     setPokes(pokes.filter(p => p.id !== pokeId))
   }
