@@ -56,17 +56,18 @@ export default function FeedPage() {
       return
     }
 
-    // Load wall posts from feed authors
+    // Load wall posts from feed authors (only posts on their own wall)
     const { data: postData } = await supabase
       .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*), wall_owner:profiles!wall_posts_wall_owner_id_fkey(*)')
+      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
       .in('author_id', feedAuthors)
       .order('created_at', { ascending: false })
-      .limit(PAGE_SIZE)
+      .limit(PAGE_SIZE * 2)
 
     if (postData) {
-      setPosts(postData as WallPost[])
-      setHasMore(postData.length === PAGE_SIZE)
+      const ownWallPosts = (postData as WallPost[]).filter(p => p.author_id === p.wall_owner_id).slice(0, PAGE_SIZE)
+      setPosts(ownWallPosts)
+      setHasMore(ownWallPosts.length === PAGE_SIZE)
     }
 
     setLoading(false)
@@ -81,15 +82,16 @@ export default function FeedPage() {
 
     const { data: postData } = await supabase
       .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*), wall_owner:profiles!wall_posts_wall_owner_id_fkey(*)')
+      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
       .in('author_id', feedAuthors)
       .lt('created_at', lastPost.created_at)
       .order('created_at', { ascending: false })
-      .limit(PAGE_SIZE)
+      .limit(PAGE_SIZE * 2)
 
     if (postData) {
-      setPosts(prev => [...prev, ...(postData as WallPost[])])
-      setHasMore(postData.length === PAGE_SIZE)
+      const ownWallPosts = (postData as WallPost[]).filter(p => p.author_id === p.wall_owner_id).slice(0, PAGE_SIZE)
+      setPosts(prev => [...prev, ...ownWallPosts])
+      setHasMore(ownWallPosts.length === PAGE_SIZE)
     }
 
     setLoadingMore(false)
@@ -141,29 +143,16 @@ export default function FeedPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map(post => {
-            const isOnOwnWall = post.author_id === post.wall_owner_id
-            return (
-              <div key={post.id}>
-                {/* Show "posted on X's wall" context if not on their own wall */}
-                {!isOnOwnWall && post.wall_owner && (
-                  <p className="text-[12px] text-text-muted mb-1 ml-1">
-                    <span className="font-medium text-text">{post.author?.full_name}</span>
-                    {' '}posted on{' '}
-                    <span className="font-medium text-text">{post.wall_owner.full_name}</span>
-                    &apos;s wall
-                  </p>
-                )}
-                <WallPostItem
-                  post={post}
-                  currentUserId={currentUserId}
-                  wallOwnerId={post.wall_owner_id}
-                  onDelete={handleDeletePost}
-                  isFriend={followedIds.includes(post.author_id)}
-                />
-              </div>
-            )
-          })}
+          {posts.map(post => (
+            <WallPostItem
+              key={post.id}
+              post={post}
+              currentUserId={currentUserId}
+              wallOwnerId={post.wall_owner_id}
+              onDelete={handleDeletePost}
+              isFriend={followedIds.includes(post.author_id)}
+            />
+          ))}
 
           {loadingMore && (
             <div className="flex justify-center py-4">
