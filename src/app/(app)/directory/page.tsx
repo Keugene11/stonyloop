@@ -115,6 +115,7 @@ export default function DirectoryPage() {
         <div>
           <h1 className="text-[24px] font-bold tracking-tight">Directory</h1>
           {uniName && <p className="text-[13px] text-text-muted">{uniName}</p>}
+          <div className="accent-bar" />
         </div>
       </div>
 

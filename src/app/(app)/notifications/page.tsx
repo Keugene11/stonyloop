@@ -255,7 +255,10 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 ">
-      <h1 className="text-[24px] font-bold tracking-tight mb-4">Inbox</h1>
+      <div className="mb-4">
+        <h1 className="text-[24px] font-bold tracking-tight">Inbox</h1>
+        <div className="accent-bar" />
+      </div>
 
       {notifications.length === 0 ? (
         <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">

@@ -82,7 +82,10 @@ export default function FollowersPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 ">
-      <h1 className="text-[24px] font-bold tracking-tight mb-4">Connections</h1>
+      <div className="mb-4">
+        <h1 className="text-[24px] font-bold tracking-tight">Connections</h1>
+        <div className="accent-bar" />
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-bg-input rounded-xl p-1 mb-4">

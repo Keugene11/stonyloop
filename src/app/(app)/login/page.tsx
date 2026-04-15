@@ -100,8 +100,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-5">
       <div className="w-full max-w-sm animate-slide-up text-center">
-        <h1 className="text-[28px] font-extrabold tracking-tight text-text">
-          [ Stonyloop ]
+        <h1 className="text-[28px] font-extrabold tracking-tight">
+          <span className="text-accent">[</span> Stonyloop <span className="text-accent">]</span>
         </h1>
 
         <ul className="text-[13px] text-text-muted mt-5 text-left space-y-2 list-disc pl-5">

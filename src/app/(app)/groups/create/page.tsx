@@ -87,7 +87,10 @@ export default function CreateGroupPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-12 pb-28 ">
-      <h1 className="text-[24px] font-bold tracking-tight mb-6">Create a Group</h1>
+      <div className="mb-6">
+        <h1 className="text-[24px] font-bold tracking-tight">Create a Group</h1>
+        <div className="accent-bar" />
+      </div>
 
       <form onSubmit={handleCreate} className="space-y-4">
         {/* Group Photo */}
