@@ -7,6 +7,7 @@ import { Camera, Loader2, LogOut, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
 import { getUniversityData, type UniversityData } from '@/lib/university-data'
+import AvatarCropper from '@/components/AvatarCropper'
 import type { Profile } from '@/types'
 
 export default function ProfilePage() {
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const [musicInput, setMusicInput] = useState('')
   const [movieInput, setMovieInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
   const [uniData, setUniData] = useState<UniversityData | null>(null)
 
   useEffect(() => {
@@ -62,18 +64,27 @@ export default function ProfilePage() {
     }, 800)
   }, [userId, supabase])
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !userId) return
+    if (!file) return
     if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
+    setCropFile(file)
+    e.target.value = ''
+  }
+
+  async function handleAvatarSave(blob: Blob) {
+    setCropFile(null)
+    if (!userId) return
+    const previewUrl = URL.createObjectURL(blob)
+    setAvatarUrl(previewUrl)
+    setProfile(prev => prev ? { ...prev, avatar_url: previewUrl } : prev)
     // Delete old avatar
     if (avatarUrl && avatarUrl.includes('/avatars/')) {
       const oldPath = avatarUrl.split('/avatars/')[1]
       if (oldPath) await supabase.storage.from('avatars').remove([decodeURIComponent(oldPath)])
     }
-    const ext = file.name.split('.').pop()
-    const path = `${userId}/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from('avatars').upload(path, file)
+    const path = `${userId}/${Date.now()}.jpg`
+    const { error } = await supabase.storage.from('avatars').upload(path, blob)
     if (error) return
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId)
@@ -150,7 +161,7 @@ export default function ProfilePage() {
               {avatarUrl ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> : <Camera size={24} className="text-text-muted" />}
             </div>
             <div className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1"><Camera size={10} /></div>
-            <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+            <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
           </label>
           <div>
             <h1 className="text-[22px] font-bold tracking-tight">Edit Profile</h1>
@@ -396,6 +407,13 @@ export default function ProfilePage() {
           </div>
         )
       })()}
+      {cropFile && (
+        <AvatarCropper
+          file={cropFile}
+          onSave={handleAvatarSave}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
     </>
   )
 }
