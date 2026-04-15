@@ -250,7 +250,7 @@ export default function ProfilePage() {
     return (
       <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
+        <div className="max-w-lg mx-auto w-full flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
           <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">
             <ArrowLeft size={20} />
           </button>
@@ -265,7 +265,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className={`flex-1 min-h-0 px-4 py-6 ${type === 'select' || type === 'multiselect' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
+        <div className={`flex-1 min-h-0 max-w-lg mx-auto w-full px-4 py-6 ${type === 'select' || type === 'multiselect' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
           {type === 'multiselect' && options ? (
             <div>
               {multiSelected.length > 0 && (
@@ -403,17 +403,49 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-10 pb-28">
+      {/* Mobile profile header — always visible */}
+      <div className="md:hidden mb-4">
+        <div className="flex items-center gap-3.5 mb-3">
+          <label className="relative cursor-pointer press flex-shrink-0">
+            <div className="w-16 h-16 rounded-full bg-bg-input border-2 border-border overflow-hidden">
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[24px] font-bold text-text-muted">
+                  {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+              )}
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 bg-accent text-white rounded-full p-1">
+              <Camera size={10} />
+            </div>
+            <input type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
+          </label>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[20px] font-bold tracking-tight truncate">{profile.full_name || 'Set your name'}</h1>
+            <p className="text-[13px] text-text-muted truncate">
+              {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
+              {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={16} /></button>
+          </div>
+        </div>
+      </div>
+
       {/* Mobile tabs */}
       <div className="flex gap-0 mb-4 md:hidden border-b border-border">
         <button
           onClick={() => setActiveTab('wall')}
-          className={`press flex-1 py-2.5 text-[14px] font-semibold text-center border-b-2 transition-colors ${activeTab === 'wall' ? 'border-text text-text' : 'border-transparent text-text-muted'}`}
+          className={`press flex-1 py-2.5 text-[14px] font-semibold text-center border-b-2 transition-colors ${activeTab === 'wall' ? 'border-accent text-accent' : 'border-transparent text-text-muted'}`}
         >
           Wall
         </button>
         <button
           onClick={() => setActiveTab('info')}
-          className={`press flex-1 py-2.5 text-[14px] font-semibold text-center border-b-2 transition-colors ${activeTab === 'info' ? 'border-text text-text' : 'border-transparent text-text-muted'}`}
+          className={`press flex-1 py-2.5 text-[14px] font-semibold text-center border-b-2 transition-colors ${activeTab === 'info' ? 'border-accent text-accent' : 'border-transparent text-text-muted'}`}
         >
           Info
         </button>
