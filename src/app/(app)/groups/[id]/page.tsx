@@ -293,10 +293,10 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
             <form onSubmit={handlePost} className="bg-bg-card border border-border rounded-2xl p-3 mb-4">
               <textarea
                 value={postContent}
-                onChange={(e) => setPostContent(e.target.value)}
+                onChange={(e) => { setPostContent(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
                 maxLength={2000}
                 placeholder="Write something to the group..."
-                className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none h-16"
+                className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none min-h-[4rem] max-h-[50vh] overflow-y-auto"
               />
               {mediaPreview && (
                 <div className="relative mb-2 inline-block">
