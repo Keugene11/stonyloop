@@ -62,8 +62,12 @@ export default function GroupsPage() {
     setLoading(false)
   }
 
+  const q = search.toLowerCase()
+  const filteredMy = search
+    ? myGroups.filter(g => g.name.toLowerCase().includes(q) || g.description.toLowerCase().includes(q))
+    : myGroups
   const filteredAll = search
-    ? allGroups.filter(g => g.name.toLowerCase().includes(search.toLowerCase()) || g.description.toLowerCase().includes(search.toLowerCase()))
+    ? allGroups.filter(g => g.name.toLowerCase().includes(q) || g.description.toLowerCase().includes(q))
     : allGroups
 
   if (loading) {
@@ -83,12 +87,23 @@ export default function GroupsPage() {
         </Link>
       </div>
 
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search groups..."
+          className="w-full bg-bg-card border border-border rounded-xl pl-9 pr-4 py-2.5 text-[14px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
+        />
+      </div>
+
       {/* My Groups */}
-      {myGroups.length > 0 && (
+      {filteredMy.length > 0 && (
         <div className="mb-6">
           <h2 className="text-[14px] font-semibold text-text-muted mb-2">Your Groups</h2>
           <div className="space-y-2">
-            {myGroups.map(g => (
+            {filteredMy.map(g => (
               <GroupCard key={g.id} group={g} />
             ))}
           </div>
@@ -98,16 +113,6 @@ export default function GroupsPage() {
       {/* Browse All */}
       <div>
         <h2 className="text-[14px] font-semibold text-text-muted mb-2">Browse Groups</h2>
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search groups..."
-            className="w-full bg-bg-card border border-border rounded-xl pl-9 pr-4 py-2.5 text-[14px] placeholder:text-text-muted/50 outline-none focus:border-text-muted transition-colors"
-          />
-        </div>
         {filteredAll.length === 0 ? (
           <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
             <p className="text-text-muted text-[14px]">
