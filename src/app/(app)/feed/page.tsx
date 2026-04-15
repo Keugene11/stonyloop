@@ -151,6 +151,7 @@ export default function FeedPage() {
               wallOwnerId={post.wall_owner_id}
               onDelete={handleDeletePost}
               isFriend={followedIds.includes(post.author_id)}
+              truncate
             />
           ))}
 

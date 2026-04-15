@@ -9,15 +9,18 @@ import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
 import Likes from '@/components/Likes'
 
+const TRUNCATE_LENGTH = 280
+
 interface WallPostItemProps {
   post: WallPost
   currentUserId: string
   wallOwnerId: string
   onDelete: (postId: string) => void
   isFriend?: boolean
+  truncate?: boolean
 }
 
-export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, isFriend = false }: WallPostItemProps) {
+export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, isFriend = false, truncate = false }: WallPostItemProps) {
   const supabase = createClient()
   const canDelete = currentUserId === post.author_id || currentUserId === wallOwnerId
   const canEdit = currentUserId === post.author_id
@@ -25,8 +28,10 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState(post.content)
   const [content, setContent] = useState(post.content)
+  const [expanded, setExpanded] = useState(false)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const shouldTruncate = truncate && !expanded && content.length > TRUNCATE_LENGTH
 
   async function handleDelete() {
     // Nullify notification references via server route (uses service role for cross-user updates)
@@ -114,7 +119,14 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
         </div>
       ) : (
         <>
-          {content && <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{content}</p>}
+          {content && (
+            <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
+              {shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '...' : content}
+              {shouldTruncate && (
+                <button onClick={() => setExpanded(true)} className="press text-accent font-medium ml-1">more</button>
+              )}
+            </p>
+          )}
           {post.media_url && (
             <div className="mt-2.5">
               {isVideo(post.media_url) ? (
