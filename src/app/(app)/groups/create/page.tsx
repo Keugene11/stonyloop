@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, Image, X } from 'lucide-react'
+import ImageCropper from '@/components/ImageCropper'
 
 export default function CreateGroupPage() {
   const supabase = createClient()
@@ -14,6 +15,7 @@ export default function CreateGroupPage() {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -22,8 +24,15 @@ export default function CreateGroupPage() {
     if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
     const ext = (file.name.split('.').pop() || '').toLowerCase()
     if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return
+    setCropFile(file)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  function handleCropSave(blob: Blob) {
+    const file = new File([blob], 'group-cover.jpg', { type: 'image/jpeg' })
     setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    setImagePreview(URL.createObjectURL(blob))
+    setCropFile(null)
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -146,6 +155,15 @@ export default function CreateGroupPage() {
           {loading ? <Loader2 size={18} className="animate-spin" /> : 'Create Group'}
         </button>
       </form>
+
+      {cropFile && (
+        <ImageCropper
+          file={cropFile}
+          aspectRatio={2}
+          onSave={handleCropSave}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
     </div>
   )
 }
