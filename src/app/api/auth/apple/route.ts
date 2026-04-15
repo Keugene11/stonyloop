@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       }).eq('id', user.id)
     }
 
-    return NextResponse.json({ ok: true, redirectTo: '/directory' })
+    return NextResponse.json({ ok: true, redirectTo: '/feed' })
   } catch (err) {
     console.error('Apple auth error:', err)
     return NextResponse.json(

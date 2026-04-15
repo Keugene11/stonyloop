@@ -36,7 +36,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      window.location.href = data.redirectTo || '/directory'
+      window.location.href = data.redirectTo || '/feed'
     } catch {
       setError('Could not authenticate')
       setLoading(false)
@@ -62,7 +62,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      window.location.href = data.redirectTo || '/directory'
+      window.location.href = data.redirectTo || '/feed'
     } catch (err: unknown) {
       const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : ''
       if (code === 'SIGN_IN_CANCELED') {
@@ -90,7 +90,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      window.location.href = data.redirectTo || '/directory'
+      window.location.href = data.redirectTo || '/feed'
     } catch {
       setError('Could not sign in')
       setLoading(false)

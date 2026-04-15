@@ -8,7 +8,7 @@ const GOOGLE_CLIENT_ID = '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.goo
 export async function POST(request: Request) {
   try {
     const { code, credential, redirectTo: rawRedirect } = await request.json()
-    const redirectTo = rawRedirect && typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/directory'
+    const redirectTo = rawRedirect && typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/feed'
 
     let idToken: string
     let accessToken: string | undefined
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       }).eq('id', user.id)
     }
 
-    return NextResponse.json({ ok: true, redirectTo: redirectTo || '/directory' })
+    return NextResponse.json({ ok: true, redirectTo: redirectTo || '/feed' })
   } catch (err) {
     console.error('Google auth error:', err)
     return NextResponse.json(
