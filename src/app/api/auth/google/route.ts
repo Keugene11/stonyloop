@@ -7,30 +7,42 @@ const GOOGLE_CLIENT_ID = '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.goo
 
 export async function POST(request: Request) {
   try {
-    const { code, redirectTo: rawRedirect } = await request.json()
+    const { code, credential, redirectTo: rawRedirect } = await request.json()
     const redirectTo = rawRedirect && typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/directory'
 
-    // Exchange auth code for tokens with Google
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code,
-        client_id: GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: 'postmessage',
-        grant_type: 'authorization_code',
-      }),
-    })
+    let idToken: string
+    let accessToken: string | undefined
 
-    const tokens = await tokenRes.json()
+    if (credential) {
+      // Google Identity Services credential response (ID token directly)
+      idToken = credential
+    } else if (code) {
+      // Auth-code flow fallback
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          client_id: GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: 'postmessage',
+          grant_type: 'authorization_code',
+        }),
+      })
 
-    if (!tokens.id_token) {
-      console.error('Google token exchange failed:', tokens)
-      return NextResponse.json(
-        { error: tokens.error_description || tokens.error || 'Failed to get ID token from Google' },
-        { status: 400 }
-      )
+      const tokens = await tokenRes.json()
+
+      if (!tokens.id_token) {
+        console.error('Google token exchange failed:', tokens)
+        return NextResponse.json(
+          { error: tokens.error_description || tokens.error || 'Failed to get ID token from Google' },
+          { status: 400 }
+        )
+      }
+      idToken = tokens.id_token
+      accessToken = tokens.access_token
+    } else {
+      return NextResponse.json({ error: 'Missing credentials' }, { status: 400 })
     }
 
     const cookieStore = await cookies()
@@ -53,8 +65,8 @@ export async function POST(request: Request) {
 
     const { error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
-      token: tokens.id_token,
-      access_token: tokens.access_token,
+      token: idToken,
+      access_token: accessToken,
     })
 
     if (error) {
