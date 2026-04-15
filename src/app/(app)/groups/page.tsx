@@ -130,11 +130,11 @@ function GroupCard({ group }: { group: Group }) {
   return (
     <Link href={`/groups/${group.id}`} className="press block">
       <div className="bg-bg-card border border-border rounded-2xl p-3 flex items-center gap-3 hover:bg-bg-card-hover transition-colors">
-        <div className="w-12 h-12 rounded-xl bg-bg-input border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-xl bg-bg-input border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
           {group.image_url ? (
             <img src={group.image_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <Users size={20} className="text-text-muted" />
+            <Users size={28} className="text-text-muted" />
           )}
         </div>
         <div className="flex-1 min-w-0">
