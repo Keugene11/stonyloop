@@ -321,12 +321,12 @@ export default function ProfilePage() {
             <p className="text-[13px] font-semibold">Favorites</p>
             <div>
               <label className={labelClass}>Music</label>
-              {musicTags.length > 0 && <div className="space-y-0.5 mb-1.5">{musicTags.map(t => <div key={t} className="flex items-center justify-between group"><span className="text-[13px]">{t}</span><button type="button" onClick={() => removeTag('favorite_music', t, musicTags)} className="text-text-muted hover:text-text opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button></div>)}</div>}
+              {musicTags.length > 0 && <p className="text-[13px] mb-1.5">{musicTags.join(', ')}</p>}
               <input type="text" value={musicInput} onChange={(e) => setMusicInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag('favorite_music', musicInput, musicTags, setMusicInput) } }} className={inputClass} placeholder="Type artist, press Enter" />
             </div>
             <div>
               <label className={labelClass}>Movies</label>
-              {movieTags.length > 0 && <div className="space-y-0.5 mb-1.5">{movieTags.map(t => <div key={t} className="flex items-center justify-between group"><span className="text-[13px]">{t}</span><button type="button" onClick={() => removeTag('favorite_movies', t, movieTags)} className="text-text-muted hover:text-text opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button></div>)}</div>}
+              {movieTags.length > 0 && <p className="text-[13px] mb-1.5">{movieTags.join(', ')}</p>}
               <input type="text" value={movieInput} onChange={(e) => setMovieInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag('favorite_movies', movieInput, movieTags, setMovieInput) } }} className={inputClass} placeholder="Type movie, press Enter" />
             </div>
             <div>

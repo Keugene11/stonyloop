@@ -397,14 +397,7 @@ export default function ProfilePage() {
 
   function Tags({ items, field }: { items: string[]; field: string }) {
     return (
-      <div className="space-y-0.5">
-        {items.map(t => (
-          <div key={t} className="flex items-center justify-between group">
-            <span className="text-[13px]">{t}</span>
-            <button type="button" onClick={() => updateField(field, items.filter(i => i !== t).join(', '))} className="text-text-muted hover:text-text opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
-          </div>
-        ))}
-      </div>
+      <p className="text-[13px]">{items.join(', ')}</p>
     )
   }
 
