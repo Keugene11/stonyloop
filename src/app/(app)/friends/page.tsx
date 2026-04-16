@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import type { Profile } from '@/types'
-import { REVIEWER_EMAIL } from '@/lib/constants'
+import { HIDDEN_EMAILS } from '@/lib/constants'
 
 export default function FollowersPage() {
   const supabase = createClient()
@@ -31,7 +31,7 @@ export default function FollowersPage() {
       .order('created_at', { ascending: false })
 
     if (followerData) {
-      setFollowers(followerData.map(f => f.requester as Profile).filter(p => p.email !== REVIEWER_EMAIL))
+      setFollowers(followerData.map(f => f.requester as Profile).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
     }
 
     // Load following (people I follow)
@@ -42,7 +42,7 @@ export default function FollowersPage() {
       .order('created_at', { ascending: false })
 
     if (followingData) {
-      setFollowing(followingData.map(f => f.addressee as Profile).filter(p => p.email !== REVIEWER_EMAIL))
+      setFollowing(followingData.map(f => f.addressee as Profile).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
     }
 
     setLoading(false)

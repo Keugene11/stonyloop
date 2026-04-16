@@ -1,4 +1,5 @@
 export const REVIEWER_EMAIL = 'reviewer@stonyloop.app'
+export const HIDDEN_EMAILS = ['reviewer@stonyloop.app', 'keugenelee9@gmail.com']
 
 export const CLASS_YEARS = [2025, 2026, 2027, 2028, 2029]
 

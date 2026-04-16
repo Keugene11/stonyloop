@@ -97,8 +97,8 @@ export default function CreateGroupPage() {
         <div>
           <label className="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Group Photo</label>
           {imagePreview ? (
-            <div className="relative rounded-2xl overflow-hidden">
-              <img src={imagePreview} alt="" className="w-full h-48 object-cover" />
+            <div className="relative rounded-2xl overflow-hidden bg-bg-card border border-border">
+              <img src={imagePreview} alt="" className="w-full h-56 object-cover" />
               <button
                 type="button"
                 onClick={() => { setImageFile(null); setImagePreview(null); if (fileRef.current) fileRef.current.value = '' }}
