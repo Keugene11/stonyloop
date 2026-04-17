@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react'
 import type { WallPost } from '@/types'
 import WallPostItem from '@/components/WallPost'
 import WallPostForm from '@/components/WallPostForm'
+import { HIDDEN_EMAILS } from '@/lib/constants'
 
 export default function FeedPage() {
   const supabase = createClient()
@@ -13,7 +14,8 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [currentUserId, setCurrentUserId] = useState('')
-  const [followedIds, setFollowedIds] = useState<string[]>([])
+  const [friendIds, setFriendIds] = useState<string[]>([])
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set())
   const [hasMore, setHasMore] = useState(true)
   const PAGE_SIZE = 20
 
@@ -27,7 +29,7 @@ export default function FeedPage() {
     if (!user) return
     setCurrentUserId(user.id)
 
-    // Get friends (accepted friendships in either direction)
+    // Get friends for the isFriend prop on posts
     const { data: friendships } = await supabase
       .from('friendships')
       .select('requester_id, addressee_id')
@@ -37,7 +39,7 @@ export default function FeedPage() {
     const fIds = (friendships || []).map(f =>
       f.requester_id === user.id ? f.addressee_id : f.requester_id
     )
-    setFollowedIds(fIds)
+    setFriendIds(fIds)
 
     // Get blocked users to filter out
     const { data: blocks } = await supabase
@@ -45,25 +47,36 @@ export default function FeedPage() {
       .select('blocked_id, blocker_id')
       .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`)
 
-    const blockedIds = new Set<string>()
+    const bIds = new Set<string>()
     for (const b of blocks || []) {
-      if (b.blocker_id === user.id) blockedIds.add(b.blocked_id)
-      else blockedIds.add(b.blocker_id)
+      if (b.blocker_id === user.id) bIds.add(b.blocked_id)
+      else bIds.add(b.blocker_id)
     }
+    setBlockedIds(bIds)
 
-    // Feed authors = friends + myself, minus blocked
-    const feedAuthors = [user.id, ...fIds].filter(id => !blockedIds.has(id))
+    // Get current user's university
+    const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
+    const myUniversity = myProfile?.university || 'stonybrook'
 
-    if (feedAuthors.length === 0) {
+    // Get all user IDs in the same university (excluding hidden and blocked)
+    const { data: uniProfiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('university', myUniversity)
+      .not('email', 'in', `(${HIDDEN_EMAILS.join(',')})`)
+
+    const uniUserIds = (uniProfiles || []).map(p => p.id).filter(id => !bIds.has(id))
+
+    if (uniUserIds.length === 0) {
       setLoading(false)
       return
     }
 
-    // Load wall posts from feed authors (only posts on their own wall)
+    // Load wall posts from everyone in the university (only posts on their own wall)
     const { data: postData } = await supabase
       .from('wall_posts')
       .select('*, author:profiles!wall_posts_author_id_fkey(*)')
-      .in('author_id', feedAuthors)
+      .in('author_id', uniUserIds)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE * 2)
 
@@ -81,24 +94,24 @@ export default function FeedPage() {
     setLoadingMore(true)
 
     const lastPost = posts[posts.length - 1]
-    const feedAuthors = [currentUserId, ...followedIds]
 
     const { data: postData } = await supabase
       .from('wall_posts')
       .select('*, author:profiles!wall_posts_author_id_fkey(*)')
-      .in('author_id', feedAuthors)
       .lt('created_at', lastPost.created_at)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE * 2)
 
     if (postData) {
-      const ownWallPosts = (postData as WallPost[]).filter(p => p.author_id === p.wall_owner_id).slice(0, PAGE_SIZE)
+      const ownWallPosts = (postData as WallPost[]).filter(p =>
+        p.author_id === p.wall_owner_id && !blockedIds.has(p.author_id)
+      ).slice(0, PAGE_SIZE)
       setPosts(prev => [...prev, ...ownWallPosts])
       setHasMore(ownWallPosts.length === PAGE_SIZE)
     }
 
     setLoadingMore(false)
-  }, [loadingMore, hasMore, posts, currentUserId, followedIds, supabase])
+  }, [loadingMore, hasMore, posts, blockedIds, supabase])
 
   // Infinite scroll
   useEffect(() => {
@@ -142,7 +155,7 @@ export default function FeedPage() {
       {/* Posts */}
       {posts.length === 0 ? (
         <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
-          <p className="text-[14px] text-text-muted">No posts yet. Add friends to see their posts here!</p>
+          <p className="text-[14px] text-text-muted">No posts yet. Be the first to post!</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -153,7 +166,7 @@ export default function FeedPage() {
               currentUserId={currentUserId}
               wallOwnerId={post.wall_owner_id}
               onDelete={handleDeletePost}
-              isFriend={followedIds.includes(post.author_id)}
+              isFriend={friendIds.includes(post.author_id)}
               truncate
             />
           ))}
