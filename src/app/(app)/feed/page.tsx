@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import type { WallPost } from '@/types'
 import WallPostItem from '@/components/WallPost'
 import WallPostForm from '@/components/WallPostForm'
-import { HIDDEN_EMAILS } from '@/lib/constants'
+
 
 export default function FeedPage() {
   const supabase = createClient()
@@ -54,34 +54,15 @@ export default function FeedPage() {
     }
     setBlockedIds(bIds)
 
-    // Get current user's university
-    const { data: myProfile } = await supabase.from('profiles').select('university').eq('id', user.id).single()
-    const myUniversity = myProfile?.university || 'stonybrook'
-
-    // Get all user IDs in the same university (excluding hidden and blocked)
-    const { data: uniProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('university', myUniversity)
-      .not('email', 'in', `(${HIDDEN_EMAILS.join(',')})`)
-
-    const uniUserIds = (uniProfiles || []).map(p => p.id).filter(id => !bIds.has(id))
-
-    if (uniUserIds.length === 0) {
-      setLoading(false)
-      return
-    }
-
-    // Load wall posts from everyone in the university (only posts on their own wall)
+    // Load all wall posts (only posts on their own wall)
     const { data: postData } = await supabase
       .from('wall_posts')
       .select('*, author:profiles!wall_posts_author_id_fkey(*)')
-      .in('author_id', uniUserIds)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE * 2)
 
     if (postData) {
-      const ownWallPosts = (postData as WallPost[]).filter(p => p.author_id === p.wall_owner_id).slice(0, PAGE_SIZE)
+      const ownWallPosts = (postData as WallPost[]).filter(p => p.author_id === p.wall_owner_id && !bIds.has(p.author_id)).slice(0, PAGE_SIZE)
       setPosts(ownWallPosts)
       setHasMore(ownWallPosts.length === PAGE_SIZE)
     }
