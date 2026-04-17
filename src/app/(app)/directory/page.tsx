@@ -57,12 +57,15 @@ export default function DirectoryPage() {
       const { data: blocks } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id)
       const blocked = blocks ? blocks.map(b => b.blocked_id) : []
 
-      // Get people I follow
-      const { data: followData } = await supabase
+      // Get friends (accepted friendships in either direction)
+      const { data: friendData } = await supabase
         .from('friendships')
-        .select('addressee_id')
-        .eq('requester_id', user.id)
-      const friendSet = new Set((followData || []).map(f => f.addressee_id))
+        .select('requester_id, addressee_id')
+        .eq('status', 'accepted')
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+      const friendSet = new Set((friendData || []).map(f =>
+        f.requester_id === user.id ? f.addressee_id : f.requester_id
+      ))
       setFriendIds(friendSet)
 
       // Get current user's university to filter directory
@@ -143,7 +146,7 @@ export default function DirectoryPage() {
                 <>
                   {friendList.length > 0 && (
                     <div>
-                      <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wide mb-2">Following · {friendList.length}</p>
+                      <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wide mb-2">Friends · {friendList.length}</p>
                       <div className="space-y-2">
                         {friendList.map(profile => (
                           <ProfileCard key={profile.id} profile={profile} />

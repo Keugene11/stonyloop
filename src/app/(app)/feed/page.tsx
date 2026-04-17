@@ -27,13 +27,16 @@ export default function FeedPage() {
     if (!user) return
     setCurrentUserId(user.id)
 
-    // Get people I follow
+    // Get friends (accepted friendships in either direction)
     const { data: friendships } = await supabase
       .from('friendships')
-      .select('addressee_id')
-      .eq('requester_id', user.id)
+      .select('requester_id, addressee_id')
+      .eq('status', 'accepted')
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
 
-    const fIds = (friendships || []).map(f => f.addressee_id)
+    const fIds = (friendships || []).map(f =>
+      f.requester_id === user.id ? f.addressee_id : f.requester_id
+    )
     setFollowedIds(fIds)
 
     // Get blocked users to filter out
@@ -48,7 +51,7 @@ export default function FeedPage() {
       else blockedIds.add(b.blocker_id)
     }
 
-    // Feed authors = people I follow + myself, minus blocked
+    // Feed authors = friends + myself, minus blocked
     const feedAuthors = [user.id, ...fIds].filter(id => !blockedIds.has(id))
 
     if (feedAuthors.length === 0) {
@@ -139,7 +142,7 @@ export default function FeedPage() {
       {/* Posts */}
       {posts.length === 0 ? (
         <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
-          <p className="text-[14px] text-text-muted">No posts yet. Follow people to see their posts here!</p>
+          <p className="text-[14px] text-text-muted">No posts yet. Add friends to see their posts here!</p>
         </div>
       ) : (
         <div className="space-y-3">

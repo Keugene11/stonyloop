@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand, UserPlus, UserCheck, Heart, MessageSquare, MessageCircle, Users, Check } from 'lucide-react'
+import { Loader2, Hand, UserPlus, UserCheck, UserX, Heart, MessageSquare, MessageCircle, Users, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
@@ -241,9 +241,9 @@ export default function NotificationsPage() {
     if (type === 'like') return 'liked your post'
     if (type === 'comment') return 'commented on your post'
     if (type === 'reply') return 'replied to your comment'
-    if (type === 'follow') return 'started following you'
-    if (type === 'friend_request') return 'started following you'
-    if (type === 'friend_accept') return 'started following you'
+    if (type === 'follow') return 'sent you a friend request'
+    if (type === 'friend_request') return 'sent you a friend request'
+    if (type === 'friend_accept') return 'accepted your friend request'
     if (type === 'message') return 'sent you a message'
     if (type === 'poke') return 'poked you'
     if (type === 'group_join') return 'joined your group'
@@ -328,7 +328,26 @@ export default function NotificationsPage() {
                     <span className="text-[11px] text-text-muted">{getTimeAgo(new Date(n.created_at))}</span>
                   </div>
                 </div>
-                {/* Follow notifications don't need action buttons */}
+                {/* Friend request accept/decline buttons */}
+                {showFriendActions && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => acceptRequest(n.actor_id)}
+                      className="bg-accent text-white rounded-xl px-3 py-1.5 text-[12px] font-medium press flex items-center gap-1"
+                    >
+                      <UserCheck size={12} /> Accept
+                    </button>
+                    <button
+                      onClick={() => declineRequest(n.actor_id)}
+                      className="bg-bg-input border border-border rounded-xl px-3 py-1.5 text-[12px] font-medium press flex items-center"
+                    >
+                      <UserX size={12} />
+                    </button>
+                  </div>
+                )}
+                {(n.type === 'friend_request' && handledRequests.has(n.actor_id)) && (
+                  <span className="text-[12px] text-text-muted flex-shrink-0">Handled</span>
+                )}
                 {/* Poke back button */}
                 {n.type === 'poke' && (
                   pokedBack.has(n.id) ? (

@@ -27,16 +27,16 @@ export async function POST(request: Request) {
     if (myProfile?.university && theirProfile?.university && myProfile.university !== theirProfile.university) {
       return NextResponse.json({ error: 'Cannot message users from other universities' }, { status: 403 })
     }
-    // Check if target user restricts messages to followers only
+    // Check if target user restricts messages to friends only
     if (theirProfile?.messages_from === 'friends') {
-      // Check if either follows the other
-      const { data: followData } = await supabase
+      const { data: friendData } = await supabase
         .from('friendships')
         .select('id')
+        .eq('status', 'accepted')
         .or(`and(requester_id.eq.${user.id},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${user.id})`)
         .limit(1)
-      if (!followData || followData.length === 0) {
-        return NextResponse.json({ error: 'This user only accepts messages from followers' }, { status: 403 })
+      if (!friendData || friendData.length === 0) {
+        return NextResponse.json({ error: 'This user only accepts messages from friends' }, { status: 403 })
       }
     }
   }

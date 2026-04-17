@@ -175,7 +175,7 @@ export default function PrivacySettingsPage() {
                   ) : privacyState === 'followers' ? (
                     <span className="flex items-center gap-1.5 text-[12px] text-accent/70 font-medium">
                       <Users size={13} />
-                      Followers
+                      Friends
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5 text-[12px] text-text-muted/40 font-medium">

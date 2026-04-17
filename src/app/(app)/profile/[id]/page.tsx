@@ -6,7 +6,7 @@ import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
-import { HIDDEN_EMAILS } from '@/lib/constants'
+import { HIDDEN_EMAILS, EMAIL_HIDDEN_FROM_OTHERS } from '@/lib/constants'
 import FriendButton from '@/components/FriendButton'
 import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
@@ -23,7 +23,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const [isFriend, setIsFriend] = useState(false)
   const [userGroups, setUserGroups] = useState<Group[]>([])
   const [friends, setFriends] = useState<Profile[]>([])
-  const [following, setFollowing] = useState<Profile[]>([])
   const [profileViews, setProfileViews] = useState<Profile[]>([])
   const [showViewers, setShowViewers] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
@@ -67,16 +66,16 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       setProfile(profileData as Profile)
     }
 
-    // Check if current user follows this profile
+    // Check if current user is friends with this profile (accepted friendship in either direction)
     if (user) {
-      const { data: followData } = await supabase
+      const { data: friendCheck } = await supabase
         .from('friendships')
         .select('id')
-        .eq('requester_id', user.id)
-        .eq('addressee_id', id)
+        .eq('status', 'accepted')
+        .or(`and(requester_id.eq.${user.id},addressee_id.eq.${id}),and(requester_id.eq.${id},addressee_id.eq.${user.id})`)
         .maybeSingle()
 
-      setIsFriend(!!followData)
+      setIsFriend(!!friendCheck)
     }
 
     // Load wall posts
@@ -89,24 +88,17 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
     if (posts) setWallPosts(posts as WallPost[])
 
-    // Load followers (people who follow this profile)
-    const { data: followerData } = await supabase
+    // Load friends (accepted friendships in either direction)
+    const { data: friendData } = await supabase
       .from('friendships')
-      .select('*, requester:profiles!friendships_requester_id_fkey(*)')
-      .eq('addressee_id', id)
+      .select('requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
+      .eq('status', 'accepted')
+      .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
 
-    if (followerData) {
-      setFriends(followerData.map(f => f.requester as Profile).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
-    }
-
-    // Load following (people this user follows)
-    const { data: followingData } = await supabase
-      .from('friendships')
-      .select('*, addressee:profiles!friendships_addressee_id_fkey(*)')
-      .eq('requester_id', id)
-
-    if (followingData) {
-      setFollowing(followingData.map(f => f.addressee as Profile).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
+    if (friendData) {
+      setFriends(friendData.map(f =>
+        (f.requester_id === id ? f.addressee : f.requester) as unknown as Profile
+      ).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
     }
 
     // Load user's groups
@@ -213,6 +205,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const show = (field: string, value: string | null | undefined) => {
     if (isOwn) return true
     if (!value || value === 'None') return false
+    if (field === 'email' && EMAIL_HIDDEN_FROM_OTHERS.includes(value)) return false
     if (privateFields.includes(field)) return false
     if (privateFields.includes(`${field}:followers`)) return isFriend
     return true
@@ -429,11 +422,11 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Followers */}
+          {/* Friends */}
           {friends.length > 0 && (
             <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[13px] font-semibold">Followers ({friends.length})</p>
+                <p className="text-[13px] font-semibold">Friends ({friends.length})</p>
                 <Link
                   href={`/profile/${id}/network`}
                   className="press flex items-center gap-1.5 text-[11px] font-semibold text-accent bg-accent/10 rounded-full px-3 py-1"
@@ -443,29 +436,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {friends.map(f => (
-                  <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1.5">
-                    <div className="w-16 h-16 rounded-full bg-bg-input border-2 border-border overflow-hidden">
-                      {f.avatar_url ? (
-                        <img src={f.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[18px] font-bold text-text-muted">
-                          {f.full_name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[12px] font-medium text-center truncate w-full">{f.full_name?.split(' ')[0]}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Following */}
-          {following.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-2xl px-4 py-4 mb-3">
-              <p className="text-[13px] font-semibold mb-3">Following ({following.length})</p>
-              <div className="grid grid-cols-3 gap-3">
-                {following.map(f => (
                   <Link key={f.id} href={`/profile/${f.id}`} className="press flex flex-col items-center gap-1.5">
                     <div className="w-16 h-16 rounded-full bg-bg-input border-2 border-border overflow-hidden">
                       {f.avatar_url ? (
