@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
-      const ALLOWED_EMAILS = ['keugenelee11@gmail.com', 'keugenelee9@gmail.com']
+      const ALLOWED_EMAILS = ['keugenelee11@gmail.com', 'keugenelee9@gmail.com', 'willzhou109@gmail.com']
       if (user && !isApprovedEmail(user.email || '') && !ALLOWED_EMAILS.includes(user.email || '')) {
         await supabase.from('profiles').delete().eq('id', user.id)
         const { createClient } = await import('@supabase/supabase-js')
