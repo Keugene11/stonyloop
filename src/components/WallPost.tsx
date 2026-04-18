@@ -20,11 +20,11 @@ interface WallPostItemProps {
   truncate?: boolean
 }
 
-export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, isFriend = false, truncate = false }: WallPostItemProps) {
+export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, truncate = false }: WallPostItemProps) {
   const supabase = createClient()
   const canDelete = currentUserId === post.author_id || currentUserId === wallOwnerId
   const canEdit = currentUserId === post.author_id
-  const canComment = isFriend || currentUserId === wallOwnerId || currentUserId === post.author_id
+  const canComment = !!currentUserId
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState(post.content)
   const [content, setContent] = useState(post.content)
