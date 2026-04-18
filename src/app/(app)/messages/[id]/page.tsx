@@ -221,7 +221,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     <div className="flex flex-col bg-bg" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: '56px', zIndex: 20 }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
-        <div className="bg-bg-card border-b border-border px-4 py-3 flex items-center gap-3 flex-shrink-0">
+        <div className="px-4 py-3 flex items-center gap-3 flex-shrink-0">
           <Link href="/messages" className="press">
             <ArrowLeft size={20} />
           </Link>
