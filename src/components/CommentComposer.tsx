@@ -17,6 +17,7 @@ interface CommentComposerProps {
   postAuthorId?: string
   parentCommentId?: string | null
   parentAuthorName?: string | null
+  parentAuthorAvatar?: string | null
   parentContent?: string | null
   onClose: () => void
   onPosted: () => void
@@ -28,6 +29,7 @@ export default function CommentComposer({
   postAuthorId,
   parentCommentId,
   parentAuthorName,
+  parentAuthorAvatar,
   parentContent,
   onClose,
   onPosted,
@@ -54,21 +56,29 @@ export default function CommentComposer({
     const { data: { user } } = await supabase.auth.getUser()
     if (user) setUserId(user.id)
 
-    const table = postType === 'wall_post' ? 'wall_posts' : 'group_posts'
-    const authorFK = postType === 'wall_post' ? 'wall_posts_author_id_fkey' : 'group_posts_author_id_fkey'
-    const { data } = await supabase
-      .from(table)
-      .select(`content, author:profiles!${authorFK}(full_name, avatar_url)`)
-      .eq('id', postId)
-      .maybeSingle()
-
-    if (data) {
-      const author = Array.isArray(data.author) ? data.author[0] : data.author
+    if (parentCommentId) {
       setPostPreview({
-        author_name: author?.full_name || 'Unknown',
-        author_avatar: author?.avatar_url || null,
-        content: data.content,
+        author_name: parentAuthorName || 'Unknown',
+        author_avatar: parentAuthorAvatar || null,
+        content: parentContent || '',
       })
+    } else {
+      const table = postType === 'wall_post' ? 'wall_posts' : 'group_posts'
+      const authorFK = postType === 'wall_post' ? 'wall_posts_author_id_fkey' : 'group_posts_author_id_fkey'
+      const { data } = await supabase
+        .from(table)
+        .select(`content, author:profiles!${authorFK}(full_name, avatar_url)`)
+        .eq('id', postId)
+        .maybeSingle()
+
+      if (data) {
+        const author = Array.isArray(data.author) ? data.author[0] : data.author
+        setPostPreview({
+          author_name: author?.full_name || 'Unknown',
+          author_avatar: author?.avatar_url || null,
+          content: data.content,
+        })
+      }
     }
     setLoading(false)
     setTimeout(() => textareaRef.current?.focus(), 50)
@@ -168,12 +178,6 @@ export default function CommentComposer({
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-semibold">{postPreview.author_name}</p>
                   <p className="text-[14px] whitespace-pre-wrap break-words mt-0.5">{postPreview.content}</p>
-                  {parentContent && (
-                    <div className="mt-2 pl-3 border-l-2 border-border">
-                      <p className="text-[12px] font-semibold text-text-muted">{parentAuthorName}</p>
-                      <p className="text-[13px] text-text-muted whitespace-pre-wrap break-words">{parentContent}</p>
-                    </div>
-                  )}
                 </div>
               </div>
               <p className="text-[12px] text-text-muted mt-3 ml-[52px]">

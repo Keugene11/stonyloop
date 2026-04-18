@@ -223,6 +223,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
           postAuthorId={postAuthorId}
           parentCommentId={composerParent?.id}
           parentAuthorName={composerParent?.author?.full_name}
+          parentAuthorAvatar={composerParent?.author?.avatar_url}
           parentContent={composerParent?.content}
           onClose={() => setComposerOpen(false)}
           onPosted={() => { setComposerOpen(false); loadComments() }}
