@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Send, X, Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
+import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Comment } from '@/types'
-import { notifyFriends } from '@/lib/notifyFriends'
+import CommentComposer from '@/components/CommentComposer'
 
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
@@ -18,12 +18,11 @@ interface CommentsProps {
 export default function Comments({ postType, postId, postAuthorId, canComment = true }: CommentsProps) {
   const supabase = createClient()
   const [comments, setComments] = useState<Comment[]>([])
-  const [input, setInput] = useState('')
-  const [replyTo, setReplyTo] = useState<string | null>(null)
-  const [replyInput, setReplyInput] = useState('')
   const [userId, setUserId] = useState('')
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [composerParent, setComposerParent] = useState<Comment | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -83,63 +82,9 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     }
   }
 
-  async function handlePost(parentId: string | null = null) {
-    const text = parentId ? replyInput.trim() : input.trim()
-    if (!text || !userId) return
-
-    const { data: newComment } = await supabase.from('comments').insert({
-      post_type: postType,
-      post_id: postId,
-      parent_id: parentId,
-      author_id: userId,
-      content: text,
-    }).select('id').single()
-
-    if (parentId) {
-      const parent = comments.find(c => c.id === parentId) || comments.flatMap(c => c.replies || []).find(c => c.id === parentId)
-      if (parent && parent.author_id !== userId) {
-        await supabase.from('notifications').insert({
-          user_id: parent.author_id,
-          actor_id: userId,
-          type: 'reply',
-          post_type: postType,
-          post_id: postId,
-          comment_id: newComment?.id,
-        })
-      }
-    } else if (postAuthorId && postAuthorId !== userId) {
-      await supabase.from('notifications').insert({
-        user_id: postAuthorId,
-        actor_id: userId,
-        type: 'comment',
-        post_type: postType,
-        post_id: postId,
-        comment_id: newComment?.id,
-      })
-    }
-
-    // Notify friends (exclude people who already got a direct notification)
-    const exclude: string[] = []
-    if (parentId) {
-      const parent = comments.find(c => c.id === parentId) || comments.flatMap(c => c.replies || []).find(c => c.id === parentId)
-      if (parent && parent.author_id !== userId) exclude.push(parent.author_id)
-    } else if (postAuthorId && postAuthorId !== userId) {
-      exclude.push(postAuthorId)
-    }
-    notifyFriends(supabase, userId, 'friend_comment', {
-      post_type: postType,
-      post_id: postId,
-      comment_id: newComment?.id,
-      content: text.slice(0, 100),
-    }, exclude)
-
-    if (parentId) {
-      setReplyInput('')
-      setReplyTo(null)
-    } else {
-      setInput('')
-    }
-    loadComments()
+  function openComposer(parent: Comment | null = null) {
+    setComposerParent(parent)
+    setComposerOpen(true)
   }
 
   async function handleDelete(commentId: string) {
@@ -182,42 +127,11 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 comment={c}
                 userId={userId}
                 onDelete={handleDelete}
-                onReply={() => { setReplyTo(replyTo === c.id ? null : c.id); setReplyInput('') }}
+                onReply={() => openComposer(c)}
                 liked={likedComments.has(c.id)}
                 likeCount={likeCounts[c.id] || 0}
                 onToggleLike={() => toggleLikeComment(c.id)}
               />
-
-              {replyTo === c.id && (
-                <div className="ml-6 mt-1.5">
-                  <div className="flex items-center gap-1.5 mb-1 px-1">
-                    <span className="text-[10px] text-text-muted">Replying to</span>
-                    <span className="text-[10px] font-semibold">{c.author?.full_name || 'Unknown'}</span>
-                    <button onClick={() => { setReplyTo(null); setReplyInput('') }} className="press ml-auto">
-                      <X size={10} className="text-text-muted" />
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={replyInput}
-                      onChange={(e) => setReplyInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handlePost(c.id) }}
-                      maxLength={2000}
-                      placeholder={`Reply to ${c.author?.full_name || 'Unknown'}...`}
-                      className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50 border border-border"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => handlePost(c.id)}
-                      disabled={!replyInput.trim()}
-                      className="text-accent disabled:opacity-30 press"
-                    >
-                      <Send size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {c.replies && c.replies.length > 0 && (
                 <div className="ml-6 space-y-1.5 mt-1.5">
@@ -227,6 +141,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                       comment={r}
                       userId={userId}
                       onDelete={handleDelete}
+                      onReply={() => openComposer(r)}
                       liked={likedComments.has(r.id)}
                       likeCount={likeCounts[r.id] || 0}
                       onToggleLike={() => toggleLikeComment(r.id)}
@@ -238,26 +153,27 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
           ))}
 
           {canComment ? (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handlePost(null) }}
-                maxLength={2000}
-                placeholder="Write a comment..."
-                className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none placeholder:text-text-muted/50"
-              />
-              <button
-                onClick={() => handlePost(null)}
-                disabled={!input.trim()}
-                className="text-accent disabled:opacity-30 press"
-              >
-                <Send size={14} />
-              </button>
-            </div>
+            <button
+              onClick={() => openComposer(null)}
+              className="press w-full text-left bg-bg-input rounded-lg px-3 py-2 text-[13px] text-text-muted/70 hover:bg-bg-input/80"
+            >
+              Write a comment...
+            </button>
           ) : null}
         </div>
+      )}
+
+      {composerOpen && (
+        <CommentComposer
+          postType={postType}
+          postId={postId}
+          postAuthorId={postAuthorId}
+          parentCommentId={composerParent?.id}
+          parentAuthorName={composerParent?.author?.full_name}
+          parentContent={composerParent?.content}
+          onClose={() => setComposerOpen(false)}
+          onPosted={() => { setComposerOpen(false); loadComments() }}
+        />
       )}
     </div>
   )
