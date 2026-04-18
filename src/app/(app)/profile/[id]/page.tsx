@@ -96,9 +96,11 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
 
     if (friendData) {
-      setFriends(friendData.map(f =>
+      const others = friendData.map(f =>
         (f.requester_id === id ? f.addressee : f.requester) as unknown as Profile
-      ).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
+      ).filter(p => p && !HIDDEN_EMAILS.includes(p.email || ''))
+      const unique = Array.from(new Map(others.map(p => [p.id, p])).values())
+      setFriends(unique)
     }
 
     // Load user's groups

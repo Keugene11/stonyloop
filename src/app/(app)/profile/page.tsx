@@ -56,9 +56,11 @@ export default function ProfilePage() {
       .eq('status', 'accepted')
       .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
     if (friendData) {
-      setFriends(friendData.map(f =>
+      const others = friendData.map(f =>
         (f.requester_id === user.id ? f.addressee : f.requester) as unknown as Profile
-      ))
+      ).filter(p => !!p)
+      const unique = Array.from(new Map(others.map(p => [p.id, p])).values())
+      setFriends(unique)
     }
 
     const { data: memberships } = await supabase.from('group_members').select('group_id').eq('user_id', user.id)

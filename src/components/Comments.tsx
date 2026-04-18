@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
+import { Send, Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Comment } from '@/types'
 import CommentComposer from '@/components/CommentComposer'
+import { notifyFriends } from '@/lib/notifyFriends'
 
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
@@ -18,6 +19,8 @@ interface CommentsProps {
 export default function Comments({ postType, postId, postAuthorId, canComment = true }: CommentsProps) {
   const supabase = createClient()
   const [comments, setComments] = useState<Comment[]>([])
+  const [input, setInput] = useState('')
+  const [posting, setPosting] = useState(false)
   const [userId, setUserId] = useState('')
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
@@ -87,6 +90,43 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     setComposerOpen(true)
   }
 
+  async function handleInlinePost() {
+    const text = input.trim()
+    if (!text || !userId || posting) return
+    setPosting(true)
+    const { data: newComment } = await supabase.from('comments').insert({
+      post_type: postType,
+      post_id: postId,
+      parent_id: null,
+      author_id: userId,
+      content: text,
+    }).select('id').single()
+
+    if (postAuthorId && postAuthorId !== userId) {
+      await supabase.from('notifications').insert({
+        user_id: postAuthorId,
+        actor_id: userId,
+        type: 'comment',
+        post_type: postType,
+        post_id: postId,
+        comment_id: newComment?.id,
+      })
+    }
+
+    const exclude: string[] = []
+    if (postAuthorId && postAuthorId !== userId) exclude.push(postAuthorId)
+    notifyFriends(supabase, userId, 'friend_comment', {
+      post_type: postType,
+      post_id: postId,
+      comment_id: newComment?.id,
+      content: text.slice(0, 100),
+    }, exclude)
+
+    setInput('')
+    setPosting(false)
+    loadComments()
+  }
+
   async function handleDelete(commentId: string) {
     // Nullify notification references via server route (uses service role for cross-user updates)
     await fetch('/api/cleanup-notifications', {
@@ -153,12 +193,25 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
           ))}
 
           {canComment ? (
-            <button
-              onClick={() => openComposer(null)}
-              className="press w-full text-left bg-bg-input rounded-lg px-3 py-2 text-[13px] text-text-muted/70 hover:bg-bg-input/80"
-            >
-              Write a comment...
-            </button>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleInlinePost() }}
+                maxLength={2000}
+                placeholder="Write a comment..."
+                className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[13px] outline-none placeholder:text-text-muted/50"
+              />
+              <button
+                onClick={handleInlinePost}
+                disabled={!input.trim() || posting}
+                className="text-accent disabled:opacity-30 press"
+                aria-label="Post comment"
+              >
+                <Send size={16} />
+              </button>
+            </div>
           ) : null}
         </div>
       )}
