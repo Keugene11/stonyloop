@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useGoogleLogin } from '@react-oauth/google'
+import { Capacitor } from '@capacitor/core'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [showEmailLogin, setShowEmailLogin] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -17,7 +19,23 @@ export default function LoginPage() {
     if (errorParam) setError(errorParam)
   }, [])
 
-  const googleLogin = useGoogleLogin({
+  useEffect(() => {
+    if (!isNative) return
+    ;(async () => {
+      try {
+        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth')
+        await GoogleAuth.initialize({
+          clientId: '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        })
+      } catch (err) {
+        console.error('GoogleAuth init failed', err)
+      }
+    })()
+  }, [isNative])
+
+  const webGoogleLogin = useGoogleLogin({
     flow: 'auth-code',
     scope: 'openid email profile',
     onSuccess: async (codeResponse) => {
@@ -46,6 +64,49 @@ export default function LoginPage() {
       setLoading(false)
     },
   })
+
+  async function handleNativeGoogleLogin() {
+    setLoading(true)
+    setError('')
+    try {
+      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth')
+      const result = await GoogleAuth.signIn()
+      const idToken = result?.authentication?.idToken
+      if (!idToken) {
+        setError('Google sign-in failed')
+        setLoading(false)
+        return
+      }
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: idToken }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Could not authenticate')
+        setLoading(false)
+        return
+      }
+      window.location.href = data.redirectTo || '/feed'
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : ''
+      if (/cancel/i.test(msg)) {
+        setLoading(false)
+        return
+      }
+      setError('Google sign-in failed')
+      setLoading(false)
+    }
+  }
+
+  function googleLogin() {
+    if (isNative) {
+      handleNativeGoogleLogin()
+    } else {
+      webGoogleLogin()
+    }
+  }
 
   async function handleAppleLogin() {
     setLoading(true)

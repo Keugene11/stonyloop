@@ -13,6 +13,13 @@ const config: CapacitorConfig = {
     allowsLinkPreview: false,
     scheme: 'StonyLoop',
   },
+  plugins: {
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '372750643272-3ab0ptudlj2s8vofsbumj7n5jiaa060e.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
+    },
+  },
 };
 
 export default config;
