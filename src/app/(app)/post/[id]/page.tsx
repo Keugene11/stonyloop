@@ -3,9 +3,12 @@
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Loader2, ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, ChevronLeft, Trash2, Pencil, Check, X } from 'lucide-react'
 import type { WallPost } from '@/types'
-import WallPostItem from '@/components/WallPost'
+import Comments from '@/components/Comments'
+import Impressions from '@/components/Impressions'
+import Likes from '@/components/Likes'
 
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -15,6 +18,10 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const [currentUserId, setCurrentUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editContent, setEditContent] = useState('')
+  const [content, setContent] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     loadPost()
@@ -31,13 +38,37 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       .eq('id', id)
       .maybeSingle()
 
-    if (data) setPost(data as WallPost)
-    else setNotFound(true)
+    if (data) {
+      const p = data as WallPost
+      setPost(p)
+      setContent(p.content)
+      setEditContent(p.content)
+    } else {
+      setNotFound(true)
+    }
     setLoading(false)
   }
 
-  function handleDelete() {
+  async function handleDelete() {
+    if (!post) return
+    await fetch('/api/cleanup-notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_id: post.id, post_type: 'wall_post' }),
+    })
+    await supabase.from('wall_posts').delete().eq('id', post.id)
     router.back()
+  }
+
+  async function handleSave() {
+    if (!post || !editContent.trim()) return
+    await supabase.from('wall_posts').update({ content: editContent.trim() }).eq('id', post.id)
+    setContent(editContent.trim())
+    setEditing(false)
+  }
+
+  function isVideo(url: string) {
+    return /\.(mp4|webm|mov|avi)$/i.test(url)
   }
 
   if (loading) {
@@ -54,25 +85,116 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         <button onClick={() => router.back()} className="press flex items-center gap-1 text-[13px] text-text-muted mb-4">
           <ChevronLeft size={16} /> Back
         </button>
-        <div className="bg-bg-card border border-border rounded-2xl p-6 text-center">
-          <p className="text-[14px] text-text-muted">Post not found.</p>
-        </div>
+        <p className="text-[14px] text-text-muted text-center mt-12">Post not found.</p>
       </div>
     )
   }
 
+  const canDelete = currentUserId === post.author_id || currentUserId === post.wall_owner_id
+  const canEdit = currentUserId === post.author_id
+  const canComment = !!currentUserId
+
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-28">
-      <button onClick={() => router.back()} className="press flex items-center gap-1 text-[13px] text-text-muted mb-4">
-        <ChevronLeft size={16} /> Back
-      </button>
-      <WallPostItem
-        post={post}
-        currentUserId={currentUserId}
-        wallOwnerId={post.wall_owner_id}
-        onDelete={handleDelete}
-        linkToDetail={false}
-      />
+    <div className="max-w-lg mx-auto pb-28">
+      <div className="sticky top-0 z-10 bg-bg/90 backdrop-blur px-4 pt-4 pb-2 flex items-center gap-2">
+        <button onClick={() => router.back()} className="press text-text-muted hover:text-text">
+          <ChevronLeft size={20} />
+        </button>
+        <h1 className="text-[17px] font-bold">Post</h1>
+      </div>
+
+      <div className="px-4 pt-3">
+        <div className="flex items-center gap-3">
+          <Link href={`/profile/${post.author_id}`} className="press">
+            <div className="w-11 h-11 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
+              {post.author?.avatar_url ? (
+                <img src={post.author.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[15px] font-bold text-text-muted">
+                  {post.author?.full_name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+              )}
+            </div>
+          </Link>
+          <div className="flex-1 min-w-0">
+            <Link href={`/profile/${post.author_id}`} className="text-[15px] font-semibold hover:underline block">
+              {post.author?.full_name || 'Unknown'}
+            </Link>
+          </div>
+          <div className="flex items-center gap-1">
+            {canEdit && !editing && !showDeleteConfirm && (
+              <button onClick={() => { setEditContent(content); setEditing(true) }} className="press text-text-muted hover:text-text p-1.5">
+                <Pencil size={14} />
+              </button>
+            )}
+            {canDelete && !showDeleteConfirm && !editing && (
+              <button onClick={() => setShowDeleteConfirm(true)} className="press text-text-muted hover:text-red-500 p-1.5">
+                <Trash2 size={15} />
+              </button>
+            )}
+            {showDeleteConfirm && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={handleDelete} className="press text-red-500 text-[12px] font-medium">Delete</button>
+                <button onClick={() => setShowDeleteConfirm(false)} className="press text-text-muted text-[12px] font-medium">Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {editing ? (
+          <div className="mt-3">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              maxLength={2000}
+              className="w-full bg-bg-input rounded-lg px-3 py-2 text-[16px] outline-none resize-none border border-border"
+              rows={5}
+              autoFocus
+            />
+            <div className="flex gap-3 mt-2">
+              <button onClick={handleSave} className="press flex items-center gap-1 text-[13px] font-medium text-accent">
+                <Check size={14} /> Save
+              </button>
+              <button onClick={() => setEditing(false)} className="press flex items-center gap-1 text-[13px] text-text-muted">
+                <X size={14} /> Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {content && (
+              <p className="text-[17px] leading-[1.45] mt-3 whitespace-pre-wrap">{content}</p>
+            )}
+            {post.media_url && (
+              <div className="mt-3">
+                {isVideo(post.media_url) ? (
+                  <video src={post.media_url} className="w-full rounded-xl" controls />
+                ) : (
+                  <img src={post.media_url} alt="" className="w-full rounded-xl" />
+                )}
+              </div>
+            )}
+            <p className="text-[13px] text-text-muted mt-3">
+              {new Date(post.created_at).toLocaleString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          </>
+        )}
+
+        <div className="flex items-center gap-4 py-3 mt-3 border-y border-border">
+          <Likes postType="wall_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
+          <Impressions postType="wall_post" postId={post.id} userId={currentUserId} />
+        </div>
+
+        <div className="mt-3">
+          <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
+        </div>
+      </div>
     </div>
   )
 }
