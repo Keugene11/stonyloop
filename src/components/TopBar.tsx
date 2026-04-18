@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 const HIDDEN_PREFIXES = ['/messages/', '/post/', '/comment/', '/compose/']
 
 function getTitle(pathname: string): { text: string; brand: boolean } {
-  if (pathname === '/feed' || pathname.startsWith('/feed/')) return { text: 'stonyloop', brand: true }
+  if (pathname === '/feed' || pathname.startsWith('/feed/')) return { text: 'Stonyloop', brand: true }
   if (pathname.startsWith('/directory')) return { text: 'Directory', brand: false }
   if (pathname.startsWith('/groups')) return { text: 'Groups', brand: false }
   if (pathname.startsWith('/messages')) return { text: 'Messages', brand: false }
@@ -55,9 +55,9 @@ export default function TopBar() {
     function onScroll() {
       const y = window.scrollY
       const delta = y - lastScrollRef.current
-      if (y < 40) setHidden(false)
-      else if (delta > 6) setHidden(true)
-      else if (delta < -6) setHidden(false)
+      if (y < 4) setHidden(false)
+      else if (delta > 2) setHidden(true)
+      else if (delta < -4) setHidden(false)
       lastScrollRef.current = y
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -76,7 +76,7 @@ export default function TopBar() {
         <h1
           className={
             title.brand
-              ? 'text-[18px] font-bold tracking-tight lowercase'
+              ? 'text-[18px] font-bold tracking-tight'
               : 'text-[16px] font-semibold tracking-tight'
           }
         >

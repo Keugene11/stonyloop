@@ -65,7 +65,7 @@ export default function Sidebar() {
     <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-60 flex-col border-r border-border bg-bg z-40 px-3 py-5">
       <div className="px-3 mb-6">
         <Link href="/feed" className="press inline-flex items-center">
-          <span className="text-[22px] font-bold tracking-tight lowercase">stonyloop</span>
+          <span className="text-[22px] font-bold tracking-tight">Stonyloop</span>
         </Link>
       </div>
 
