@@ -68,7 +68,7 @@ export default function TopBar() {
 
   return (
     <header
-      className={`lg:hidden fixed top-0 left-0 right-0 z-40 bg-bg-card/95 backdrop-blur-lg border-b border-border transition-transform duration-200 ${
+      className={`lg:hidden fixed top-0 left-0 right-0 z-40 bg-bg/80 backdrop-blur-md border-b border-border transition-transform duration-200 ${
         hidden ? '-translate-y-full' : 'translate-y-0'
       }`}
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
