@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, ArrowLeft, Send, Heart } from 'lucide-react'
+import { Loader2, ArrowLeft, Send, Heart, Image as ImageIcon, X } from 'lucide-react'
 import Link from 'next/link'
 import type { Message, Profile } from '@/types'
 
@@ -19,10 +19,30 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [otherReadAt, setOtherReadAt] = useState<string | null>(null)
   const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const initialScrollDone = useRef(false)
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5 MB.')
+      return
+    }
+    setMediaFile(file)
+    setMediaPreview(URL.createObjectURL(file))
+  }
+
+  function clearMedia() {
+    setMediaFile(null)
+    setMediaPreview(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   function scrollToBottom(instant: boolean) {
     const el = scrollRef.current
@@ -142,16 +162,39 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
-    if (!content.trim() || sending) return
+    if ((!content.trim() && !mediaFile) || sending) return
 
     setSending(true)
     const text = content.trim()
+    const fileToUpload = mediaFile
     setContent('')
+    clearMedia()
+
+    let media_url: string | null = null
+    if (fileToUpload) {
+      const ext = (fileToUpload.name.split('.').pop() || '').toLowerCase()
+      const allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+      if (!allowed.includes(ext)) {
+        alert('Unsupported image type.')
+        setSending(false)
+        return
+      }
+      const path = `${currentUserId}/${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('posts').upload(path, fileToUpload)
+      if (upErr) {
+        alert('Failed to upload image.')
+        setSending(false)
+        return
+      }
+      const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
+      media_url = publicUrl
+    }
 
     const { data, error } = await supabase.from('messages').insert({
       conversation_id: conversationId,
       sender_id: currentUserId,
       content: text,
+      media_url,
     }).select().single()
 
     if (!error && data) {
@@ -161,22 +204,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       })
     }
 
-    // Update conversation with last message info
+    const preview = text || (media_url ? '📷 Photo' : '')
     const now = new Date().toISOString()
     await supabase.from('conversations').update({
       last_message_at: now,
-      last_message_content: text,
+      last_message_content: preview,
       last_message_sender_id: currentUserId,
       ...(amUser1 ? { user1_read_at: now } : { user2_read_at: now }),
     }).eq('id', conversationId)
 
-    // Create inbox notification with message content
     if (otherUser) {
       await supabase.from('notifications').insert({
         user_id: otherUser.id,
         actor_id: currentUserId,
         type: 'message',
-        content: text,
+        content: preview,
       })
     }
 
@@ -262,7 +304,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       : 'bg-bg-card border border-border rounded-bl-sm'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  {msg.media_url && (
+                    <img
+                      src={msg.media_url}
+                      alt=""
+                      className="rounded-xl max-w-full max-h-80 mb-1 block"
+                    />
+                  )}
+                  {msg.content && (
+                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  )}
                   <div className={`flex items-center gap-1.5 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
                     <span className="text-[10px] text-text-muted">
                       {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
@@ -295,22 +346,52 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex gap-2 flex-shrink-0 bg-bg">
-          <input
-            ref={inputRef}
-            type="text"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
-          />
-          <button
-            type="submit"
-            disabled={!content.trim() || sending}
-            className="bg-text text-bg rounded-full p-2.5 press disabled:opacity-50 flex-shrink-0"
-          >
-            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-          </button>
+        <form onSubmit={handleSend} className="border-t border-border px-4 py-3 flex flex-col gap-2 flex-shrink-0 bg-bg">
+          {mediaPreview && (
+            <div className="relative inline-block self-start">
+              <img src={mediaPreview} alt="" className="max-h-32 rounded-xl" />
+              <button
+                type="button"
+                onClick={clearMedia}
+                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 press"
+                aria-label="Remove image"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          <div className="flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="press text-text-muted hover:text-text p-1 flex-shrink-0"
+              aria-label="Attach image"
+            >
+              <ImageIcon size={20} />
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
+            />
+            <button
+              type="submit"
+              disabled={(!content.trim() && !mediaFile) || sending}
+              className="bg-text text-bg rounded-full p-2.5 press disabled:opacity-50 flex-shrink-0"
+            >
+              {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            </button>
+          </div>
         </form>
       </div>
     </div>

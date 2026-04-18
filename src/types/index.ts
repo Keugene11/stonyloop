@@ -93,6 +93,7 @@ export interface Message {
   conversation_id: string
   sender_id: string
   content: string
+  media_url?: string | null
   created_at: string
   sender?: Profile
 }
