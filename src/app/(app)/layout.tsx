@@ -1,15 +1,17 @@
 import NavBar from '@/components/NavBar'
-import TopRightBar from '@/components/TopRightBar'
+import TopBar from '@/components/TopBar'
+import Sidebar from '@/components/Sidebar'
 import LastSeenUpdater from '@/components/LastSeenUpdater'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <LastSeenUpdater />
-      <div className="bg-bg pb-24">
+      <Sidebar />
+      <TopBar />
+      <div className="bg-bg pb-24 lg:pb-0">
         {children}
       </div>
-      <TopRightBar />
       <NavBar />
     </>
   )
