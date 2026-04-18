@@ -90,12 +90,13 @@ export default function LoginPage() {
       }
       window.location.href = data.redirectTo || '/feed'
     } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : ''
+      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : String(err)
       if (/cancel/i.test(msg)) {
         setLoading(false)
         return
       }
-      setError('Google sign-in failed')
+      console.error('Native Google sign-in error:', err)
+      setError(`Google sign-in failed: ${msg || 'unknown error'}`)
       setLoading(false)
     }
   }
