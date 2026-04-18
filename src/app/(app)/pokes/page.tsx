@@ -75,8 +75,8 @@ export default function PokesPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 ">
-      <div className="mb-4">
+    <div className="max-w-lg mx-auto px-4 pt-16 ">
+      <div className="mb-4 hidden lg:block">
         <h1 className="text-[24px] font-bold tracking-tight">
           <Hand size={24} className="inline mr-2" />
           Pokes

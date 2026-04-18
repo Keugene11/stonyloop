@@ -407,7 +407,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-10 pb-28">
+    <div className="max-w-5xl mx-auto px-4 pt-16 pb-28">
       {/* Mobile profile header — always visible */}
       <div className="md:hidden mb-4">
         <div className="flex items-center gap-3.5 mb-3">

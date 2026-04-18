@@ -7,7 +7,7 @@ import { Home, Search, UsersRound, MessageCircle, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
-  { href: '/feed', icon: Home, label: 'Feed' },
+  { href: '/feed', icon: Home, label: 'Home' },
   { href: '/directory', icon: Search, label: 'Directory' },
   { href: '/groups', icon: UsersRound, label: 'Groups' },
   { href: '/messages', icon: MessageCircle, label: 'Messages' },

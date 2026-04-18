@@ -30,13 +30,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-10 pb-28 ">
+    <div className="max-w-lg mx-auto px-4 pt-16 pb-28 ">
       <button onClick={() => router.back()} className="press flex items-center gap-1.5 text-[13px] text-text-muted mb-4">
         <ArrowLeft size={14} />
         Back
       </button>
 
-      <h1 className="text-[22px] font-bold tracking-tight mb-5">Settings</h1>
+      <h1 className="text-[22px] font-bold tracking-tight mb-5 hidden lg:block">Settings</h1>
 
       <div className="bg-bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border mb-6">
         <button onClick={toggle} className="press flex items-center gap-3 px-4 py-3.5 w-full text-left">

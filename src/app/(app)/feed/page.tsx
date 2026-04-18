@@ -122,12 +122,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-12 pb-28">
-      <div className="mb-4">
-        <h1 className="text-[24px] font-bold tracking-tight">Feed</h1>
-        <div className="accent-bar" />
-      </div>
-
+    <div className="max-w-lg mx-auto px-4 pt-16 pb-28">
       {/* Compose */}
       <div className="mb-4">
         <WallPostForm wallOwnerId={currentUserId} onPost={handleNewPost} />
