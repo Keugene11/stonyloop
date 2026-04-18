@@ -281,6 +281,7 @@ function CommentItem({ comment, userId, onDelete, onEdit, onReply, liked, likeCo
 }) {
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(comment.content)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   function handleSave() {
     if (!editText.trim()) return
@@ -339,11 +340,17 @@ function CommentItem({ comment, userId, onDelete, onEdit, onReply, liked, likeCo
               {onReply && (
                 <button onClick={onReply} className="text-[10px] text-text-muted hover:text-text font-medium press">Reply</button>
               )}
-              {userId === comment.author_id && (
+              {userId === comment.author_id && !confirmDelete && (
                 <button onClick={() => { setEditText(comment.content); setEditing(true) }} className="text-[10px] text-text-muted hover:text-text font-medium press">Edit</button>
               )}
-              {userId === comment.author_id && (
-                <button onClick={() => onDelete(comment.id)} className="text-[10px] text-text-muted hover:text-red-500 press">Delete</button>
+              {userId === comment.author_id && !confirmDelete && (
+                <button onClick={() => setConfirmDelete(true)} className="text-[10px] text-text-muted hover:text-red-500 press">Delete</button>
+              )}
+              {confirmDelete && (
+                <>
+                  <button onClick={() => onDelete(comment.id)} className="text-[10px] text-red-500 font-medium press">Delete</button>
+                  <button onClick={() => setConfirmDelete(false)} className="text-[10px] text-text-muted font-medium press">Cancel</button>
+                </>
               )}
             </div>
           </>

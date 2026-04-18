@@ -36,6 +36,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
   const [savingGroup, setSavingGroup] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingGroup, setDeletingGroup] = useState(false)
+  const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null)
 
   useEffect(() => {
     loadGroup()
@@ -498,10 +499,16 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                           <Pencil size={13} />
                         </button>
                       )}
-                      {(currentUserId === post.author_id || isAdmin) && (
-                        <button onClick={() => handleDeletePost(post.id)} className="press text-text-muted hover:text-red-500 p-1">
+                      {(currentUserId === post.author_id || isAdmin) && confirmDeletePostId !== post.id && (
+                        <button onClick={() => setConfirmDeletePostId(post.id)} className="press text-text-muted hover:text-red-500 p-1">
                           <Trash2 size={14} />
                         </button>
+                      )}
+                      {confirmDeletePostId === post.id && (
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => { handleDeletePost(post.id); setConfirmDeletePostId(null) }} className="press text-red-500 text-[11px] font-medium">Delete</button>
+                          <button onClick={() => setConfirmDeletePostId(null)} className="press text-text-muted text-[11px] font-medium">Cancel</button>
+                        </div>
                       )}
                     </div>
                   </div>
