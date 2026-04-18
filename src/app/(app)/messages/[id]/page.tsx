@@ -138,8 +138,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
 
     setLoading(false)
-    // Focus input after load
-    setTimeout(() => inputRef.current?.focus(), 100)
   }
 
   async function handleSend(e: React.FormEvent) {
@@ -305,7 +303,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             onChange={(e) => setContent(e.target.value)}
             placeholder="Type a message..."
             className="flex-1 bg-bg-input rounded-full px-4 py-2 text-[14px] outline-none border-none placeholder:text-text-muted/50"
-            autoFocus
           />
           <button
             type="submit"
