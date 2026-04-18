@@ -31,7 +31,8 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const content = post.content
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const shouldTruncate = truncate && content.length > TRUNCATE_LENGTH
+  const [expanded, setExpanded] = useState(false)
+  const shouldTruncate = truncate && !expanded && content.length > TRUNCATE_LENGTH
   const openDetail = () => router.push(`/post/${post.id}`)
 
   async function handleDelete() {
@@ -100,7 +101,12 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
             {shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '...' : content}
             {shouldTruncate && (
-              <span className="text-accent font-medium ml-1">more</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
+                className="press text-accent font-medium ml-1"
+              >
+                more
+              </button>
             )}
           </p>
         )}
