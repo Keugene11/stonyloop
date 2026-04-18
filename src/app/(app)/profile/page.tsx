@@ -460,8 +460,8 @@ export default function ProfilePage() {
         {/* LEFT — details */}
         <div className={`md:w-[380px] md:flex-shrink-0 md:sticky md:top-4 space-y-3 ${activeTab === 'info' ? 'block' : 'hidden'} md:block`}>
 
-          {/* Name & subtitle */}
-          <div>
+          {/* Name & subtitle — desktop only; mobile uses the compact header above */}
+          <div className="hidden md:block">
             <h1 className="text-[22px] font-bold tracking-tight cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
             <p className="text-[13px] text-text-muted mt-0.5">
               {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
