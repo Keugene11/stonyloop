@@ -131,7 +131,7 @@ export default function CommentComposer({
 
   return (
     <div
-      className="fixed inset-0 z-50 sm:bg-black/60 sm:backdrop-blur-sm sm:flex sm:items-start sm:justify-center sm:pt-16 sm:px-4"
+      className="fixed inset-0 z-[60] sm:bg-black/60 sm:backdrop-blur-sm sm:flex sm:items-start sm:justify-center sm:pt-16 sm:px-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="w-full h-full bg-bg sm:h-auto sm:max-h-[85vh] sm:max-w-lg sm:rounded-2xl sm:border sm:border-border sm:shadow-2xl flex flex-col overflow-hidden">
