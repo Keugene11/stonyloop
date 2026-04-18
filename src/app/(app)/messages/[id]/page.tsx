@@ -260,25 +260,25 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 <div
                   className={`relative max-w-[75%] rounded-2xl px-3.5 py-2 text-[14px] ${
                     isMine
-                      ? 'bg-text text-bg rounded-br-sm'
+                      ? 'bg-bg-input rounded-br-sm'
                       : 'bg-bg-card border border-border rounded-bl-sm'
                   }`}
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   <div className={`flex items-center gap-1.5 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
-                    <span className={`text-[10px] ${isMine ? 'text-bg/60' : 'text-text-muted'}`}>
+                    <span className="text-[10px] text-text-muted">
                       {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                     </span>
                     {status && (
                       status === 'delivered'
-                        ? <CheckCheck size={12} className="text-bg/60" />
-                        : <Check size={12} className="text-bg/60" />
+                        ? <CheckCheck size={12} className="text-text-muted" />
+                        : <Check size={12} className="text-text-muted" />
                     )}
                     <button
                       onClick={() => toggleLikeMessage(msg.id)}
                       className="press"
                     >
-                      <Heart size={10} className={iLiked ? 'fill-red-500 text-red-500' : isMine ? 'text-bg/30 hover:text-bg/60' : 'text-text-muted/30 hover:text-text-muted'} />
+                      <Heart size={10} className={iLiked ? 'fill-red-500 text-red-500' : 'text-text-muted/30 hover:text-text-muted'} />
                     </button>
                   </div>
                   {/* Like count bubble */}
