@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, ArrowLeft, Send, Heart, Check, CheckCheck } from 'lucide-react'
+import { Loader2, ArrowLeft, Send, Heart } from 'lucide-react'
 import Link from 'next/link'
 import type { Message, Profile } from '@/types'
 
@@ -270,9 +270,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                     </span>
                     {status && (
-                      status === 'delivered'
-                        ? <CheckCheck size={12} className="text-text-muted" />
-                        : <Check size={12} className="text-text-muted" />
+                      <span className="text-[10px] text-text-muted">
+                        {status === 'delivered' ? 'Seen' : 'Sent'}
+                      </span>
                     )}
                     <button
                       onClick={() => toggleLikeMessage(msg.id)}
