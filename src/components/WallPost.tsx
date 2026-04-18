@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Trash2, Pencil, Check, X } from 'lucide-react'
 import type { WallPost } from '@/types'
@@ -18,20 +19,22 @@ interface WallPostItemProps {
   onDelete: (postId: string) => void
   isFriend?: boolean
   truncate?: boolean
+  linkToDetail?: boolean
 }
 
-export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, truncate = false }: WallPostItemProps) {
+export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelete, truncate = false, linkToDetail = true }: WallPostItemProps) {
   const supabase = createClient()
+  const router = useRouter()
   const canDelete = currentUserId === post.author_id || currentUserId === wallOwnerId
   const canEdit = currentUserId === post.author_id
   const canComment = !!currentUserId
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState(post.content)
   const [content, setContent] = useState(post.content)
-  const [expanded, setExpanded] = useState(false)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const shouldTruncate = truncate && !expanded && content.length > TRUNCATE_LENGTH
+  const shouldTruncate = truncate && content.length > TRUNCATE_LENGTH
+  const openDetail = () => router.push(`/post/${post.id}`)
 
   async function handleDelete() {
     // Nullify notification references via server route (uses service role for cross-user updates)
@@ -118,17 +121,20 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           </div>
         </div>
       ) : (
-        <>
+        <div
+          onClick={linkToDetail ? openDetail : undefined}
+          className={linkToDetail ? 'cursor-pointer' : undefined}
+        >
           {content && (
             <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
               {shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '...' : content}
               {shouldTruncate && (
-                <button onClick={() => setExpanded(true)} className="press text-accent font-medium ml-1">more</button>
+                <span className="text-accent font-medium ml-1">more</span>
               )}
             </p>
           )}
           {post.media_url && (
-            <div className="mt-2.5">
+            <div className="mt-2.5" onClick={(e) => e.stopPropagation()}>
               {isVideo(post.media_url) ? (
                 <video src={post.media_url} className="max-w-full rounded-xl" controls />
               ) : (
@@ -136,7 +142,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
               )}
             </div>
           )}
-        </>
+        </div>
       )}
       <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
     </div>
