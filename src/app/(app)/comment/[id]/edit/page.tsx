@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, useRef, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ChevronLeft } from 'lucide-react'
@@ -13,11 +13,19 @@ export default function EditCommentPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notAllowed, setNotAllowed] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }, [content])
 
   async function load() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -84,14 +92,17 @@ export default function EditCommentPage({ params }: { params: Promise<{ id: stri
       </div>
 
       <div className="px-4 pt-2">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          maxLength={2000}
-          className="w-full bg-transparent text-[17px] leading-[1.5] outline-none resize-none min-h-[40vh]"
-          autoFocus
-          placeholder="Edit your comment..."
-        />
+        <div className="bg-bg-card border border-border rounded-2xl p-4">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            maxLength={2000}
+            className="w-full bg-transparent text-[15px] leading-[1.5] outline-none resize-none min-h-[120px] overflow-hidden"
+            autoFocus
+            placeholder="Edit your comment..."
+          />
+        </div>
       </div>
     </div>
   )
