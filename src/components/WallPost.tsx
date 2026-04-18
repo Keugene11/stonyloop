@@ -123,7 +123,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
       ) : (
         <div
           onClick={linkToDetail ? openDetail : undefined}
-          className={linkToDetail ? 'cursor-pointer' : undefined}
+          className={linkToDetail ? 'press cursor-pointer active:opacity-70 transition-opacity' : undefined}
         >
           {content && (
             <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
@@ -134,9 +134,9 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
             </p>
           )}
           {post.media_url && (
-            <div className="mt-2.5" onClick={(e) => e.stopPropagation()}>
+            <div className="mt-2.5">
               {isVideo(post.media_url) ? (
-                <video src={post.media_url} className="max-w-full rounded-xl" controls />
+                <video src={post.media_url} className="max-w-full rounded-xl" controls onClick={(e) => e.stopPropagation()} />
               ) : (
                 <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
               )}
