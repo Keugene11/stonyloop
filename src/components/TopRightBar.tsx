@@ -3,23 +3,18 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-const HIDDEN_PATHS = ['/notifications']
 const HIDDEN_PREFIXES = ['/messages/', '/post/', '/comment/', '/compose/']
 
 export default function TopRightBar() {
   const pathname = usePathname()
-  const [count, setCount] = useState(0)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [initial, setInitial] = useState<string>('?')
   const [hidden, setHidden] = useState(false)
   const lastScrollRef = useRef(0)
 
-  const routeHidden =
-    HIDDEN_PATHS.includes(pathname) ||
-    HIDDEN_PREFIXES.some(p => pathname.startsWith(p))
+  const routeHidden = HIDDEN_PREFIXES.some(p => pathname.startsWith(p))
 
   useEffect(() => {
     if (routeHidden) return
@@ -39,25 +34,7 @@ export default function TopRightBar() {
       }
     }
 
-    async function loadCount() {
-      if (pathname === '/notifications') {
-        setCount(0)
-        return
-      }
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { count: notifCount } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('seen', false)
-      setCount(notifCount || 0)
-    }
-
     loadProfile()
-    loadCount()
-    const interval = setInterval(loadCount, 15000)
-    return () => clearInterval(interval)
   }, [pathname, routeHidden])
 
   useEffect(() => {
@@ -87,18 +64,6 @@ export default function TopRightBar() {
         hidden ? '-translate-y-[150%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
       }`}
     >
-      <Link
-        href="/notifications"
-        aria-label="Inbox"
-        className="press relative w-9 h-9 rounded-full bg-bg-card/80 backdrop-blur border border-border flex items-center justify-center text-text-muted hover:text-text"
-      >
-        <Inbox size={17} strokeWidth={1.8} />
-        {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
-            {count > 99 ? '99+' : count}
-          </span>
-        )}
-      </Link>
       <Link
         href="/profile"
         aria-label="Profile"
