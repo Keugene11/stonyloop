@@ -1,5 +1,5 @@
 import NavBar from '@/components/NavBar'
-import NotificationBell from '@/components/NotificationBell'
+import TopRightBar from '@/components/TopRightBar'
 import LastSeenUpdater from '@/components/LastSeenUpdater'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -9,7 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="bg-bg pb-24">
         {children}
       </div>
-      <NotificationBell />
+      <TopRightBar />
       <NavBar />
     </>
   )

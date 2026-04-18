@@ -2,14 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, UsersRound, MessageCircle, User } from 'lucide-react'
+import { Home, Search, UsersRound, MessageCircle } from 'lucide-react'
 
 const navItems = [
   { href: '/feed', icon: Home, label: 'Feed' },
   { href: '/directory', icon: Search, label: 'Directory' },
   { href: '/groups', icon: UsersRound, label: 'Groups' },
   { href: '/messages', icon: MessageCircle, label: 'Messages' },
-  { href: '/profile', icon: User, label: 'Profile' },
 ]
 
 export default function NavBar() {
