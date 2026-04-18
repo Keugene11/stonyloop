@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, ChevronLeft, Trash2, Pencil, Check, X } from 'lucide-react'
+import { Loader2, ChevronLeft, Trash2, Pencil } from 'lucide-react'
 import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
@@ -18,9 +18,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const [currentUserId, setCurrentUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [editContent, setEditContent] = useState('')
-  const [content, setContent] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
@@ -39,10 +36,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       .maybeSingle()
 
     if (data) {
-      const p = data as WallPost
-      setPost(p)
-      setContent(p.content)
-      setEditContent(p.content)
+      setPost(data as WallPost)
     } else {
       setNotFound(true)
     }
@@ -58,13 +52,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     })
     await supabase.from('wall_posts').delete().eq('id', post.id)
     router.back()
-  }
-
-  async function handleSave() {
-    if (!post || !editContent.trim()) return
-    await supabase.from('wall_posts').update({ content: editContent.trim() }).eq('id', post.id)
-    setContent(editContent.trim())
-    setEditing(false)
   }
 
   function isVideo(url: string) {
@@ -122,12 +109,12 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             </Link>
           </div>
           <div className="flex items-center gap-1">
-            {canEdit && !editing && !showDeleteConfirm && (
-              <button onClick={() => { setEditContent(content); setEditing(true) }} className="press text-text-muted hover:text-text p-1.5">
+            {canEdit && !showDeleteConfirm && (
+              <button onClick={() => router.push(`/post/${post.id}/edit`)} className="press text-text-muted hover:text-text p-1.5">
                 <Pencil size={14} />
               </button>
             )}
-            {canDelete && !showDeleteConfirm && !editing && (
+            {canDelete && !showDeleteConfirm && (
               <button onClick={() => setShowDeleteConfirm(true)} className="press text-text-muted hover:text-red-500 p-1.5">
                 <Trash2 size={15} />
               </button>
@@ -141,50 +128,27 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        {editing ? (
-          <div className="mt-3">
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              maxLength={2000}
-              className="w-full bg-bg-input rounded-lg px-3 py-2 text-[16px] outline-none resize-none border border-border"
-              rows={5}
-              autoFocus
-            />
-            <div className="flex gap-3 mt-2">
-              <button onClick={handleSave} className="press flex items-center gap-1 text-[13px] font-medium text-accent">
-                <Check size={14} /> Save
-              </button>
-              <button onClick={() => setEditing(false)} className="press flex items-center gap-1 text-[13px] text-text-muted">
-                <X size={14} /> Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {content && (
-              <p className="text-[17px] leading-[1.45] mt-3 whitespace-pre-wrap">{content}</p>
-            )}
-            {post.media_url && (
-              <div className="mt-3">
-                {isVideo(post.media_url) ? (
-                  <video src={post.media_url} className="w-full rounded-xl" controls />
-                ) : (
-                  <img src={post.media_url} alt="" className="w-full rounded-xl" />
-                )}
-              </div>
-            )}
-            <p className="text-[13px] text-text-muted mt-3">
-              {new Date(post.created_at).toLocaleString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          </>
+        {post.content && (
+          <p className="text-[17px] leading-[1.45] mt-3 whitespace-pre-wrap">{post.content}</p>
         )}
+        {post.media_url && (
+          <div className="mt-3">
+            {isVideo(post.media_url) ? (
+              <video src={post.media_url} className="w-full rounded-xl" controls />
+            ) : (
+              <img src={post.media_url} alt="" className="w-full rounded-xl" />
+            )}
+          </div>
+        )}
+        <p className="text-[13px] text-text-muted mt-3">
+          {new Date(post.created_at).toLocaleString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+        </p>
 
         <div className="flex items-center gap-4 py-3 mt-3 border-y border-border">
           <Likes postType="wall_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />

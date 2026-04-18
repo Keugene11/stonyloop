@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Send, Trash2, Pencil, Check, X, Heart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Send, X, Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Comment } from '@/types'
 import { notifyFriends } from '@/lib/notifyFriends'
 
@@ -152,11 +153,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     loadComments()
   }
 
-  async function handleEdit(commentId: string, newContent: string) {
-    await supabase.from('comments').update({ content: newContent }).eq('id', commentId)
-    loadComments()
-  }
-
   async function toggleLikeComment(commentId: string) {
     if (likedComments.has(commentId)) {
       await supabase.from('comment_likes').delete()
@@ -186,7 +182,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 comment={c}
                 userId={userId}
                 onDelete={handleDelete}
-                onEdit={handleEdit}
                 onReply={() => { setReplyTo(replyTo === c.id ? null : c.id); setReplyInput('') }}
                 liked={likedComments.has(c.id)}
                 likeCount={likeCounts[c.id] || 0}
@@ -232,7 +227,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                       comment={r}
                       userId={userId}
                       onDelete={handleDelete}
-                      onEdit={handleEdit}
                       liked={likedComments.has(r.id)}
                       likeCount={likeCounts[r.id] || 0}
                       onToggleLike={() => toggleLikeComment(r.id)}
@@ -269,92 +263,96 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   )
 }
 
-function CommentItem({ comment, userId, onDelete, onEdit, onReply, liked, likeCount, onToggleLike }: {
+function CommentItem({ comment, userId, onDelete, onReply, liked, likeCount, onToggleLike }: {
   comment: Comment
   userId: string
   onDelete: (id: string) => void
-  onEdit: (id: string, content: string) => void
   onReply?: () => void
   liked: boolean
   likeCount: number
   onToggleLike: () => void
 }) {
-  const [editing, setEditing] = useState(false)
-  const [editText, setEditText] = useState(comment.content)
+  const router = useRouter()
+  const [showMenu, setShowMenu] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-
-  function handleSave() {
-    if (!editText.trim()) return
-    onEdit(comment.id, editText.trim())
-    setEditing(false)
-  }
+  const isAuthor = userId === comment.author_id
 
   return (
     <div className="flex gap-2">
       <Link href={`/profile/${comment.author_id}`} className="press flex-shrink-0">
-        <div className="w-6 h-6 rounded-full bg-bg-input border border-border overflow-hidden">
+        <div className="w-7 h-7 rounded-full bg-bg-input border border-border overflow-hidden">
           {comment.author?.avatar_url ? (
             <img src={comment.author.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-text-muted">
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-text-muted">
               {comment.author?.full_name?.charAt(0)?.toUpperCase() || '?'}
             </div>
           )}
         </div>
       </Link>
       <div className="flex-1 min-w-0">
-        {editing ? (
-          <div>
-            <input
-              type="text"
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
-              maxLength={2000}
-              className="w-full bg-bg-input rounded-lg px-3 py-1.5 text-[12px] outline-none border border-border"
-              autoFocus
-            />
-            <div className="flex gap-2 mt-1 px-1">
-              <button onClick={handleSave} className="press flex items-center gap-0.5 text-[10px] font-medium text-accent">
-                <Check size={10} /> Save
+        <div className="bg-bg-input rounded-xl px-3 py-2 inline-block max-w-full">
+          <Link href={`/profile/${comment.author_id}`} className="text-[13px] font-semibold hover:underline">
+            {comment.author?.full_name || 'Unknown'}
+          </Link>
+          <p className="text-[13px] whitespace-pre-wrap break-words">{comment.content}</p>
+        </div>
+        <div className="flex items-center gap-1 mt-1 -ml-2">
+          <span className="text-[11px] text-text-muted px-2">{getTimeAgo(new Date(comment.created_at))}</span>
+          <button
+            onClick={onToggleLike}
+            className="press flex items-center gap-1 px-2 py-1.5 rounded-full hover:bg-bg-input"
+            aria-label="Like"
+          >
+            <Heart size={14} className={liked ? 'fill-red-500 text-red-500' : 'text-text-muted'} />
+            {likeCount > 0 && <span className={`text-[11px] ${liked ? 'text-red-500' : 'text-text-muted'}`}>{likeCount}</span>}
+          </button>
+          {onReply && (
+            <button
+              onClick={onReply}
+              className="press flex items-center px-2 py-1.5 rounded-full hover:bg-bg-input"
+              aria-label="Reply"
+            >
+              <MessageCircle size={14} className="text-text-muted" />
+            </button>
+          )}
+          {isAuthor && !confirmDelete && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="press flex items-center px-2 py-1.5 rounded-full hover:bg-bg-input"
+                aria-label="More"
+              >
+                <MoreHorizontal size={14} className="text-text-muted" />
               </button>
-              <button onClick={() => setEditing(false)} className="press flex items-center gap-0.5 text-[10px] text-text-muted">
-                <X size={10} /> Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="bg-bg-input rounded-xl px-3 py-1.5 inline-block">
-              <Link href={`/profile/${comment.author_id}`} className="text-[12px] font-semibold hover:underline">
-                {comment.author?.full_name || 'Unknown'}
-              </Link>
-              <p className="text-[12px]">{comment.content}</p>
-            </div>
-            <div className="flex items-center gap-3 mt-0.5 px-1">
-              <span className="text-[10px] text-text-muted">{getTimeAgo(new Date(comment.created_at))}</span>
-              <button onClick={onToggleLike} className="flex items-center gap-0.5 press">
-                <Heart size={10} className={liked ? 'fill-red-500 text-red-500' : 'text-text-muted hover:text-red-400'} />
-                {likeCount > 0 && <span className={`text-[10px] ${liked ? 'text-red-500' : 'text-text-muted'}`}>{likeCount}</span>}
-              </button>
-              {onReply && (
-                <button onClick={onReply} className="text-[10px] text-text-muted hover:text-text font-medium press">Reply</button>
-              )}
-              {userId === comment.author_id && !confirmDelete && (
-                <button onClick={() => { setEditText(comment.content); setEditing(true) }} className="text-[10px] text-text-muted hover:text-text font-medium press">Edit</button>
-              )}
-              {userId === comment.author_id && !confirmDelete && (
-                <button onClick={() => setConfirmDelete(true)} className="text-[10px] text-text-muted hover:text-red-500 press">Delete</button>
-              )}
-              {confirmDelete && (
+              {showMenu && (
                 <>
-                  <button onClick={() => onDelete(comment.id)} className="text-[10px] text-red-500 font-medium press">Delete</button>
-                  <button onClick={() => setConfirmDelete(false)} className="text-[10px] text-text-muted font-medium press">Cancel</button>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                  <div className="absolute top-full left-0 mt-1 z-20 bg-bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[120px]">
+                    <button
+                      onClick={() => { setShowMenu(false); router.push(`/comment/${comment.id}/edit`) }}
+                      className="press block w-full text-left px-4 py-2.5 text-[13px] hover:bg-bg-input"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => { setShowMenu(false); setConfirmDelete(true) }}
+                      className="press block w-full text-left px-4 py-2.5 text-[13px] text-red-500 hover:bg-bg-input"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </>
               )}
             </div>
-          </>
-        )}
+          )}
+          {confirmDelete && (
+            <div className="flex items-center gap-2 px-2">
+              <button onClick={() => onDelete(comment.id)} className="press text-[12px] text-red-500 font-medium">Delete</button>
+              <button onClick={() => setConfirmDelete(false)} className="press text-[12px] text-text-muted font-medium">Cancel</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

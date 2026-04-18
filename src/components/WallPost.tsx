@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Trash2, Pencil, Check, X } from 'lucide-react'
+import { Trash2, Pencil } from 'lucide-react'
 import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
@@ -28,9 +28,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const canDelete = currentUserId === post.author_id || currentUserId === wallOwnerId
   const canEdit = currentUserId === post.author_id
   const canComment = !!currentUserId
-  const [editing, setEditing] = useState(false)
-  const [editContent, setEditContent] = useState(post.content)
-  const [content, setContent] = useState(post.content)
+  const content = post.content
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const shouldTruncate = truncate && content.length > TRUNCATE_LENGTH
@@ -45,13 +43,6 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
     })
     await supabase.from('wall_posts').delete().eq('id', post.id)
     onDelete(post.id)
-  }
-
-  async function handleSave() {
-    if (!editContent.trim()) return
-    await supabase.from('wall_posts').update({ content: editContent.trim() }).eq('id', post.id)
-    setContent(editContent.trim())
-    setEditing(false)
   }
 
   function isVideo(url: string) {
@@ -83,8 +74,8 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
         <div className="flex items-center gap-2">
           <Likes postType="wall_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
           <Impressions postType="wall_post" postId={post.id} userId={currentUserId} />
-          {canEdit && !editing && (
-            <button onClick={() => { setEditContent(content); setEditing(true) }} className="press text-text-muted hover:text-text p-1">
+          {canEdit && !showDeleteConfirm && (
+            <button onClick={() => router.push(`/post/${post.id}/edit`)} className="press text-text-muted hover:text-text p-1">
               <Pencil size={13} />
             </button>
           )}
@@ -101,49 +92,28 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           )}
         </div>
       </div>
-      {editing ? (
-        <div className="mt-2.5">
-          <textarea
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            maxLength={2000}
-            className="w-full bg-bg-input rounded-lg px-3 py-2 text-[14px] outline-none resize-none border border-border"
-            rows={3}
-            autoFocus
-          />
-          <div className="flex gap-2 mt-1.5">
-            <button onClick={handleSave} className="press flex items-center gap-1 text-[12px] font-medium text-accent">
-              <Check size={13} /> Save
-            </button>
-            <button onClick={() => setEditing(false)} className="press flex items-center gap-1 text-[12px] text-text-muted">
-              <X size={13} /> Cancel
-            </button>
+      <div
+        onClick={linkToDetail ? openDetail : undefined}
+        className={linkToDetail ? 'press cursor-pointer active:opacity-70 transition-opacity' : undefined}
+      >
+        {content && (
+          <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
+            {shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '...' : content}
+            {shouldTruncate && (
+              <span className="text-accent font-medium ml-1">more</span>
+            )}
+          </p>
+        )}
+        {post.media_url && (
+          <div className="mt-2.5">
+            {isVideo(post.media_url) ? (
+              <video src={post.media_url} className="max-w-full rounded-xl" controls onClick={(e) => e.stopPropagation()} />
+            ) : (
+              <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
+            )}
           </div>
-        </div>
-      ) : (
-        <div
-          onClick={linkToDetail ? openDetail : undefined}
-          className={linkToDetail ? 'press cursor-pointer active:opacity-70 transition-opacity' : undefined}
-        >
-          {content && (
-            <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
-              {shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '...' : content}
-              {shouldTruncate && (
-                <span className="text-accent font-medium ml-1">more</span>
-              )}
-            </p>
-          )}
-          {post.media_url && (
-            <div className="mt-2.5">
-              {isVideo(post.media_url) ? (
-                <video src={post.media_url} className="max-w-full rounded-xl" controls onClick={(e) => e.stopPropagation()} />
-              ) : (
-                <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
-              )}
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
       <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
     </div>
   )
