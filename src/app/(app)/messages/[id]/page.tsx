@@ -276,9 +276,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     )}
                     <button
                       onClick={() => toggleLikeMessage(msg.id)}
-                      className="press"
+                      className="press p-0.5"
+                      aria-label="Like message"
                     >
-                      <Heart size={10} className={iLiked ? 'fill-red-500 text-red-500' : 'text-text-muted/30 hover:text-text-muted'} />
+                      <Heart size={13} className={iLiked ? 'fill-red-500 text-red-500' : 'text-text-muted hover:text-text'} />
                     </button>
                   </div>
                   {/* Like count bubble */}
