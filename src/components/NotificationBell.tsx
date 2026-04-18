@@ -41,9 +41,9 @@ export default function NotificationBell() {
     <Link
       href="/notifications"
       aria-label="Inbox"
-      className="press fixed top-3 right-3 z-40 w-10 h-10 rounded-full bg-bg-card/90 backdrop-blur border border-border flex items-center justify-center text-text-muted hover:text-text"
+      className="press fixed top-3 right-3 sm:right-[max(0.75rem,calc(50%-16rem+0.75rem))] z-40 w-9 h-9 rounded-full bg-bg-card/80 backdrop-blur border border-border flex items-center justify-center text-text-muted hover:text-text"
     >
-      <Inbox size={18} strokeWidth={1.8} />
+      <Inbox size={17} strokeWidth={1.8} />
       {count > 0 && (
         <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
           {count > 99 ? '99+' : count}
