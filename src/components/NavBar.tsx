@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, UsersRound, MessageCircle, Inbox } from 'lucide-react'
+import { Home, Search, UsersRound, MessageCircle, Inbox, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/groups', icon: UsersRound, label: 'Groups' },
   { href: '/messages', icon: MessageCircle, label: 'Messages' },
   { href: '/notifications', icon: Inbox, label: 'Inbox', hasBadge: true },
+  { href: '/profile', icon: User, label: 'Profile' },
 ]
 
 export default function NavBar() {
@@ -43,10 +44,10 @@ export default function NavBar() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 bg-bg-card/95 backdrop-blur-lg border-t border-border z-50"
+      className="fixed bottom-0 left-0 right-0 bg-bg-card/95 backdrop-blur-lg border-t border-border z-50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="max-w-lg mx-auto flex items-center justify-around h-14">
+      <div className="max-w-xl mx-auto flex items-center justify-around h-14">
         {navItems.map(({ href, icon: Icon, label, hasBadge }) => {
           const isActive = pathname.startsWith(href)
           return (
