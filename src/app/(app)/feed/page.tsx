@@ -123,6 +123,8 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-16 pb-28">
+      <h1 className="text-[24px] font-bold tracking-tight mb-4 hidden lg:block">Home</h1>
+
       {/* Compose */}
       <div className="mb-4">
         <WallPostForm wallOwnerId={currentUserId} onPost={handleNewPost} />
