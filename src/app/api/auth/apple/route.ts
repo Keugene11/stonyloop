@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { isSignupPermitted } from '@/lib/universities'
 
 export async function POST(request: Request) {
   try {
@@ -39,18 +38,7 @@ export async function POST(request: Request) {
     }
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (user && !isSignupPermitted(user.email)) {
-      await supabase.from('profiles').delete().eq('id', user.id)
-      const { createClient } = await import('@supabase/supabase-js')
-      const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-      await admin.auth.admin.deleteUser(user.id)
-      await supabase.auth.signOut()
-      return NextResponse.json(
-        { error: 'You must use an approved university email address' },
-        { status: 403 }
-      )
-    }
-
+    // Signup gating is enforced by the handle_new_user DB trigger.
     if (user) {
       await supabase.from('profiles').update({
         onboarding_complete: true,
