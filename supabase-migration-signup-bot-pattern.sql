@@ -12,6 +12,17 @@ BEGIN
   email_domain := lower(split_part(new.email, '@', 2));
   email_local  := lower(split_part(new.email, '@', 1));
 
+  -- Email/password signups are disabled for everyone except the reviewer.
+  -- Real users sign up via Google/Apple (provider = 'google' or 'apple').
+  -- This stops bots from hitting /auth/v1/signup with fake stonybrook.edu
+  -- addresses, which previously caused confirmation-email bounces.
+  IF (new.raw_app_meta_data->>'provider') = 'email'
+     AND lower(new.email) <> 'reviewer@stonyloop.app'
+  THEN
+    RAISE EXCEPTION 'email_password_signup_disabled'
+      USING ERRCODE = '22023';
+  END IF;
+
   IF email_domain = ''
      OR (
        NOT EXISTS (SELECT 1 FROM public.auth_email_allowed_domains WHERE domain = email_domain)
@@ -23,8 +34,11 @@ BEGIN
   END IF;
 
   -- Known bot signatures (live during the current attack).
+  -- Real Stony Brook emails follow first.last@stonybrook.edu, so any local
+  -- part containing "_test_" or starting with "bot_" is safe to reject.
   IF email_local LIKE 'bot\_%' ESCAPE '\'
      OR email_local ~ '^test[0-9]+$'
+     OR email_local LIKE '%\_test\_%' ESCAPE '\'
   THEN
     RAISE EXCEPTION 'signup_blocked_pattern: %', new.email
       USING ERRCODE = '22023';
