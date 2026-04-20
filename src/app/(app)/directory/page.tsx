@@ -8,7 +8,6 @@ import ProfileCard from '@/components/ProfileCard'
 import { getUniversityData, type UniversityData } from '@/lib/university-data'
 import { getUniversityBySlug } from '@/lib/universities'
 import type { Profile } from '@/types'
-import { HIDDEN_EMAILS } from '@/lib/constants'
 
 interface Filters {
   name: string
@@ -79,7 +78,7 @@ export default function DirectoryPage() {
         .from('profiles')
         .select('id, full_name, avatar_url, major, class_year, gender, residence_hall, courses, hometown, high_school, fraternity_sorority, clubs, relationship_status, interested_in, last_seen')
         .eq('university', myUniversity)
-        .not('email', 'in', `(${HIDDEN_EMAILS.join(',')})`)
+        .eq('hidden_from_directory', false)
         .order('last_seen', { ascending: false, nullsFirst: false })
 
       if (profiles) {

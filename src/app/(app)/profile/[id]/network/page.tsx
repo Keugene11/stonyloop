@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import type { Profile } from '@/types'
-import { HIDDEN_EMAILS } from '@/lib/constants'
 
 interface Node {
   id: string
@@ -52,7 +51,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
       if (friendData) {
         setFriends(friendData.map(f =>
           (f.requester_id === id ? f.addressee : f.requester) as unknown as Profile
-        ).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
+        ).filter(p => !p.hidden_from_directory))
       }
       setLoading(false)
     }

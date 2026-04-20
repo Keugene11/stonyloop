@@ -6,7 +6,7 @@ import { Loader2, MapPin, BookOpen, GraduationCap, Heart, MessageCircle, Clock, 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
-import { HIDDEN_EMAILS, EMAIL_HIDDEN_FROM_OTHERS } from '@/lib/constants'
+import { EMAIL_HIDDEN_FROM_OTHERS } from '@/lib/constants'
 import FriendButton from '@/components/FriendButton'
 import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
@@ -49,8 +49,8 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
       .single()
 
     if (profileData) {
-      // Hide reviewer account from other users
-      if (HIDDEN_EMAILS.includes(profileData.email || '') && user && user.id !== id) {
+      // Hide flagged profiles from other users
+      if (profileData.hidden_from_directory && user && user.id !== id) {
         setLoading(false)
         return
       }
@@ -98,7 +98,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
     if (friendData) {
       const others = friendData.map(f =>
         (f.requester_id === id ? f.addressee : f.requester) as unknown as Profile
-      ).filter(p => p && !HIDDEN_EMAILS.includes(p.email || ''))
+      ).filter(p => p && !p.hidden_from_directory)
       const unique = Array.from(new Map(others.map(p => [p.id, p])).values())
       setFriends(unique)
     }
@@ -146,7 +146,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
         .eq('profile_id', id)
         .order('created_at', { ascending: false })
         .limit(50)
-      if (views) setProfileViews(views.map((v: { viewer: Profile }) => v.viewer).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
+      if (views) setProfileViews(views.map((v: { viewer: Profile }) => v.viewer).filter(p => !p.hidden_from_directory))
     }
 
     setLoading(false)

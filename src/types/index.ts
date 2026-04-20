@@ -28,6 +28,7 @@ export interface Profile {
   clubs: string
   university: string
   onboarding_complete: boolean
+  hidden_from_directory: boolean
   private_fields: string
   last_seen: string | null
   notif_friend_requests: boolean

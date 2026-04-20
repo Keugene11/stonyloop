@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, UserCheck, UserX } from 'lucide-react'
 import Link from 'next/link'
 import type { Profile } from '@/types'
-import { HIDDEN_EMAILS } from '@/lib/constants'
 
 export default function FriendsPage() {
   const supabase = createClient()
@@ -36,7 +35,7 @@ export default function FriendsPage() {
     if (friendData) {
       setFriends(friendData.map(f =>
         (f.requester_id === user.id ? f.addressee : f.requester) as unknown as Profile
-      ).filter(p => !HIDDEN_EMAILS.includes(p.email || '')))
+      ).filter(p => !p.hidden_from_directory))
     }
 
     // Load pending friend requests (sent to me)
@@ -51,7 +50,7 @@ export default function FriendsPage() {
       setRequests(requestData.map(r => ({
         id: r.id,
         profile: r.requester as unknown as Profile,
-      })).filter(r => !HIDDEN_EMAILS.includes(r.profile.email || '')))
+      })).filter(r => !r.profile.hidden_from_directory))
     }
 
     setLoading(false)
