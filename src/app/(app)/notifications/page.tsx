@@ -87,9 +87,9 @@ export default function NotificationsPage() {
         })
       }
 
-      // Fetch original post content for like/comment notifications so the user sees which post
+      // Fetch original post content for like/comment/friend_post notifications so the user sees which post
       const postRefNotifs = notifs.filter(n =>
-        (n.type === 'like' || n.type === 'friend_like' || n.type === 'comment' || n.type === 'friend_comment') && n.post_id
+        (n.type === 'like' || n.type === 'friend_like' || n.type === 'comment' || n.type === 'friend_comment' || n.type === 'friend_post') && n.post_id
       )
       const refWallIds = [...new Set(postRefNotifs.filter(n => n.post_type === 'wall_post').map(n => n.post_id!))]
       const refGroupIds = [...new Set(postRefNotifs.filter(n => n.post_type === 'group_post').map(n => n.post_id!))]
@@ -321,9 +321,9 @@ export default function NotificationsPage() {
                       on &ldquo;{n.post_content}&rdquo;
                     </p>
                   )}
-                  {n.content && n.type === 'friend_post' && (
+                  {n.type === 'friend_post' && (n.post_content || n.content) && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
-                      &ldquo;{n.content}&rdquo;
+                      &ldquo;{n.post_content || n.content}&rdquo;
                     </p>
                   )}
                   {n.type === 'message' && n.content && (
