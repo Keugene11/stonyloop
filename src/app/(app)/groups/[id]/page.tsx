@@ -96,6 +96,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         user_id: group.created_by,
         actor_id: currentUserId,
         type: 'group_join',
+        post_type: 'group',
+        post_id: id,
       })
     }
     loadGroup()

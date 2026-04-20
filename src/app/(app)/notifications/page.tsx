@@ -24,6 +24,7 @@ interface Notification {
   wall_owner_id?: string
   conversation_id?: string
   group_id?: string
+  group_name?: string
 }
 
 export default function NotificationsPage() {
@@ -83,6 +84,23 @@ export default function NotificationsPage() {
         notifs.forEach(n => {
           if (n.post_type === 'group_post' && n.post_id) {
             n.group_id = groupMap[n.post_id]
+          }
+        })
+      }
+
+      // Fetch group names for group_join notifications
+      const groupJoinIds = [...new Set(notifs.filter(n => n.type === 'group_join' && n.post_type === 'group' && n.post_id).map(n => n.post_id!))]
+      if (groupJoinIds.length > 0) {
+        const { data: groups } = await supabase
+          .from('groups')
+          .select('id, name')
+          .in('id', groupJoinIds)
+        const nameMap: Record<string, string> = {}
+        groups?.forEach(g => { nameMap[g.id] = g.name })
+        notifs.forEach(n => {
+          if (n.type === 'group_join' && n.post_id && nameMap[n.post_id]) {
+            n.group_name = nameMap[n.post_id]
+            n.group_id = n.post_id
           }
         })
       }
@@ -284,6 +302,8 @@ export default function NotificationsPage() {
               ? `/profile/${n.wall_owner_id}`
               : n.post_type === 'group_post' && n.group_id
               ? `/groups/${n.group_id}`
+              : n.type === 'group_join' && n.group_id
+              ? `/groups/${n.group_id}`
               : null
             const showFriendActions = n.type === 'friend_request' && !handledRequests.has(n.actor_id)
 
@@ -335,6 +355,11 @@ export default function NotificationsPage() {
                   {n.type === 'friend_post' && (n.post_content || n.content) && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.post_content || n.content}&rdquo;
+                    </p>
+                  )}
+                  {n.type === 'group_join' && n.group_name && (
+                    <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-1">
+                      {n.group_name}
                     </p>
                   )}
                   {n.type === 'message' && n.content && (
