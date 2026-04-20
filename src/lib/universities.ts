@@ -31,3 +31,18 @@ export function isApprovedEmail(email: string): boolean {
   if (!domain) return false
   return APPROVED_DOMAINS.includes(domain)
 }
+
+function getAllowlist(): string[] {
+  const raw = process.env.AUTH_DEV_WHITELIST || ''
+  return raw.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+}
+
+export function isAllowlistedEmail(email: string | null | undefined): boolean {
+  if (!email) return false
+  return getAllowlist().includes(email.toLowerCase())
+}
+
+export function isSignupPermitted(email: string | null | undefined): boolean {
+  if (!email) return false
+  return isApprovedEmail(email) || isAllowlistedEmail(email)
+}
