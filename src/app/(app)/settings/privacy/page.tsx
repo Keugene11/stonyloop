@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, Lock, Unlock, GraduationCap, BookOpen, MapPin, Home
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
 import { getUniversityData } from '@/lib/university-data'
 import type { Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 type IconType = typeof GraduationCap
 
@@ -59,9 +60,11 @@ export default function PrivacySettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      const { data } = await supabase.from('profiles').select(PROFILE_PUBLIC_COLUMNS).eq('id', user.id).single<Profile>()
       if (data) {
-        setProfile(data as Profile)
+        const { data: contact } = await supabase.rpc('get_profile_contact', { p_profile_id: user.id })
+        const contactRow = Array.isArray(contact) ? contact[0] : contact
+        setProfile({ ...data, email: contactRow?.email ?? user.email ?? '', phone: contactRow?.phone ?? '' })
         if (data.private_fields) {
           setPrivateFields(data.private_fields.split(',').filter(Boolean))
         }

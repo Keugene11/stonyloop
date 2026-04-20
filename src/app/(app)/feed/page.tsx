@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 import type { WallPost } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 import WallPostItem from '@/components/WallPost'
 import WallPostForm from '@/components/WallPostForm'
 
@@ -57,7 +58,7 @@ export default function FeedPage() {
     // Load all wall posts (only posts on their own wall)
     const { data: postData } = await supabase
       .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!wall_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE * 2)
 
@@ -78,7 +79,7 @@ export default function FeedPage() {
 
     const { data: postData } = await supabase
       .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!wall_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .lt('created_at', lastPost.created_at)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE * 2)

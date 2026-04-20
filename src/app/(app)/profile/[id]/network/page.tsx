@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import type { Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 interface Node {
   id: string
@@ -38,13 +39,13 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     async function load() {
-      const { data: profileData } = await supabase.from('profiles').select('*').eq('id', id).single()
-      if (profileData) setProfile(profileData as Profile)
+      const { data: profileData } = await supabase.from('profiles').select(PROFILE_PUBLIC_COLUMNS).eq('id', id).single<Profile>()
+      if (profileData) setProfile(profileData)
 
       // Load friends (accepted friendships in either direction)
       const { data: friendData } = await supabase
         .from('friendships')
-        .select('requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
+        .select(`requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(${PROFILE_PUBLIC_COLUMNS}), addressee:profiles!friendships_addressee_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
         .eq('status', 'accepted')
         .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
 

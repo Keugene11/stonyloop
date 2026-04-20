@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, ChevronLeft, Trash2, Pencil } from 'lucide-react'
 import type { WallPost } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
 import Likes from '@/components/Likes'
@@ -31,7 +32,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     const { data } = await supabase
       .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!wall_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('id', id)
       .maybeSingle()
 

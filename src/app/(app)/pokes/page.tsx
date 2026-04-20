@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, Hand } from 'lucide-react'
 import Link from 'next/link'
 import type { Poke, Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 export default function PokesPage() {
   const supabase = createClient()
@@ -24,7 +25,7 @@ export default function PokesPage() {
 
     const { data } = await supabase
       .from('pokes')
-      .select('*, poker:profiles!pokes_poker_id_fkey(*)')
+      .select(`*, poker:profiles!pokes_poker_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('poked_id', user.id)
       .order('created_at', { ascending: false })
 

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Profile, WallPost, Group } from '@/types'
 import { EMAIL_HIDDEN_FROM_OTHERS } from '@/lib/constants'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 import FriendButton from '@/components/FriendButton'
 import PokeButton from '@/components/PokeButton'
 import WallPostForm from '@/components/WallPostForm'
@@ -44,9 +45,9 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('*')
+      .select(PROFILE_PUBLIC_COLUMNS)
       .eq('id', id)
-      .single()
+      .single<Profile>()
 
     if (profileData) {
       // Hide flagged profiles from other users
@@ -63,7 +64,10 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           return
         }
       }
-      setProfile(profileData as Profile)
+      // Fetch email/phone via RPC (respects private_fields)
+      const { data: contact } = await supabase.rpc('get_profile_contact', { p_profile_id: id })
+      const contactRow = Array.isArray(contact) ? contact[0] : contact
+      setProfile({ ...profileData, email: contactRow?.email ?? '', phone: contactRow?.phone ?? '' })
     }
 
     // Check if current user is friends with this profile (accepted friendship in either direction)
@@ -81,7 +85,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
     // Load wall posts
     const { data: posts } = await supabase
       .from('wall_posts')
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!wall_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('wall_owner_id', id)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -91,7 +95,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
     // Load friends (accepted friendships in either direction)
     const { data: friendData } = await supabase
       .from('friendships')
-      .select('requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
+      .select(`requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(${PROFILE_PUBLIC_COLUMNS}), addressee:profiles!friendships_addressee_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('status', 'accepted')
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
 
@@ -142,7 +146,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
     if (user && user.id === id) {
       const { data: views } = await supabase
         .from('profile_views')
-        .select('*, viewer:profiles!profile_views_viewer_id_fkey(*)')
+        .select(`*, viewer:profiles!profile_views_viewer_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
         .eq('profile_id', id)
         .order('created_at', { ascending: false })
         .limit(50)

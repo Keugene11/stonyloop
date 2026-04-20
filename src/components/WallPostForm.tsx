@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, Image, X } from 'lucide-react'
 import type { WallPost } from '@/types'
 import { notifyFriends } from '@/lib/notifyFriends'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 interface WallPostFormProps {
   wallOwnerId: string
@@ -71,7 +72,7 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
         content: content.trim(),
         media_url,
       })
-      .select('*, author:profiles!wall_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!wall_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .single()
 
     if (!error && data) {

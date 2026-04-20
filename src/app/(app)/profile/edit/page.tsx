@@ -9,6 +9,7 @@ import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN
 import { getUniversityData, type UniversityData } from '@/lib/university-data'
 import AvatarCropper from '@/components/AvatarCropper'
 import type { Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 export default function ProfilePage() {
   const supabase = createClient()
@@ -36,9 +37,11 @@ export default function ProfilePage() {
     if (!user) return
     setUserId(user.id)
 
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    const { data } = await supabase.from('profiles').select(PROFILE_PUBLIC_COLUMNS).eq('id', user.id).single<Profile>()
     if (data) {
-      setProfile(data as Profile)
+      const { data: contact } = await supabase.rpc('get_profile_contact', { p_profile_id: user.id })
+      const contactRow = Array.isArray(contact) ? contact[0] : contact
+      setProfile({ ...data, email: contactRow?.email ?? user.email ?? '', phone: contactRow?.phone ?? '' })
       setAvatarUrl(data.avatar_url || '')
       const ud = await getUniversityData(data.university || 'stonybrook')
       setUniData(ud)

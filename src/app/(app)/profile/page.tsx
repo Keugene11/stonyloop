@@ -11,6 +11,7 @@ import WallPostForm from '@/components/WallPostForm'
 import WallPostItem from '@/components/WallPost'
 import AvatarCropper from '@/components/AvatarCropper'
 import type { Profile, WallPost, Group } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 export default function ProfilePage() {
   const supabase = createClient()
@@ -41,18 +42,20 @@ export default function ProfilePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     setUserId(user.id)
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    const { data } = await supabase.from('profiles').select(PROFILE_PUBLIC_COLUMNS).eq('id', user.id).single<Profile>()
     if (data) {
-      setProfile(data as Profile)
+      const { data: contact } = await supabase.rpc('get_profile_contact', { p_profile_id: user.id })
+      const contactRow = Array.isArray(contact) ? contact[0] : contact
+      setProfile({ ...data, email: contactRow?.email ?? user.email ?? '', phone: contactRow?.phone ?? '' })
       const ud = await getUniversityData(data.university || 'stonybrook')
       setUniData(ud)
     }
-    const { data: posts } = await supabase.from('wall_posts').select('*, author:profiles!wall_posts_author_id_fkey(*)').eq('wall_owner_id', user.id).order('created_at', { ascending: false }).limit(50)
+    const { data: posts } = await supabase.from('wall_posts').select(`*, author:profiles!wall_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`).eq('wall_owner_id', user.id).order('created_at', { ascending: false }).limit(50)
     if (posts) setWallPosts(posts as WallPost[])
     // Load friends (accepted friendships in either direction)
     const { data: friendData } = await supabase
       .from('friendships')
-      .select('requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(*), addressee:profiles!friendships_addressee_id_fkey(*)')
+      .select(`requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(${PROFILE_PUBLIC_COLUMNS}), addressee:profiles!friendships_addressee_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('status', 'accepted')
       .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
     if (friendData) {
@@ -72,7 +75,7 @@ export default function ProfilePage() {
     // Load profile viewers
     const { data: views } = await supabase
       .from('profile_views')
-      .select('*, viewer:profiles!profile_views_viewer_id_fkey(*)')
+      .select(`*, viewer:profiles!profile_views_viewer_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('profile_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50)

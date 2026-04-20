@@ -8,6 +8,7 @@ import { Send, Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Comment } from '@/types'
 import CommentComposer from '@/components/CommentComposer'
 import { notifyFriends } from '@/lib/notifyFriends'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
@@ -38,7 +39,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   async function loadComments() {
     const { data } = await supabase
       .from('comments')
-      .select('*, author:profiles!comments_author_id_fkey(*)')
+      .select(`*, author:profiles!comments_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('post_type', postType)
       .eq('post_id', postId)
       .order('created_at', { ascending: true })

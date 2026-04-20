@@ -6,6 +6,7 @@ import { Loader2, Users, LogOut, Trash2, Send, Image, X, Pencil, Check, Camera, 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Group, GroupMember, GroupPost, Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
 import Likes from '@/components/Likes'
@@ -51,7 +52,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     // Load group
     const { data: groupData } = await supabase
       .from('groups')
-      .select('*, creator:profiles!groups_created_by_fkey(*)')
+      .select(`*, creator:profiles!groups_created_by_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('id', id)
       .single()
 
@@ -60,7 +61,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     // Load members
     const { data: memberData } = await supabase
       .from('group_members')
-      .select('*, user:profiles!group_members_user_id_fkey(*)')
+      .select(`*, user:profiles!group_members_user_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('group_id', id)
       .order('joined_at', { ascending: true })
 
@@ -74,7 +75,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     // Load posts
     const { data: postData } = await supabase
       .from('group_posts')
-      .select('*, author:profiles!group_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!group_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('group_id', id)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -138,7 +139,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         content: postContent.trim(),
         media_url,
       })
-      .select('*, author:profiles!group_posts_author_id_fkey(*)')
+      .select(`*, author:profiles!group_posts_author_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .single()
 
     if (!error && data) {

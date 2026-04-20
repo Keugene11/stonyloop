@@ -6,6 +6,7 @@ import { Loader2, Hand, UserPlus, UserCheck, UserX, Heart, MessageSquare, Messag
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 interface Notification {
   id: string
@@ -49,7 +50,7 @@ export default function NotificationsPage() {
     // Load ALL notifications — this is the single source of truth for the inbox
     const { data: notifData } = await supabase
       .from('notifications')
-      .select('*, actor:profiles!notifications_actor_id_fkey(*), comment:comments(content)')
+      .select(`*, actor:profiles!notifications_actor_id_fkey(${PROFILE_PUBLIC_COLUMNS}), comment:comments(content)`)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(100)

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, ArrowLeft, Send, Heart, Image as ImageIcon, X } from 'lucide-react'
 import Link from 'next/link'
 import type { Message, Profile } from '@/types'
+import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: conversationId } = use(params)
@@ -111,7 +112,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
     const { data: conv } = await supabase
       .from('conversations')
-      .select('*, user1:profiles!conversations_user1_id_fkey(*), user2:profiles!conversations_user2_id_fkey(*)')
+      .select(`*, user1:profiles!conversations_user1_id_fkey(${PROFILE_PUBLIC_COLUMNS}), user2:profiles!conversations_user2_id_fkey(${PROFILE_PUBLIC_COLUMNS})`)
       .eq('id', conversationId)
       .single()
 
