@@ -94,19 +94,26 @@ export default function NotificationsPage() {
       const refWallIds = [...new Set(postRefNotifs.filter(n => n.post_type === 'wall_post').map(n => n.post_id!))]
       const refGroupIds = [...new Set(postRefNotifs.filter(n => n.post_type === 'group_post').map(n => n.post_id!))]
       const postContentMap: Record<string, string> = {}
+      const mediaFallback = (url: string) => /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url) ? '[video]' : '[photo]'
       if (refWallIds.length > 0) {
         const { data: wallPosts } = await supabase
           .from('wall_posts')
-          .select('id, content')
+          .select('id, content, media_url')
           .in('id', refWallIds)
-        wallPosts?.forEach(wp => { if (wp.content) postContentMap[wp.id] = wp.content })
+        wallPosts?.forEach(wp => {
+          if (wp.content) postContentMap[wp.id] = wp.content
+          else if (wp.media_url) postContentMap[wp.id] = mediaFallback(wp.media_url)
+        })
       }
       if (refGroupIds.length > 0) {
         const { data: groupPosts } = await supabase
           .from('group_posts')
-          .select('id, content')
+          .select('id, content, media_url')
           .in('id', refGroupIds)
-        groupPosts?.forEach(gp => { if (gp.content) postContentMap[gp.id] = gp.content })
+        groupPosts?.forEach(gp => {
+          if (gp.content) postContentMap[gp.id] = gp.content
+          else if (gp.media_url) postContentMap[gp.id] = mediaFallback(gp.media_url)
+        })
       }
       postRefNotifs.forEach(n => {
         if (n.post_id && postContentMap[n.post_id]) {
