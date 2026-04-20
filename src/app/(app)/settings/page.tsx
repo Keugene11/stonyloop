@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,18 +14,28 @@ export default function SettingsPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmText, setConfirmText] = useState('')
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email || ''))
+  }, [supabase])
 
   async function handleDelete() {
-    if (confirmText !== 'DELETE') return
+    if (!email || confirmText.trim().toLowerCase() !== email.toLowerCase()) return
     setDeleting(true)
-    const res = await fetch('/api/account', { method: 'DELETE' })
+    const res = await fetch('/api/account', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm_email: confirmText.trim() }),
+    })
     if (res.ok) {
       await supabase.auth.signOut()
       router.push('/login')
       router.refresh()
     } else {
+      const data = await res.json().catch(() => null)
       setDeleting(false)
-      alert('Something went wrong. Please try again.')
+      alert(data?.error || 'Something went wrong. Please try again.')
     }
   }
 
@@ -93,12 +103,12 @@ export default function SettingsPage() {
           </button>
         ) : (
           <div className="space-y-3">
-            <p className="text-[13px] text-text-muted">Type <span className="font-bold text-text">DELETE</span> to confirm.</p>
+            <p className="text-[13px] text-text-muted">Type your email <span className="font-bold text-text">{email || '…'}</span> to confirm.</p>
             <input
-              type="text"
+              type="email"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Type DELETE"
+              placeholder="your email"
               className="bg-bg-input rounded-lg px-3 py-2 text-[13px] outline-none w-full border border-border focus:border-red-500"
               autoFocus
             />
@@ -111,7 +121,7 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={handleDelete}
-                disabled={confirmText !== 'DELETE' || deleting}
+                disabled={!email || confirmText.trim().toLowerCase() !== email.toLowerCase() || deleting}
                 className="press flex items-center gap-2 text-[13px] font-medium text-white bg-red-500 rounded-xl px-4 py-2 disabled:opacity-40"
               >
                 {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}

@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+**/.next/
 /out/
 
 # production
@@ -54,3 +55,7 @@ android/capacitor-android/build/
 android/capacitor-cordova-android-plugins/build/
 android/.gradle/
 *.keystore
+
+# local DB backups + incident recovery artifacts (contain user emails + content)
+backups/
+recovered/
