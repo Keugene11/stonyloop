@@ -236,6 +236,8 @@ export default function NotificationsPage() {
     if (type === 'friend_post') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
     if (type === 'friend_comment') return <MessageSquare size={12} className="text-accent flex-shrink-0" />
     if (type === 'friend_like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
+    if (type === 'like_comment') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
+    if (type === 'friend_like_comment') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     return null
   }
 
@@ -252,6 +254,8 @@ export default function NotificationsPage() {
     if (type === 'friend_post') return 'made a post'
     if (type === 'friend_comment') return 'commented on a post'
     if (type === 'friend_like') return 'liked a post'
+    if (type === 'like_comment') return 'liked your comment'
+    if (type === 'friend_like_comment') return 'liked a comment'
     return ''
   }
 
@@ -306,7 +310,7 @@ export default function NotificationsPage() {
                       )}
                     </span>
                   </div>
-                  {n.comment?.content && (n.type === 'comment' || n.type === 'reply' || n.type === 'friend_comment') && (
+                  {n.comment?.content && (n.type === 'comment' || n.type === 'reply' || n.type === 'friend_comment' || n.type === 'like_comment' || n.type === 'friend_like_comment') && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.comment.content}&rdquo;
                     </p>

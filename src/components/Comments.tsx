@@ -145,6 +145,10 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
         .eq('user_id', userId)
       setLikedComments(prev => { const s = new Set(prev); s.delete(commentId); return s })
       setLikeCounts(prev => ({ ...prev, [commentId]: (prev[commentId] || 1) - 1 }))
+      await supabase.from('notifications').delete()
+        .eq('actor_id', userId)
+        .eq('comment_id', commentId)
+        .in('type', ['like_comment', 'friend_like_comment'])
     } else {
       await supabase.from('comment_likes').insert({
         comment_id: commentId,
@@ -152,6 +156,38 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
       })
       setLikedComments(prev => new Set([...prev, commentId]))
       setLikeCounts(prev => ({ ...prev, [commentId]: (prev[commentId] || 0) + 1 }))
+
+      let commentAuthorId: string | undefined
+      for (const c of comments) {
+        if (c.id === commentId) { commentAuthorId = c.author_id; break }
+        const reply = c.replies?.find(r => r.id === commentId)
+        if (reply) { commentAuthorId = reply.author_id; break }
+      }
+
+      if (commentAuthorId && commentAuthorId !== userId) {
+        await supabase.from('notifications').delete()
+          .eq('actor_id', userId)
+          .eq('comment_id', commentId)
+          .eq('type', 'like_comment')
+        await supabase.from('notifications').insert({
+          user_id: commentAuthorId,
+          actor_id: userId,
+          type: 'like_comment',
+          post_type: postType,
+          post_id: postId,
+          comment_id: commentId,
+        })
+      }
+
+      await supabase.from('notifications').delete()
+        .eq('actor_id', userId)
+        .eq('comment_id', commentId)
+        .eq('type', 'friend_like_comment')
+      notifyFriends(supabase, userId, 'friend_like_comment', {
+        post_type: postType,
+        post_id: postId,
+        comment_id: commentId,
+      }, commentAuthorId && commentAuthorId !== userId ? [commentAuthorId] : [])
     }
   }
 
