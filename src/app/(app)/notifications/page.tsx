@@ -87,26 +87,28 @@ export default function NotificationsPage() {
         })
       }
 
-      // Fetch post content for like notifications so we can show what was liked
-      const likeNotifs = notifs.filter(n => (n.type === 'like' || n.type === 'friend_like') && n.post_id)
-      const likeWallIds = [...new Set(likeNotifs.filter(n => n.post_type === 'wall_post').map(n => n.post_id!))]
-      const likeGroupIds = [...new Set(likeNotifs.filter(n => n.post_type === 'group_post').map(n => n.post_id!))]
+      // Fetch original post content for like/comment notifications so the user sees which post
+      const postRefNotifs = notifs.filter(n =>
+        (n.type === 'like' || n.type === 'friend_like' || n.type === 'comment' || n.type === 'friend_comment') && n.post_id
+      )
+      const refWallIds = [...new Set(postRefNotifs.filter(n => n.post_type === 'wall_post').map(n => n.post_id!))]
+      const refGroupIds = [...new Set(postRefNotifs.filter(n => n.post_type === 'group_post').map(n => n.post_id!))]
       const postContentMap: Record<string, string> = {}
-      if (likeWallIds.length > 0) {
+      if (refWallIds.length > 0) {
         const { data: wallPosts } = await supabase
           .from('wall_posts')
           .select('id, content')
-          .in('id', likeWallIds)
+          .in('id', refWallIds)
         wallPosts?.forEach(wp => { if (wp.content) postContentMap[wp.id] = wp.content })
       }
-      if (likeGroupIds.length > 0) {
+      if (refGroupIds.length > 0) {
         const { data: groupPosts } = await supabase
           .from('group_posts')
           .select('id, content')
-          .in('id', likeGroupIds)
+          .in('id', refGroupIds)
         groupPosts?.forEach(gp => { if (gp.content) postContentMap[gp.id] = gp.content })
       }
-      likeNotifs.forEach(n => {
+      postRefNotifs.forEach(n => {
         if (n.post_id && postContentMap[n.post_id]) {
           n.post_content = postContentMap[n.post_id]
         }
@@ -304,7 +306,7 @@ export default function NotificationsPage() {
                       )}
                     </span>
                   </div>
-                  {n.comment?.content && (n.type === 'comment' || n.type === 'reply') && (
+                  {n.comment?.content && (n.type === 'comment' || n.type === 'reply' || n.type === 'friend_comment') && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.comment.content}&rdquo;
                     </p>
@@ -314,7 +316,12 @@ export default function NotificationsPage() {
                       &ldquo;{n.post_content}&rdquo;
                     </p>
                   )}
-                  {n.content && (n.type === 'friend_post' || n.type === 'friend_comment') && (
+                  {n.post_content && (n.type === 'comment' || n.type === 'friend_comment') && (
+                    <p className="text-[12px] text-text-muted mt-0.5 pl-[18px] line-clamp-2">
+                      on &ldquo;{n.post_content}&rdquo;
+                    </p>
+                  )}
+                  {n.content && n.type === 'friend_post' && (
                     <p className="text-[12px] text-text-muted mt-1 pl-[18px] line-clamp-2">
                       &ldquo;{n.content}&rdquo;
                     </p>
