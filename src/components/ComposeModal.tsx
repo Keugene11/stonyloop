@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
-import { X } from 'lucide-react'
 import WallPostForm from '@/components/WallPostForm'
 
 interface ComposeModalProps {
@@ -49,16 +48,17 @@ export default function ComposeModal({ open, onClose }: ComposeModalProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="w-full max-w-xl bg-bg-card rounded-2xl border border-border shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <button onClick={onClose} className="press text-text-muted hover:text-text p-1" aria-label="Close">
-            <X size={20} />
+        <div className="flex items-center px-4 pt-3">
+          <button
+            onClick={onClose}
+            className="press text-[14px] font-semibold text-text hover:text-text-muted px-2 py-1"
+          >
+            Cancel
           </button>
-          <p className="text-[14px] font-semibold">New post</p>
-          <span className="w-7" />
         </div>
 
         {me && (
-          <div className="flex items-center gap-3 px-5 pt-5">
+          <div className="flex items-center gap-3 px-5 pt-4">
             <div className="w-11 h-11 rounded-full bg-bg-input border border-border overflow-hidden flex-shrink-0">
               {me.avatar_url ? (
                 <img src={me.avatar_url} alt="" className="w-full h-full object-cover" />
