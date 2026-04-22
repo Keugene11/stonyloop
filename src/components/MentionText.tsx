@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { USERNAME_REGEX } from '@/components/MentionAutocomplete'
 
@@ -21,6 +23,7 @@ export default function MentionText({ text, className }: MentionTextProps) {
       <Link
         key={`m-${match.index}`}
         href={`/u/${handle}`}
+        onClick={(e) => e.stopPropagation()}
         className="text-accent font-medium hover:underline"
       >
         @{handle}
