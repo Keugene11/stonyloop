@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, LogOut, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2, Users, ArrowLeft } from 'lucide-react'
+import { Loader2, Camera, MapPin, GraduationCap, BookOpen, Heart, Phone, Globe, School, Cake, Home, Mail, X, Settings, Eye, Share2, Users, ArrowLeft } from 'lucide-react'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
 import { getUniversityData, type UniversityData } from '@/lib/university-data'
 import WallPostForm from '@/components/WallPostForm'
@@ -439,7 +439,6 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={16} /></button>
           </div>
         </div>
       </div>
@@ -474,7 +473,6 @@ export default function ProfilePage() {
             </p>
             <div className="flex items-center gap-3 mt-2">
               <Link href="/settings" className="press p-2 text-text-muted hover:text-text"><Settings size={18} /></Link>
-              <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); router.refresh() }} className="press p-2 text-text-muted hover:text-text"><LogOut size={18} /></button>
             </div>
           </div>
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Lock, Trash2, Loader2, Mail, Info, Bell, Moon, Sun } from 'lucide-react'
+import { ArrowLeft, Lock, Trash2, Loader2, Mail, Info, Bell, Moon, Sun, LogOut } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 
 export default function SettingsPage() {
@@ -19,6 +19,12 @@ export default function SettingsPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email || ''))
   }, [supabase])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   async function handleDelete() {
     if (!email || confirmText.trim().toLowerCase() !== email.toLowerCase()) return
@@ -87,6 +93,13 @@ export default function SettingsPage() {
             <p className="text-[12px] text-text-muted">Email keugenelee11@gmail.com</p>
           </div>
         </a>
+        <button onClick={handleSignOut} className="press flex items-center gap-3 px-4 py-3.5 w-full text-left">
+          <LogOut size={16} className="text-text-muted" />
+          <div className="flex-1">
+            <p className="text-[14px] font-medium">Sign out</p>
+            <p className="text-[12px] text-text-muted">Log out of your account</p>
+          </div>
+        </button>
       </div>
 
       <div className="bg-bg-card border border-red-500/20 rounded-2xl px-4 py-4">

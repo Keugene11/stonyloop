@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { Camera, Loader2, LogOut, X, ArrowLeft } from 'lucide-react'
+import { Camera, Loader2, X, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { CLASS_YEARS, GENDERS, RELATIONSHIP_STATUSES, LOOKING_FOR, INTERESTED_IN, POLITICAL_VIEWS } from '@/lib/constants'
 import { getUniversityData, type UniversityData } from '@/lib/university-data'
@@ -13,7 +12,6 @@ import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 
 export default function ProfilePage() {
   const supabase = createClient()
-  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -96,12 +94,6 @@ export default function ProfilePage() {
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId)
     setAvatarUrl(publicUrl)
     setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : prev)
-  }
-
-  async function handleSignOut() {
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
   }
 
   // Course helpers
