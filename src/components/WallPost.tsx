@@ -61,7 +61,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   return (
     <div
       onClick={handleCardClick}
-      className={`bg-bg-card border border-border rounded-2xl p-4${linkToDetail ? ' cursor-pointer' : ''}`}
+      className={`bg-bg-card border border-border rounded-2xl p-4 transition-colors${linkToDetail ? ' cursor-pointer active:bg-bg-card-hover' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
