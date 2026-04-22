@@ -184,6 +184,11 @@ export default function ProfilePage() {
               <label className={labelClass}>Full Name</label>
               <input type="text" value={profile.full_name || ''} onChange={(e) => updateField('full_name', e.target.value)} className={inputClass} placeholder="Your full name" />
             </div>
+            <UsernameField
+              userId={userId}
+              initial={profile.username || ''}
+              onChange={(v) => setProfile(prev => prev ? { ...prev, username: v } : prev)}
+            />
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelClass}>Class Year</label>
@@ -418,5 +423,99 @@ export default function ProfilePage() {
         />
       )}
     </>
+  )
+}
+
+function UsernameField({ userId, initial, onChange }: { userId: string; initial: string; onChange: (v: string) => void }) {
+  const supabase = createClient()
+  const [draft, setDraft] = useState(initial)
+  const [status, setStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'saving' | 'saved' | 'error'>('idle')
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => { setDraft(initial) }, [initial])
+
+  const normalized = draft.trim().toLowerCase()
+  const formatOk = /^[a-z0-9_]{3,20}$/.test(normalized)
+  const isCurrent = normalized === initial.toLowerCase()
+
+  useEffect(() => {
+    if (isCurrent) { setStatus('idle'); setMessage(null); return }
+    if (!formatOk) {
+      setStatus('invalid')
+      setMessage('3-20 chars, lowercase letters, digits, or _')
+      return
+    }
+    setStatus('checking')
+    setMessage(null)
+    let cancelled = false
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', normalized)
+        .maybeSingle()
+      if (cancelled) return
+      if (data && data.id !== userId) {
+        setStatus('taken')
+        setMessage('Already taken')
+      } else {
+        setStatus('available')
+        setMessage('Available')
+      }
+    }, 350)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [normalized, formatOk, isCurrent, supabase, userId])
+
+  async function save() {
+    if (!formatOk || status === 'taken' || isCurrent) return
+    setStatus('saving')
+    const { error } = await supabase.from('profiles').update({
+      username: normalized, updated_at: new Date().toISOString(),
+    }).eq('id', userId)
+    if (error) {
+      setStatus('error')
+      setMessage(error.message.includes('unique') ? 'Already taken' : 'Save failed')
+      return
+    }
+    onChange(normalized)
+    setStatus('saved')
+    setMessage('Saved')
+  }
+
+  const inputClass = 'w-full bg-bg-card border border-border rounded-xl pl-8 pr-3 py-2 text-[14px] outline-none focus:border-text-muted transition-colors'
+  const labelClass = 'text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block'
+  const color = status === 'taken' || status === 'invalid' || status === 'error'
+    ? 'text-red-500'
+    : status === 'available' || status === 'saved'
+    ? 'text-green-600'
+    : 'text-text-muted'
+
+  return (
+    <div>
+      <label className={labelClass}>Username</label>
+      <div className="flex gap-2 items-center">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[14px]">@</span>
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className={inputClass}
+            placeholder="yourname"
+            maxLength={20}
+            autoComplete="off"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={save}
+          disabled={!formatOk || status === 'taken' || status === 'saving' || isCurrent}
+          className="press bg-text text-bg font-semibold text-[13px] px-4 py-2 rounded-xl disabled:opacity-40"
+        >
+          {status === 'saving' ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+      {message && <p className={`text-[11px] mt-1 ${color}`}>{message}</p>}
+    </div>
   )
 }

@@ -431,6 +431,7 @@ export default function ProfilePage() {
           </label>
           <div className="min-w-0 flex-1">
             <h1 className="text-[20px] font-bold tracking-tight truncate">{profile.full_name || 'Set your name'}</h1>
+            {profile.username && <p className="text-[13px] text-text-muted truncate">@{profile.username}</p>}
             <p className="text-[13px] text-text-muted truncate">
               {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
               {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}
@@ -466,6 +467,7 @@ export default function ProfilePage() {
           {/* Name & subtitle — desktop only; mobile uses the compact header above */}
           <div className="hidden md:block">
             <h1 className="text-[22px] font-bold tracking-tight cursor-pointer hover:underline" onClick={() => setEditing('full_name')}>{profile.full_name || 'Click to set name'}</h1>
+            {profile.username && <p className="text-[13px] text-text-muted mt-0.5">@{profile.username}</p>}
             <p className="text-[13px] text-text-muted mt-0.5">
               {profile.major || 'No major'}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}
               {profile.residence_hall ? ` · ${profile.residence_hall}` : ''}

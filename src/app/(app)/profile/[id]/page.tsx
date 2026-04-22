@@ -281,6 +281,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="min-w-0">
             <h1 className="text-[16px] font-bold tracking-tight truncate">{profile.full_name}</h1>
+            {profile.username && <p className="text-[12px] text-text-muted truncate">@{profile.username}</p>}
             {profile.major && (
               <p className="text-[12px] text-text-muted truncate">{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>
             )}
@@ -313,6 +314,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
           {/* Name & subtitle */}
           <div className="mb-3">
             <h1 className="text-[22px] font-bold tracking-tight">{profile.full_name}</h1>
+            {profile.username && <p className="text-[13px] text-text-muted mt-0.5">@{profile.username}</p>}
             <div className="text-[13px] text-text-muted space-y-0.5 mt-0.5">
               {profile.major && <p>{profile.major}{profile.class_year ? ` '${profile.class_year.toString().slice(-2)}` : ''}</p>}
               {profile.residence_hall && (
