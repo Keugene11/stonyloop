@@ -11,9 +11,10 @@ import { useMentionAutocomplete, MentionDropdown, notifyMentions } from '@/compo
 interface WallPostFormProps {
   wallOwnerId: string
   onPost: (post: WallPost) => void
+  variant?: 'inline' | 'modal'
 }
 
-export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps) {
+export default function WallPostForm({ wallOwnerId, onPost, variant = 'inline' }: WallPostFormProps) {
   const supabase = createClient()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
@@ -103,9 +104,10 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
   }
 
   const isVideo = mediaFile?.type.startsWith('video/')
+  const isModal = variant === 'modal'
 
   return (
-    <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-2xl p-3">
+    <form onSubmit={handleSubmit} className={isModal ? '' : 'bg-bg-card border border-border rounded-2xl p-3'}>
       <div className="relative">
         <textarea
           ref={textareaRef}
@@ -113,8 +115,8 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={mention.onKeyDown}
           maxLength={2000}
-          placeholder="Write on the wall..."
-          className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none min-h-[4rem] overflow-hidden"
+          placeholder={isModal ? "What's on your mind?" : 'Write on the wall...'}
+          className={`w-full bg-transparent placeholder:text-text-muted/50 outline-none resize-none overflow-hidden ${isModal ? 'text-[16px] leading-[1.5] min-h-[200px]' : 'text-[14px] min-h-[4rem]'}`}
         />
         <MentionDropdown
           suggestions={mention.suggestions}
