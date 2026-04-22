@@ -54,14 +54,17 @@ export default function NavBar() {
             <Link
               key={href}
               href={href}
-              className={`press flex flex-col items-center gap-0.5 px-3 py-1.5 relative ${
+              className={`press flex flex-col items-center gap-0.5 px-3 pt-2 pb-1.5 relative ${
                 isActive ? 'text-accent' : 'text-text-muted'
               }`}
             >
-              <div className="relative">
-                <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} />
+              {isActive && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-b-full bg-accent" />
+              )}
+              <div className={`relative rounded-full px-3 py-1 ${isActive ? 'bg-accent/15' : ''}`}>
+                <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} />
                 {hasBadge && badgeCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
+                  <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
