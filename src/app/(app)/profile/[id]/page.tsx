@@ -539,8 +539,6 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
         {/* RIGHT COLUMN — The Wall */}
         <div className={`flex-1 min-w-0 ${activeTab === 'wall' ? 'block' : 'hidden'} md:block`}>
-          <h2 className="text-[18px] font-bold mb-3 hidden md:block">The Wall</h2>
-
         {currentUserId && !isBlocked && (() => {
           const wallSetting = profile.wall_posts_from || 'everyone'
           const canPost = currentUserId === id || wallSetting === 'everyone' || (wallSetting === 'friends' && isFriend)

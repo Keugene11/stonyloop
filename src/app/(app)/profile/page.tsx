@@ -639,7 +639,6 @@ export default function ProfilePage() {
 
         {/* RIGHT — Wall */}
         <div className={`flex-1 min-w-0 mt-5 md:mt-0 ${activeTab === 'wall' ? 'block' : 'hidden'} md:block`}>
-          <h2 className="text-[18px] font-bold mb-3">The Wall</h2>
           <WallPostForm wallOwnerId={userId} onPost={(post) => setWallPosts([post, ...wallPosts])} />
           {wallPosts.length === 0 ? (
             <div className="bg-bg-card border border-border rounded-2xl p-6 text-center mt-3">
