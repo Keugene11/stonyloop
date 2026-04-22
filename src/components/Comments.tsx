@@ -1,14 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Send, Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
+import { Send, Heart, MessageCircle, MoreHorizontal, Image as ImageIcon, X, Loader2 } from 'lucide-react'
 import type { Comment } from '@/types'
 import CommentComposer from '@/components/CommentComposer'
 import { notifyFriends } from '@/lib/notifyFriends'
 import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|mov|avi)$/i.test(url)
+}
 
 interface CommentsProps {
   postType: 'wall_post' | 'group_post'
@@ -27,6 +31,9 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerParent, setComposerParent] = useState<Comment | null>(null)
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -91,16 +98,49 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     setComposerOpen(true)
   }
 
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const maxSize = file.type.startsWith('video/') ? 20 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert(file.type.startsWith('video/') ? 'Video must be under 20 MB.' : 'Image must be under 5 MB.')
+      return
+    }
+    setMediaFile(file)
+    setMediaPreview(URL.createObjectURL(file))
+  }
+
+  function clearMedia() {
+    setMediaFile(null)
+    setMediaPreview(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
   async function handleInlinePost() {
     const text = input.trim()
-    if (!text || !userId || posting) return
+    if ((!text && !mediaFile) || !userId || posting) return
     setPosting(true)
+
+    let media_url: string | null = null
+    if (mediaFile) {
+      const ext = (mediaFile.name.split('.').pop() || '').toLowerCase()
+      const allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov']
+      if (!allowed.includes(ext)) { setPosting(false); return }
+      const path = `${userId}/${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('posts').upload(path, mediaFile)
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(path)
+        media_url = publicUrl
+      }
+    }
+
     const { data: newComment } = await supabase.from('comments').insert({
       post_type: postType,
       post_id: postId,
       parent_id: null,
       author_id: userId,
       content: text,
+      media_url,
     }).select('id').single()
 
     if (postAuthorId && postAuthorId !== userId) {
@@ -124,6 +164,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     }, exclude)
 
     setInput('')
+    clearMedia()
     setPosting(false)
     loadComments()
   }
@@ -230,24 +271,58 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
           ))}
 
           {canComment ? (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleInlinePost() }}
-                maxLength={2000}
-                placeholder="Write a comment..."
-                className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[13px] outline-none placeholder:text-text-muted/50"
-              />
-              <button
-                onClick={handleInlinePost}
-                disabled={!input.trim() || posting}
-                className="text-accent disabled:opacity-30 press"
-                aria-label="Post comment"
-              >
-                <Send size={16} />
-              </button>
+            <div>
+              {mediaPreview && (
+                <div className="relative inline-block mb-1.5">
+                  {mediaFile?.type.startsWith('video/') ? (
+                    <video src={mediaPreview} className="max-h-32 rounded-lg" controls />
+                  ) : (
+                    <img src={mediaPreview} alt="" className="max-h-32 rounded-lg" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={clearMedia}
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 press"
+                    aria-label="Remove media"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              )}
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleInlinePost() }}
+                  maxLength={2000}
+                  placeholder="Write a comment..."
+                  className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[13px] outline-none placeholder:text-text-muted/50 min-w-0"
+                />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="text-text-muted hover:text-text press"
+                  aria-label="Attach media"
+                >
+                  <ImageIcon size={16} />
+                </button>
+                <button
+                  onClick={handleInlinePost}
+                  disabled={(!input.trim() && !mediaFile) || posting}
+                  className="text-accent disabled:opacity-30 press"
+                  aria-label="Post comment"
+                >
+                  {posting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </button>
+              </div>
             </div>
           ) : null}
         </div>
@@ -302,8 +377,19 @@ function CommentItem({ comment, userId, onDelete, onReply, liked, likeCount, onT
           <Link href={`/profile/${comment.author_id}`} className="text-[13px] font-semibold hover:underline">
             {comment.author?.full_name || 'Unknown'}
           </Link>
-          <p className="text-[13px] whitespace-pre-wrap break-words">{comment.content}</p>
+          {comment.content && (
+            <p className="text-[13px] whitespace-pre-wrap break-words">{comment.content}</p>
+          )}
         </div>
+        {comment.media_url && (
+          <div className="mt-1.5">
+            {isVideoUrl(comment.media_url) ? (
+              <video src={comment.media_url} className="max-h-64 rounded-xl" controls />
+            ) : (
+              <img src={comment.media_url} alt="" className="max-h-64 rounded-xl" />
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-1 mt-1 -ml-2">
           <span className="text-[11px] text-text-muted px-2">{getTimeAgo(new Date(comment.created_at))}</span>
           <button

@@ -138,6 +138,7 @@ export interface Comment {
   parent_id: string | null
   author_id: string
   content: string
+  media_url: string | null
   created_at: string
   author?: Profile
   replies?: Comment[]

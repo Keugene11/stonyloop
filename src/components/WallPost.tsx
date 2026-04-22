@@ -31,9 +31,8 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const content = post.content
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [expanded, setExpanded] = useState(false)
-  const shouldTruncate = truncate && !expanded && content.length > TRUNCATE_LENGTH
-  const openDetail = () => router.push(`/post/${post.id}`)
+  const shouldTruncate = truncate && content.length > TRUNCATE_LENGTH
+  const displayContent = shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '…' : content
 
   async function handleDelete() {
     // Nullify notification references via server route (uses service role for cross-user updates)
@@ -93,33 +92,34 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           )}
         </div>
       </div>
-      <div
-        onClick={linkToDetail ? openDetail : undefined}
-        className={linkToDetail ? 'press cursor-pointer active:opacity-70 transition-opacity' : undefined}
-      >
-        {content && (
-          <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
-            {shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '...' : content}
-            {shouldTruncate && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
-                className="press text-accent font-medium ml-1"
-              >
-                more
-              </button>
-            )}
-          </p>
-        )}
-        {post.media_url && (
-          <div className="mt-2.5">
-            {isVideo(post.media_url) ? (
-              <video src={post.media_url} className="max-w-full rounded-xl" controls onClick={(e) => e.stopPropagation()} />
-            ) : (
-              <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
-            )}
-          </div>
-        )}
-      </div>
+      {linkToDetail ? (
+        <Link
+          href={`/post/${post.id}`}
+          className="press block active:opacity-70 transition-opacity -mx-1 px-1 py-1"
+        >
+          {content && (
+            <p className="text-[14px] mt-1.5 whitespace-pre-wrap">
+              {displayContent}
+              {shouldTruncate && <span className="text-accent font-medium ml-1">more</span>}
+            </p>
+          )}
+          {post.media_url && !isVideo(post.media_url) && (
+            <img src={post.media_url} alt="" className="max-w-full rounded-xl mt-2.5" />
+          )}
+        </Link>
+      ) : (
+        <>
+          {content && (
+            <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{content}</p>
+          )}
+          {post.media_url && !isVideo(post.media_url) && (
+            <img src={post.media_url} alt="" className="max-w-full rounded-xl mt-2.5" />
+          )}
+        </>
+      )}
+      {post.media_url && isVideo(post.media_url) && (
+        <video src={post.media_url} className="max-w-full rounded-xl mt-2.5" controls />
+      )}
       <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
     </div>
   )
