@@ -9,6 +9,7 @@ import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
 import Likes from '@/components/Likes'
+import MentionText from '@/components/MentionText'
 
 const TRUNCATE_LENGTH = 280
 
@@ -131,7 +132,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
       </div>
       {content && (
         <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
-          {displayContent}
+          <MentionText text={displayContent} />
           {shouldTruncate && <span className="text-accent font-medium ml-1">more</span>}
         </p>
       )}

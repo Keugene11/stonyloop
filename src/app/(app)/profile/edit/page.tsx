@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [uniData, setUniData] = useState<UniversityData | null>(null)
+  const [usernameChangedAt, setUsernameChangedAt] = useState<string | null>(null)
 
   useEffect(() => {
     loadProfile()
@@ -45,6 +46,8 @@ export default function ProfilePage() {
       setAvatarUrl(data.avatar_url || '')
       const ud = await getUniversityData(data.university || 'stonybrook')
       setUniData(ud)
+      const { data: meta } = await supabase.from('profiles').select('username_changed_at').eq('id', user.id).maybeSingle()
+      setUsernameChangedAt(meta?.username_changed_at ?? null)
     }
 
     setLoading(false)
@@ -187,7 +190,8 @@ export default function ProfilePage() {
             <UsernameField
               userId={userId}
               initial={profile.username || ''}
-              onChange={(v) => setProfile(prev => prev ? { ...prev, username: v } : prev)}
+              lastChangedAt={usernameChangedAt}
+              onChange={(v) => { setProfile(prev => prev ? { ...prev, username: v } : prev); setUsernameChangedAt(new Date().toISOString()) }}
             />
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -426,7 +430,12 @@ export default function ProfilePage() {
   )
 }
 
-function UsernameField({ userId, initial, onChange }: { userId: string; initial: string; onChange: (v: string) => void }) {
+function UsernameField({ userId, initial, lastChangedAt, onChange }: {
+  userId: string
+  initial: string
+  lastChangedAt: string | null
+  onChange: (v: string) => void
+}) {
   const supabase = createClient()
   const [draft, setDraft] = useState(initial)
   const [status, setStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'saving' | 'saved' | 'error'>('idle')
@@ -437,6 +446,14 @@ function UsernameField({ userId, initial, onChange }: { userId: string; initial:
   const normalized = draft.trim().toLowerCase()
   const formatOk = /^[a-z0-9_]{3,20}$/.test(normalized)
   const isCurrent = normalized === initial.toLowerCase()
+
+  const cooldownUntil = lastChangedAt
+    ? new Date(new Date(lastChangedAt).getTime() + 30 * 24 * 60 * 60 * 1000)
+    : null
+  const onCooldown = cooldownUntil !== null && cooldownUntil.getTime() > Date.now()
+  const cooldownDaysLeft = onCooldown && cooldownUntil
+    ? Math.ceil((cooldownUntil.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+    : 0
 
   useEffect(() => {
     if (isCurrent) { setStatus('idle'); setMessage(null); return }
@@ -467,14 +484,16 @@ function UsernameField({ userId, initial, onChange }: { userId: string; initial:
   }, [normalized, formatOk, isCurrent, supabase, userId])
 
   async function save() {
-    if (!formatOk || status === 'taken' || isCurrent) return
+    if (!formatOk || status === 'taken' || isCurrent || onCooldown) return
     setStatus('saving')
     const { error } = await supabase.from('profiles').update({
       username: normalized, updated_at: new Date().toISOString(),
     }).eq('id', userId)
     if (error) {
       setStatus('error')
-      setMessage(error.message.includes('unique') ? 'Already taken' : 'Save failed')
+      if (error.message.includes('username_cooldown')) setMessage('You recently changed your username — try again later')
+      else if (error.message.includes('unique')) setMessage('Already taken')
+      else setMessage('Save failed')
       return
     }
     onChange(normalized)
@@ -509,13 +528,19 @@ function UsernameField({ userId, initial, onChange }: { userId: string; initial:
         <button
           type="button"
           onClick={save}
-          disabled={!formatOk || status === 'taken' || status === 'saving' || isCurrent}
+          disabled={!formatOk || status === 'taken' || status === 'saving' || isCurrent || onCooldown}
           className="press bg-text text-bg font-semibold text-[13px] px-4 py-2 rounded-xl disabled:opacity-40"
         >
           {status === 'saving' ? 'Saving…' : 'Save'}
         </button>
       </div>
-      {message && <p className={`text-[11px] mt-1 ${color}`}>{message}</p>}
+      {onCooldown ? (
+        <p className="text-[11px] mt-1 text-text-muted">
+          You can change your username again in {cooldownDaysLeft} day{cooldownDaysLeft === 1 ? '' : 's'}.
+        </p>
+      ) : message ? (
+        <p className={`text-[11px] mt-1 ${color}`}>{message}</p>
+      ) : null}
     </div>
   )
 }

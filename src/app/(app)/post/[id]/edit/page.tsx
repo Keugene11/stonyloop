@@ -4,16 +4,29 @@ import { useState, useEffect, useRef, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ChevronLeft } from 'lucide-react'
+import {
+  useMentionAutocomplete,
+  MentionDropdown,
+  notifyMentions,
+  extractMentionHandles,
+} from '@/components/MentionAutocomplete'
 
 export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const supabase = createClient()
   const router = useRouter()
   const [content, setContent] = useState('')
+  const [originalContent, setOriginalContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notAllowed, setNotAllowed] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const mention = useMentionAutocomplete({
+    value: content,
+    setValue: setContent,
+    inputRef: textareaRef,
+  })
 
   useEffect(() => {
     load()
@@ -43,6 +56,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       setNotAllowed(true)
     } else {
       setContent(data.content)
+      setOriginalContent(data.content)
     }
     setLoading(false)
   }
@@ -50,7 +64,22 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   async function handleSave() {
     if (!content.trim() || saving) return
     setSaving(true)
-    await supabase.from('wall_posts').update({ content: content.trim() }).eq('id', id)
+    const body = content.trim()
+    await supabase.from('wall_posts').update({ content: body }).eq('id', id)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const oldHandles = new Set(extractMentionHandles(originalContent))
+      const newHandles = extractMentionHandles(body).filter(h => !oldHandles.has(h))
+      if (newHandles.length > 0) {
+        const diffText = newHandles.map(h => `@${h}`).join(' ')
+        await notifyMentions(supabase, user.id, diffText, {
+          post_type: 'wall_post',
+          post_id: id,
+        })
+      }
+    }
+
     router.back()
   }
 
@@ -92,15 +121,23 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       </div>
 
       <div className="px-4 pt-2">
-        <div className="bg-bg-card border border-border rounded-2xl p-4">
+        <div className="bg-bg-card border border-border rounded-2xl p-4 relative">
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={mention.onKeyDown}
             maxLength={2000}
             className="w-full bg-transparent text-[15px] leading-[1.5] outline-none resize-none min-h-[120px] overflow-hidden"
             autoFocus
             placeholder="What's on your mind?"
+          />
+          <MentionDropdown
+            suggestions={mention.suggestions}
+            highlightIndex={mention.highlightIndex}
+            onSelect={mention.select}
+            onHover={mention.setHighlightIndex}
+            className="top-full mt-1 left-4 right-4"
           />
         </div>
       </div>

@@ -10,6 +10,7 @@ import CommentComposer from '@/components/CommentComposer'
 import { notifyFriends } from '@/lib/notifyFriends'
 import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
 import { useMentionAutocomplete, MentionDropdown, notifyMentions } from '@/components/MentionAutocomplete'
+import MentionText from '@/components/MentionText'
 
 function isVideoUrl(url: string) {
   return /\.(mp4|webm|mov|avi)$/i.test(url)
@@ -409,7 +410,9 @@ function CommentItem({ comment, userId, onDelete, onReply, liked, likeCount, onT
             {comment.author?.full_name || 'Unknown'}
           </Link>
           {comment.content && (
-            <p className="text-[13px] whitespace-pre-wrap break-words">{comment.content}</p>
+            <p className="text-[13px] whitespace-pre-wrap break-words">
+              <MentionText text={comment.content} />
+            </p>
           )}
         </div>
         {comment.media_url && (
