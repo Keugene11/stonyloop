@@ -6,7 +6,7 @@ import { Send, Loader2, Image, X } from 'lucide-react'
 import type { WallPost } from '@/types'
 import { notifyFriends } from '@/lib/notifyFriends'
 import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
-import { useMentionAutocomplete, MentionDropdown, notifyMentions, type MentionSuggestion } from '@/components/MentionAutocomplete'
+import { useMentionAutocomplete, MentionDropdown, notifyMentions } from '@/components/MentionAutocomplete'
 
 interface WallPostFormProps {
   wallOwnerId: string
@@ -19,7 +19,6 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
   const [loading, setLoading] = useState(false)
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
-  const [mentionIds, setMentionIds] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -27,9 +26,6 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
     value: content,
     setValue: setContent,
     inputRef: textareaRef,
-    onSelect: (s: MentionSuggestion) => {
-      setMentionIds(prev => ({ ...prev, [s.id]: s.full_name }))
-    },
   })
 
   useEffect(() => {
@@ -92,21 +88,16 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
       setContent('')
       clearMedia()
 
-      const mentionedIds = new Set(
-        Object.keys(mentionIds).filter(uid => bodyText.includes(`@${mentionIds[uid]}`))
-      )
-      await notifyMentions(supabase, user.id, mentionedIds, bodyText, mentionIds, {
+      const mentionedIds = await notifyMentions(supabase, user.id, bodyText, {
         post_type: 'wall_post',
         post_id: data.id,
       })
-      setMentionIds({})
 
-      // Notify friends that you posted (skip those already notified via mention)
       notifyFriends(supabase, user.id, 'friend_post', {
         post_type: 'wall_post',
         post_id: data.id,
         content: bodyText.slice(0, 100) || undefined,
-      }, Array.from(mentionedIds))
+      }, mentionedIds)
     }
     setLoading(false)
   }

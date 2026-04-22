@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 export interface MentionSuggestion {
   id: string
   full_name: string
+  username: string
   avatar_url: string | null
 }
 
@@ -22,6 +23,8 @@ interface UseMentionAutocompleteArgs {
   onSelect?: (s: MentionSuggestion) => void
 }
 
+export const USERNAME_REGEX = /@([a-z0-9_]{3,20})/gi
+
 export function useMentionAutocomplete({ value, setValue, inputRef, onSelect }: UseMentionAutocompleteArgs) {
   const [suggestions, setSuggestions] = useState<MentionSuggestion[]>([])
   const [activeQuery, setActiveQuery] = useState<ActiveQuery | null>(null)
@@ -32,11 +35,11 @@ export function useMentionAutocomplete({ value, setValue, inputRef, onSelect }: 
     if (!el) { setActiveQuery(null); return }
     const cursor = el.selectionStart ?? 0
     const before = value.slice(0, cursor)
-    const match = before.match(/(?:^|\s)@([A-Za-z][A-Za-z\s'-]{0,40})$/)
+    const match = before.match(/(?:^|\s)@([A-Za-z0-9_]{0,20})$/)
     if (match) {
       const query = match[1]
       const start = cursor - query.length - 1
-      setActiveQuery({ start, end: cursor, text: query })
+      setActiveQuery({ start, end: cursor, text: query.toLowerCase() })
       setHighlightIndex(0)
     } else {
       setActiveQuery(null)
@@ -55,15 +58,18 @@ export function useMentionAutocomplete({ value, setValue, inputRef, onSelect }: 
       if (!user) return
       const { data: me } = await supabase.from('profiles').select('university').eq('id', user.id).single()
       if (!me) return
-      const { data } = await supabase
+      let query = supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
+        .select('id, full_name, username, avatar_url')
         .eq('university', me.university)
         .eq('hidden_from_directory', false)
-        .ilike('full_name', `${q}%`)
         .neq('id', user.id)
-        .order('full_name', { ascending: true })
+        .order('username', { ascending: true })
         .limit(6)
+      if (q.length > 0) {
+        query = query.or(`username.ilike.${q}%,full_name.ilike.${q}%`)
+      }
+      const { data } = await query
       if (!cancelled && data) setSuggestions(data as MentionSuggestion[])
     }
 
@@ -75,7 +81,7 @@ export function useMentionAutocomplete({ value, setValue, inputRef, onSelect }: 
     if (!activeQuery) return
     const before = value.slice(0, activeQuery.start)
     const after = value.slice(activeQuery.end)
-    const insert = `@${s.full_name} `
+    const insert = `@${s.username} `
     const next = before + insert + after
     setValue(next)
     setActiveQuery(null)
@@ -141,29 +147,41 @@ export function MentionDropdown({ suggestions, highlightIndex, onSelect, onHover
               </div>
             )}
           </div>
-          <span className="text-[13px] truncate">{s.full_name}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold truncate">@{s.username}</p>
+            <p className="text-[11px] text-text-muted truncate">{s.full_name}</p>
+          </div>
         </button>
       ))}
     </div>
   )
 }
 
+export function extractMentionHandles(text: string): string[] {
+  const out = new Set<string>()
+  for (const m of text.matchAll(USERNAME_REGEX)) {
+    out.add(m[1].toLowerCase())
+  }
+  return [...out]
+}
+
 export async function notifyMentions(
   supabase: ReturnType<typeof createClient>,
   actorId: string,
-  mentionedIds: Set<string>,
   text: string,
-  nameById: Record<string, string>,
   target: { post_type?: 'wall_post' | 'group_post'; post_id?: string; comment_id?: string }
-) {
-  if (mentionedIds.size === 0) return
-  for (const uid of mentionedIds) {
-    if (uid === actorId) continue
-    const name = nameById[uid]
-    if (!name) continue
-    if (!text.includes(`@${name}`)) continue
+): Promise<string[]> {
+  const handles = extractMentionHandles(text)
+  if (handles.length === 0) return []
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, username')
+    .in('username', handles)
+  const users = (data || []).filter(p => p.id !== actorId)
+  if (users.length === 0) return []
+  for (const u of users) {
     await supabase.from('notifications').insert({
-      user_id: uid,
+      user_id: u.id,
       actor_id: actorId,
       type: 'mention',
       post_type: target.post_type ?? null,
@@ -171,4 +189,5 @@ export async function notifyMentions(
       comment_id: target.comment_id ?? null,
     })
   }
+  return users.map(u => u.id)
 }

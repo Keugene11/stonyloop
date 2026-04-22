@@ -2,6 +2,7 @@ export interface Profile {
   id: string
   email: string
   full_name: string
+  username: string
   avatar_url: string | null
   class_year: number | null
   major: string

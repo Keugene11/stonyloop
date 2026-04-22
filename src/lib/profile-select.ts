@@ -2,7 +2,7 @@
 // Excludes email and phone, which are revoked at the column level and must be
 // fetched via the `get_profile_contact` RPC (respects private_fields server-side).
 export const PROFILE_PUBLIC_COLUMNS =
-  'id, full_name, avatar_url, class_year, major, second_major, minor, ' +
+  'id, full_name, username, avatar_url, class_year, major, second_major, minor, ' +
   'residence_hall, courses, gender, relationship_status, interests, about_me, ' +
   'political_views, favorite_quotes, looking_for, interested_in, favorite_music, ' +
   'favorite_movies, hometown, high_school, websites, birthday, private_fields, ' +

@@ -9,7 +9,7 @@ import type { Comment } from '@/types'
 import CommentComposer from '@/components/CommentComposer'
 import { notifyFriends } from '@/lib/notifyFriends'
 import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
-import { useMentionAutocomplete, MentionDropdown, notifyMentions, type MentionSuggestion } from '@/components/MentionAutocomplete'
+import { useMentionAutocomplete, MentionDropdown, notifyMentions } from '@/components/MentionAutocomplete'
 
 function isVideoUrl(url: string) {
   return /\.(mp4|webm|mov|avi)$/i.test(url)
@@ -34,7 +34,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   const [composerParent, setComposerParent] = useState<Comment | null>(null)
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
-  const [mentionIds, setMentionIds] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -42,9 +41,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
     value: input,
     setValue: setInput,
     inputRef,
-    onSelect: (s: MentionSuggestion) => {
-      setMentionIds(prev => ({ ...prev, [s.id]: s.full_name }))
-    },
   })
 
   useEffect(() => {
@@ -168,10 +164,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
 
     const exclude: string[] = []
     if (postAuthorId && postAuthorId !== userId) exclude.push(postAuthorId)
-    const mentionedIds = new Set(
-      Object.keys(mentionIds).filter(uid => text.includes(`@${mentionIds[uid]}`))
-    )
-    await notifyMentions(supabase, userId, mentionedIds, text, mentionIds, {
+    const mentionedIds = await notifyMentions(supabase, userId, text, {
       post_type: postType,
       post_id: postId,
       comment_id: newComment?.id,
@@ -187,7 +180,6 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
 
     setInput('')
     clearMedia()
-    setMentionIds({})
     setPosting(false)
     loadComments()
   }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { X, Loader2, Image as ImageIcon } from 'lucide-react'
 import { notifyFriends } from '@/lib/notifyFriends'
-import { useMentionAutocomplete, MentionDropdown, notifyMentions, type MentionSuggestion } from '@/components/MentionAutocomplete'
+import { useMentionAutocomplete, MentionDropdown, notifyMentions } from '@/components/MentionAutocomplete'
 
 interface PostPreview {
   author_name: string
@@ -43,7 +43,6 @@ export default function CommentComposer({
   const [userId, setUserId] = useState('')
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
-  const [mentionIds, setMentionIds] = useState<Record<string, string>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -51,9 +50,6 @@ export default function CommentComposer({
     value: text,
     setValue: setText,
     inputRef: textareaRef,
-    onSelect: (s: MentionSuggestion) => {
-      setMentionIds(prev => ({ ...prev, [s.id]: s.full_name }))
-    },
   })
 
   useEffect(() => {
@@ -173,10 +169,7 @@ export default function CommentComposer({
     } else if (postAuthorId && postAuthorId !== userId) {
       exclude.push(postAuthorId)
     }
-    const mentionedIds = new Set(
-      Object.keys(mentionIds).filter(uid => body.includes(`@${mentionIds[uid]}`))
-    )
-    await notifyMentions(supabase, userId, mentionedIds, body, mentionIds, {
+    const mentionedIds = await notifyMentions(supabase, userId, body, {
       post_type: postType,
       post_id: postId,
       comment_id: newComment?.id,
