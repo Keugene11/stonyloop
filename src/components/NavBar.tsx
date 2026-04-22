@@ -3,17 +3,40 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, UsersRound, MessageCircle, Inbox, User } from 'lucide-react'
+import {
+  HomeIcon as HomeOutline,
+  MagnifyingGlassIcon as SearchOutline,
+  UsersIcon as UsersOutline,
+  ChatBubbleOvalLeftIcon as ChatOutline,
+  InboxIcon as InboxOutline,
+  UserIcon as UserOutline,
+} from '@heroicons/react/24/outline'
+import {
+  HomeIcon as HomeSolid,
+  MagnifyingGlassIcon as SearchSolid,
+  UsersIcon as UsersSolid,
+  ChatBubbleOvalLeftIcon as ChatSolid,
+  InboxIcon as InboxSolid,
+  UserIcon as UserSolid,
+} from '@heroicons/react/24/solid'
 import { createClient } from '@/lib/supabase/client'
 import ComposeModal from '@/components/ComposeModal'
 
-const navItems = [
-  { href: '/feed', icon: Home, label: 'Home' },
-  { href: '/directory', icon: Search, label: 'Directory' },
-  { href: '/groups', icon: UsersRound, label: 'Groups' },
-  { href: '/messages', icon: MessageCircle, label: 'Messages' },
-  { href: '/notifications', icon: Inbox, label: 'Inbox', hasBadge: true },
-  { href: '/profile', icon: User, label: 'Profile' },
+type NavItem = {
+  href: string
+  outline: typeof HomeOutline
+  solid: typeof HomeSolid
+  label: string
+  hasBadge?: boolean
+}
+
+const navItems: NavItem[] = [
+  { href: '/feed', outline: HomeOutline, solid: HomeSolid, label: 'Home' },
+  { href: '/directory', outline: SearchOutline, solid: SearchSolid, label: 'Directory' },
+  { href: '/groups', outline: UsersOutline, solid: UsersSolid, label: 'Groups' },
+  { href: '/messages', outline: ChatOutline, solid: ChatSolid, label: 'Messages' },
+  { href: '/notifications', outline: InboxOutline, solid: InboxSolid, label: 'Inbox', hasBadge: true },
+  { href: '/profile', outline: UserOutline, solid: UserSolid, label: 'Profile' },
 ]
 
 export default function NavBar() {
@@ -52,24 +75,22 @@ export default function NavBar() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="max-w-xl mx-auto flex items-center justify-around h-14">
-          {navItems.map(({ href, icon: Icon, label, hasBadge }) => {
+          {navItems.map(({ href, outline: Outline, solid: Solid, label, hasBadge }) => {
             const isActive = pathname.startsWith(href)
+            const Icon = isActive ? Solid : Outline
             return (
               <Link
                 key={href}
                 href={href}
                 aria-label={label}
-                className={`press flex items-center justify-center px-3 py-2 relative ${
-                  isActive ? 'text-accent' : 'text-text-muted'
+                className={`flex items-center justify-center px-3 py-2 relative transition-colors ${
+                  isActive ? 'text-text' : 'text-text-muted'
                 }`}
               >
-                {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-b-full bg-accent" />
-                )}
-                <div className={`relative rounded-full px-3 py-1.5 ${isActive ? 'bg-accent/15' : ''}`}>
-                  <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />
+                <div className="relative">
+                  <Icon className="w-6 h-6" />
                   {hasBadge && badgeCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
+                    <span className="absolute -top-1.5 -right-2 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
                       {badgeCount > 99 ? '99+' : badgeCount}
                     </span>
                   )}
@@ -82,18 +103,19 @@ export default function NavBar() {
 
       {/* Desktop left sidebar */}
       <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-56 flex-col py-6 px-3 gap-3 bg-bg z-40">
-        {navItems.map(({ href, icon: Icon, label, hasBadge }) => {
+        {navItems.map(({ href, outline: Outline, solid: Solid, label, hasBadge }) => {
           const isActive = pathname.startsWith(href)
+          const Icon = isActive ? Solid : Outline
           return (
             <Link
               key={href}
               href={href}
-              className={`press flex items-center gap-3 px-3 py-3 rounded-xl relative transition-colors cursor-pointer ${
-                isActive ? 'bg-accent/15 text-accent' : 'text-text hover:bg-bg-card-hover'
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl relative transition-colors cursor-pointer ${
+                isActive ? 'text-text' : 'text-text-muted hover:bg-bg-card-hover hover:text-text'
               }`}
             >
               <div className="relative">
-                <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />
+                <Icon className="w-6 h-6" />
                 {hasBadge && badgeCount > 0 && (
                   <span className="absolute -top-1 -right-1.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
                     {badgeCount > 99 ? '99+' : badgeCount}
