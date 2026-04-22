@@ -9,6 +9,7 @@ import type { Comment } from '@/types'
 import CommentComposer from '@/components/CommentComposer'
 import { notifyFriends } from '@/lib/notifyFriends'
 import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
+import { useMentionAutocomplete, MentionDropdown, notifyMentions, type MentionSuggestion } from '@/components/MentionAutocomplete'
 
 function isVideoUrl(url: string) {
   return /\.(mp4|webm|mov|avi)$/i.test(url)
@@ -33,7 +34,18 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
   const [composerParent, setComposerParent] = useState<Comment | null>(null)
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
+  const [mentionIds, setMentionIds] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const mention = useMentionAutocomplete({
+    value: input,
+    setValue: setInput,
+    inputRef,
+    onSelect: (s: MentionSuggestion) => {
+      setMentionIds(prev => ({ ...prev, [s.id]: s.full_name }))
+    },
+  })
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -156,6 +168,16 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
 
     const exclude: string[] = []
     if (postAuthorId && postAuthorId !== userId) exclude.push(postAuthorId)
+    const mentionedIds = new Set(
+      Object.keys(mentionIds).filter(uid => text.includes(`@${mentionIds[uid]}`))
+    )
+    await notifyMentions(supabase, userId, mentionedIds, text, mentionIds, {
+      post_type: postType,
+      post_id: postId,
+      comment_id: newComment?.id,
+    })
+    mentionedIds.forEach(id => exclude.push(id))
+
     notifyFriends(supabase, userId, 'friend_comment', {
       post_type: postType,
       post_id: postId,
@@ -165,6 +187,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
 
     setInput('')
     clearMedia()
+    setMentionIds({})
     setPosting(false)
     loadComments()
   }
@@ -289,16 +312,32 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                   </button>
                 </div>
               )}
-              <div className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleInlinePost() }}
-                  maxLength={2000}
-                  placeholder="Write a comment..."
-                  className="flex-1 bg-bg-input rounded-lg px-3 py-1.5 text-[13px] outline-none placeholder:text-text-muted/50 min-w-0"
-                />
+              <div className="flex gap-2 items-center relative">
+                <div className="flex-1 relative min-w-0">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (mention.suggestions.length > 0 && ['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+                        mention.onKeyDown(e)
+                        return
+                      }
+                      if (e.key === 'Enter') handleInlinePost()
+                    }}
+                    maxLength={2000}
+                    placeholder="Write a comment..."
+                    className="w-full bg-bg-input rounded-lg px-3 py-1.5 text-[13px] outline-none placeholder:text-text-muted/50"
+                  />
+                  <MentionDropdown
+                    suggestions={mention.suggestions}
+                    highlightIndex={mention.highlightIndex}
+                    onSelect={mention.select}
+                    onHover={mention.setHighlightIndex}
+                    className="bottom-full mb-1"
+                  />
+                </div>
                 <input
                   ref={fileRef}
                   type="file"

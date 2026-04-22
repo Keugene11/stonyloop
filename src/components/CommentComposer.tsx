@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { X, Loader2, Image as ImageIcon } from 'lucide-react'
 import { notifyFriends } from '@/lib/notifyFriends'
+import { useMentionAutocomplete, MentionDropdown, notifyMentions, type MentionSuggestion } from '@/components/MentionAutocomplete'
 
 interface PostPreview {
   author_name: string
@@ -42,8 +43,18 @@ export default function CommentComposer({
   const [userId, setUserId] = useState('')
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
+  const [mentionIds, setMentionIds] = useState<Record<string, string>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const mention = useMentionAutocomplete({
+    value: text,
+    setValue: setText,
+    inputRef: textareaRef,
+    onSelect: (s: MentionSuggestion) => {
+      setMentionIds(prev => ({ ...prev, [s.id]: s.full_name }))
+    },
+  })
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -162,6 +173,16 @@ export default function CommentComposer({
     } else if (postAuthorId && postAuthorId !== userId) {
       exclude.push(postAuthorId)
     }
+    const mentionedIds = new Set(
+      Object.keys(mentionIds).filter(uid => body.includes(`@${mentionIds[uid]}`))
+    )
+    await notifyMentions(supabase, userId, mentionedIds, body, mentionIds, {
+      post_type: postType,
+      post_id: postId,
+      comment_id: newComment?.id,
+    })
+    mentionedIds.forEach(id => exclude.push(id))
+
     notifyFriends(supabase, userId, 'friend_comment', {
       post_type: postType,
       post_id: postId,
@@ -221,16 +242,24 @@ export default function CommentComposer({
             </div>
           ) : null}
 
-          <div className="px-4 pb-4 flex-1">
+          <div className="px-4 pb-4 flex-1 relative">
             <textarea
               ref={textareaRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onKeyDown={mention.onKeyDown}
               maxLength={2000}
               placeholder="Write your reply..."
               className="w-full bg-transparent text-[16px] leading-[1.5] outline-none resize-none"
               rows={6}
               autoFocus
+            />
+            <MentionDropdown
+              suggestions={mention.suggestions}
+              highlightIndex={mention.highlightIndex}
+              onSelect={mention.select}
+              onHover={mention.setHighlightIndex}
+              className="top-24 left-4 right-4"
             />
             {mediaPreview && (
               <div className="relative inline-block mt-2">

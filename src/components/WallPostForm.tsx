@@ -6,6 +6,7 @@ import { Send, Loader2, Image, X } from 'lucide-react'
 import type { WallPost } from '@/types'
 import { notifyFriends } from '@/lib/notifyFriends'
 import { PROFILE_PUBLIC_COLUMNS } from '@/lib/profile-select'
+import { useMentionAutocomplete, MentionDropdown, notifyMentions, type MentionSuggestion } from '@/components/MentionAutocomplete'
 
 interface WallPostFormProps {
   wallOwnerId: string
@@ -18,8 +19,18 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
   const [loading, setLoading] = useState(false)
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
+  const [mentionIds, setMentionIds] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const mention = useMentionAutocomplete({
+    value: content,
+    setValue: setContent,
+    inputRef: textareaRef,
+    onSelect: (s: MentionSuggestion) => {
+      setMentionIds(prev => ({ ...prev, [s.id]: s.full_name }))
+    },
+  })
 
   useEffect(() => {
     const ta = textareaRef.current
@@ -77,14 +88,25 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
 
     if (!error && data) {
       onPost(data as WallPost)
+      const bodyText = content.trim()
       setContent('')
       clearMedia()
-      // Notify friends that you posted
+
+      const mentionedIds = new Set(
+        Object.keys(mentionIds).filter(uid => bodyText.includes(`@${mentionIds[uid]}`))
+      )
+      await notifyMentions(supabase, user.id, mentionedIds, bodyText, mentionIds, {
+        post_type: 'wall_post',
+        post_id: data.id,
+      })
+      setMentionIds({})
+
+      // Notify friends that you posted (skip those already notified via mention)
       notifyFriends(supabase, user.id, 'friend_post', {
         post_type: 'wall_post',
         post_id: data.id,
-        content: content.trim().slice(0, 100) || undefined,
-      })
+        content: bodyText.slice(0, 100) || undefined,
+      }, Array.from(mentionedIds))
     }
     setLoading(false)
   }
@@ -93,14 +115,24 @@ export default function WallPostForm({ wallOwnerId, onPost }: WallPostFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-2xl p-3">
-      <textarea
-        ref={textareaRef}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        maxLength={2000}
-        placeholder="Write on the wall..."
-        className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none min-h-[4rem] overflow-hidden"
-      />
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onKeyDown={mention.onKeyDown}
+          maxLength={2000}
+          placeholder="Write on the wall..."
+          className="w-full bg-transparent text-[14px] placeholder:text-text-muted/50 outline-none resize-none min-h-[4rem] overflow-hidden"
+        />
+        <MentionDropdown
+          suggestions={mention.suggestions}
+          highlightIndex={mention.highlightIndex}
+          onSelect={mention.select}
+          onHover={mention.setHighlightIndex}
+          className="top-full mt-1"
+        />
+      </div>
       {mediaPreview && (
         <div className="relative mb-2 inline-block">
           {isVideo ? (

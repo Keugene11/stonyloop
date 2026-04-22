@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Hand, UserPlus, UserCheck, UserX, Heart, MessageSquare, MessageCircle, Users, Check } from 'lucide-react'
+import { Loader2, Hand, UserPlus, UserCheck, UserX, Heart, MessageSquare, MessageCircle, Users, Check, AtSign } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
@@ -264,6 +264,7 @@ export default function NotificationsPage() {
     if (type === 'friend_like') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     if (type === 'like_comment') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
     if (type === 'friend_like_comment') return <Heart size={12} className="text-red-500 fill-red-500 flex-shrink-0" />
+    if (type === 'mention') return <AtSign size={12} className="text-accent flex-shrink-0" />
     return null
   }
 
@@ -282,6 +283,7 @@ export default function NotificationsPage() {
     if (type === 'friend_like') return 'liked a post'
     if (type === 'like_comment') return 'liked your comment'
     if (type === 'friend_like_comment') return 'liked a comment'
+    if (type === 'mention') return 'mentioned you'
     return ''
   }
 
