@@ -305,7 +305,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                   </button>
                 </div>
               )}
-              <div className="flex gap-2 items-center relative">
+              <div className="flex gap-3 items-center relative">
                 <div className="flex-1 relative min-w-0">
                   <input
                     ref={inputRef}
@@ -341,7 +341,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="text-text-muted hover:text-text press"
+                  className="text-text-muted hover:text-text press p-1"
                   aria-label="Attach media"
                 >
                   <ImageIcon size={16} />
@@ -349,7 +349,7 @@ export default function Comments({ postType, postId, postAuthorId, canComment = 
                 <button
                   onClick={handleInlinePost}
                   disabled={(!input.trim() && !mediaFile) || posting}
-                  className="text-accent disabled:opacity-30 press"
+                  className="text-accent disabled:opacity-30 press p-1 ml-1"
                   aria-label="Post comment"
                 >
                   {posting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
