@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Trash2, Pencil } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import type { WallPost } from '@/types'
 import Comments from '@/components/Comments'
 import Impressions from '@/components/Impressions'
@@ -31,6 +31,7 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const content = post.content
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
   const shouldTruncate = truncate && content.length > TRUNCATE_LENGTH
   const displayContent = shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '…' : content
 
@@ -86,15 +87,39 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
         <div className="flex items-center gap-2">
           <Likes postType="wall_post" postId={post.id} userId={currentUserId} authorId={post.author_id} />
           <Impressions postType="wall_post" postId={post.id} userId={currentUserId} />
-          {canEdit && !showDeleteConfirm && (
-            <button onClick={() => router.push(`/post/${post.id}/edit`)} className="press text-text-muted hover:text-text p-1">
-              <Pencil size={13} />
-            </button>
-          )}
-          {canDelete && !showDeleteConfirm && (
-            <button onClick={() => setShowDeleteConfirm(true)} className="press text-text-muted hover:text-red-500 p-1">
-              <Trash2 size={14} />
-            </button>
+          {(canEdit || canDelete) && !showDeleteConfirm && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="press text-text-muted hover:text-text p-1"
+                aria-label="More"
+              >
+                <MoreHorizontal size={16} />
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                  <div className="absolute top-full right-0 mt-1 z-20 bg-bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[120px]">
+                    {canEdit && (
+                      <button
+                        onClick={() => { setShowMenu(false); router.push(`/post/${post.id}/edit`) }}
+                        className="press block w-full text-left px-4 py-2.5 text-[13px] hover:bg-bg-input"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => { setShowMenu(false); setShowDeleteConfirm(true) }}
+                        className="press block w-full text-left px-4 py-2.5 text-[13px] text-red-500 hover:bg-bg-input"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           )}
           {showDeleteConfirm && (
             <div className="flex items-center gap-1.5">
