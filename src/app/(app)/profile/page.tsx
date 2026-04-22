@@ -258,7 +258,7 @@ export default function ProfilePage() {
     return (
       <div className="fixed inset-0 bg-bg z-[60] flex flex-col animate-slide-up overflow-hidden touch-none" style={{ overscrollBehavior: 'none', height: '100dvh' }}>
         {/* Header */}
-        <div className="max-w-lg mx-auto w-full flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
+        <div className="max-w-xl mx-auto w-full flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
           <button onClick={() => setEditing(null)} className="press text-[14px] text-text-muted">
             <ArrowLeft size={20} />
           </button>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className={`flex-1 min-h-0 max-w-lg mx-auto w-full px-4 py-6 ${type === 'select' || type === 'multiselect' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
+        <div className={`flex-1 min-h-0 max-w-xl mx-auto w-full px-4 py-6 ${type === 'select' || type === 'multiselect' ? 'overflow-y-auto touch-auto -webkit-overflow-scrolling-touch' : 'overflow-hidden'}`}>
           {type === 'multiselect' && options ? (
             <div>
               {multiSelected.length > 0 && (

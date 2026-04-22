@@ -40,7 +40,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6 pb-28 ">
+    <div className="max-w-xl mx-auto px-4 pt-6 pb-28 ">
       <button onClick={() => router.back()} className="press flex items-center gap-1.5 text-[13px] text-text-muted mb-4">
         <ArrowLeft size={14} />
         Back

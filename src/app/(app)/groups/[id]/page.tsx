@@ -247,7 +247,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   if (!group) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-6 text-center">
+      <div className="max-w-xl mx-auto px-4 pt-6 text-center">
         <p className="text-text-muted">Group not found.</p>
       </div>
     )

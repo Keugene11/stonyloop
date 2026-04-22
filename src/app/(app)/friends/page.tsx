@@ -111,7 +111,7 @@ export default function FriendsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6 ">
+    <div className="max-w-xl mx-auto px-4 pt-6 ">
       <div className="mb-4">
         <h1 className="text-[24px] font-bold tracking-tight">Friends</h1>
         <div className="accent-bar" />

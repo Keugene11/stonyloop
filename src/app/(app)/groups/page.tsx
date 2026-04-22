@@ -80,7 +80,7 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6 pb-28 ">
+    <div className="max-w-xl mx-auto px-4 pt-6 pb-28 ">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-[24px] font-bold tracking-tight">Groups</h1>

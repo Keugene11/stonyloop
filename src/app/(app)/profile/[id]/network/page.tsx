@@ -328,7 +328,7 @@ export default function NetworkPage({ params }: { params: Promise<{ id: string }
 
   if (!profile) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-6 text-center">
+      <div className="max-w-xl mx-auto px-4 pt-6 text-center">
         <p className="text-text-muted">User not found.</p>
       </div>
     )

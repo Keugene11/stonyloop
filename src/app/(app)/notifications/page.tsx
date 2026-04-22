@@ -288,7 +288,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6 pb-28 ">
+    <div className="max-w-xl mx-auto px-4 pt-6 pb-28 ">
       <div className="mb-4">
         <h1 className="text-[24px] font-bold tracking-tight">Inbox</h1>
         <div className="accent-bar" />

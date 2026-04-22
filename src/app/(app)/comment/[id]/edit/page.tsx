@@ -98,7 +98,7 @@ export default function EditCommentPage({ params }: { params: Promise<{ id: stri
 
   if (notAllowed) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-12 pb-28">
+      <div className="max-w-xl mx-auto px-4 pt-12 pb-28">
         <button onClick={() => router.back()} className="press flex items-center gap-1 text-[13px] text-text-muted mb-4">
           <ChevronLeft size={16} /> Back
         </button>
@@ -108,7 +108,7 @@ export default function EditCommentPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="max-w-lg mx-auto pb-28">
+    <div className="max-w-xl mx-auto pb-28">
       <div className="sticky top-0 z-10 bg-bg/90 backdrop-blur px-4 pt-4 pb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <button onClick={() => router.back()} className="press text-text-muted hover:text-text">
