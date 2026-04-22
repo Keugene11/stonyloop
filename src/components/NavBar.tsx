@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, UsersRound, MessageCircle, Inbox, User, Pencil } from 'lucide-react'
+import { Home, Search, UsersRound, MessageCircle, Inbox, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ComposeModal from '@/components/ComposeModal'
 
@@ -81,37 +81,35 @@ export default function NavBar() {
       </nav>
 
       {/* Desktop left sidebar */}
-      <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-20 flex-col items-center py-6 gap-1 bg-bg border-r border-border z-40">
-        <button
-          onClick={() => setComposeOpen(true)}
-          aria-label="New post"
-          className="press w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-md shadow-accent/20 mb-4 hover:bg-accent-dark transition-colors"
-        >
-          <Pencil size={20} />
-        </button>
+      <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-56 flex-col py-6 px-3 gap-1 bg-bg border-r border-border z-40">
         {navItems.map(({ href, icon: Icon, label, hasBadge }) => {
           const isActive = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
-              aria-label={label}
-              title={label}
-              className={`press flex items-center justify-center relative ${
-                isActive ? 'text-accent' : 'text-text-muted'
+              className={`press flex items-center gap-3 px-3 py-2.5 rounded-xl relative transition-colors ${
+                isActive ? 'bg-accent/15 text-accent' : 'text-text hover:bg-bg-card-hover'
               }`}
             >
-              <div className={`relative rounded-full p-3 ${isActive ? 'bg-accent/15' : 'hover:bg-bg-card-hover'} transition-colors`}>
+              <div className="relative">
                 <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />
                 {hasBadge && badgeCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
+                  <span className="absolute -top-1 -right-1.5 bg-accent text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-1">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
               </div>
+              <span className={`text-[14px] ${isActive ? 'font-semibold' : 'font-medium'}`}>{label}</span>
             </Link>
           )
         })}
+        <button
+          onClick={() => setComposeOpen(true)}
+          className="press mt-4 w-full bg-accent text-white font-semibold text-[14px] py-2.5 rounded-xl hover:bg-accent-dark transition-colors"
+        >
+          Post
+        </button>
       </aside>
 
       <ComposeModal open={composeOpen} onClose={() => setComposeOpen(false)} />
