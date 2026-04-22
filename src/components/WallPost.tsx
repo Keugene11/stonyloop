@@ -34,6 +34,15 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   const shouldTruncate = truncate && content.length > TRUNCATE_LENGTH
   const displayContent = shouldTruncate ? content.slice(0, TRUNCATE_LENGTH).trimEnd() + '…' : content
 
+  function handleCardClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (!linkToDetail) return
+    const target = e.target as HTMLElement
+    if (target.closest('a, button, input, textarea, video, label, [role="button"]')) return
+    const sel = typeof window !== 'undefined' ? window.getSelection() : null
+    if (sel && sel.toString().length > 0) return
+    router.push(`/post/${post.id}`)
+  }
+
   async function handleDelete() {
     // Nullify notification references via server route (uses service role for cross-user updates)
     await fetch('/api/cleanup-notifications', {
@@ -50,7 +59,10 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
   }
 
   return (
-    <div className="bg-bg-card border border-border rounded-2xl p-4">
+    <div
+      onClick={handleCardClick}
+      className={`bg-bg-card border border-border rounded-2xl p-4${linkToDetail ? ' cursor-pointer' : ''}`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <Link href={`/profile/${post.author_id}`} className="press">
@@ -92,33 +104,20 @@ export default function WallPostItem({ post, currentUserId, wallOwnerId, onDelet
           )}
         </div>
       </div>
-      {linkToDetail ? (
-        <Link
-          href={`/post/${post.id}`}
-          className="press block active:opacity-70 transition-opacity -mx-1 px-1 py-1"
-        >
-          {content && (
-            <p className="text-[14px] mt-1.5 whitespace-pre-wrap">
-              {displayContent}
-              {shouldTruncate && <span className="text-accent font-medium ml-1">more</span>}
-            </p>
-          )}
-          {post.media_url && !isVideo(post.media_url) && (
-            <img src={post.media_url} alt="" className="max-w-full rounded-xl mt-2.5" />
-          )}
-        </Link>
-      ) : (
-        <>
-          {content && (
-            <p className="text-[14px] mt-2.5 whitespace-pre-wrap">{content}</p>
-          )}
-          {post.media_url && !isVideo(post.media_url) && (
-            <img src={post.media_url} alt="" className="max-w-full rounded-xl mt-2.5" />
-          )}
-        </>
+      {content && (
+        <p className="text-[14px] mt-2.5 whitespace-pre-wrap">
+          {displayContent}
+          {shouldTruncate && <span className="text-accent font-medium ml-1">more</span>}
+        </p>
       )}
-      {post.media_url && isVideo(post.media_url) && (
-        <video src={post.media_url} className="max-w-full rounded-xl mt-2.5" controls />
+      {post.media_url && (
+        <div className="mt-2.5">
+          {isVideo(post.media_url) ? (
+            <video src={post.media_url} className="max-w-full rounded-xl" controls />
+          ) : (
+            <img src={post.media_url} alt="" className="max-w-full rounded-xl" />
+          )}
+        </div>
       )}
       <Comments postType="wall_post" postId={post.id} postAuthorId={post.author_id} canComment={canComment} />
     </div>
