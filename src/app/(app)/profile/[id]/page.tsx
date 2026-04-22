@@ -192,7 +192,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   if (notInNetwork) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-16 text-center">
+      <div className="max-w-lg mx-auto px-4 pt-6 text-center">
         <p className="text-text-muted">This user is not in your school&apos;s network.</p>
       </div>
     )
@@ -200,7 +200,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
 
   if (!profile) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-16 text-center">
+      <div className="max-w-lg mx-auto px-4 pt-6 text-center">
         <p className="text-text-muted">User not found.</p>
       </div>
     )
@@ -220,7 +220,7 @@ export default function ProfileViewPage({ params }: { params: Promise<{ id: stri
   const clubs = profile.clubs ? profile.clubs.split(', ').filter(Boolean) : []
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-16 pb-28">
+    <div className="max-w-5xl mx-auto px-4 pt-6 pb-28">
 
       {/* Report modal */}
       {showReport && (

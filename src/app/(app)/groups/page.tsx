@@ -80,13 +80,13 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-16 pb-28 ">
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-28 ">
       <div className="flex items-center justify-between mb-4">
-        <div className="hidden lg:block">
+        <div>
           <h1 className="text-[24px] font-bold tracking-tight">Groups</h1>
           <div className="accent-bar" />
         </div>
-        <Link href="/groups/create" className="press bg-accent text-white rounded-xl px-4 py-2 text-[13px] font-medium flex items-center gap-1.5 ml-auto">
+        <Link href="/groups/create" className="press bg-accent text-white rounded-xl px-4 py-2 text-[13px] font-medium flex items-center gap-1.5">
           <Plus size={14} /> Create
         </Link>
       </div>

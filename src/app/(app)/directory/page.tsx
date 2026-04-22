@@ -111,11 +111,11 @@ export default function DirectoryPage() {
   })
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-16 pb-28 ">
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-28 ">
       <div className="flex items-center gap-3 mb-4">
         <img src="/sbu_logo.png" alt="SBU" className="w-10 h-10 object-contain" />
         <div>
-          <h1 className="text-[24px] font-bold tracking-tight hidden lg:block">Directory</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">Directory</h1>
           {uniName && <p className="text-[13px] text-text-muted">{uniName}</p>}
           <div className="accent-bar" />
         </div>

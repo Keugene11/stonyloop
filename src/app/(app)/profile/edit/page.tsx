@@ -158,7 +158,7 @@ export default function ProfilePage() {
   const labelClass = 'text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1 block'
 
   return (
-    <><div className="max-w-5xl mx-auto px-4 pt-16 pb-28 ">
+    <><div className="max-w-5xl mx-auto px-4 pt-6 pb-28 ">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">

@@ -123,8 +123,8 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-16 pb-28">
-      <div className="mb-4 hidden lg:block">
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-28">
+      <div className="mb-4">
         <h1 className="text-[24px] font-bold tracking-tight">Home</h1>
         <div className="accent-bar" />
       </div>
