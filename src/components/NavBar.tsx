@@ -81,14 +81,14 @@ export default function NavBar() {
       </nav>
 
       {/* Desktop left sidebar */}
-      <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-56 flex-col py-6 px-3 gap-1 bg-bg border-r border-border z-40">
+      <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-56 flex-col py-6 px-3 gap-3 bg-bg z-40">
         {navItems.map(({ href, icon: Icon, label, hasBadge }) => {
           const isActive = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
-              className={`press flex items-center gap-3 px-3 py-2.5 rounded-xl relative transition-colors ${
+              className={`press flex items-center gap-3 px-3 py-3 rounded-xl relative transition-colors cursor-pointer ${
                 isActive ? 'bg-accent/15 text-accent' : 'text-text hover:bg-bg-card-hover'
               }`}
             >
@@ -106,7 +106,7 @@ export default function NavBar() {
         })}
         <button
           onClick={() => setComposeOpen(true)}
-          className="press mt-4 w-full bg-accent text-white font-semibold text-[14px] py-2.5 rounded-xl hover:bg-accent-dark transition-colors"
+          className="press mt-6 w-full bg-accent text-white font-semibold text-[14px] py-3 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer"
         >
           Post
         </button>
