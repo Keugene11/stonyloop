@@ -127,6 +127,7 @@ export default function FeedPage() {
       <div className="mb-4">
         <h1 className="text-[24px] font-bold tracking-tight">Home</h1>
         <div className="accent-bar" />
+        <p className="text-[13px] text-text-muted mt-2">The social network for Stony Brook University students.</p>
       </div>
 
       {/* Compose */}
