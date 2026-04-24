@@ -97,3 +97,21 @@ select optgroup {
   border-radius: 2px;
   margin-top: 4px;
 }
+
+/* Chat page: full-viewport flex column that escapes (app)/layout.tsx padding.
+   Height reserves room for the mobile bottom navbar; negative margins cancel
+   the parent's safe-area + navbar padding so the chat fills the screen. */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 56px - env(safe-area-inset-bottom));
+  margin-top: calc(-1 * env(safe-area-inset-top));
+  margin-bottom: calc(-6rem - env(safe-area-inset-bottom));
+}
+@media (min-width: 1024px) {
+  .chat-container {
+    height: 100dvh;
+    margin-top: 0;
+    margin-bottom: -1.5rem;
+  }
+}
