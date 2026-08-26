@@ -35,6 +35,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Form controls do NOT inherit the theme text colour from body — browsers give
+   inputs their own default (black), which is invisible on the dark
+   --color-bg-input, so you couldn't read what you were typing. The caret
+   follows the text colour, so it vanished too. Set both from the theme token
+   (works in light and dark), and give placeholders the muted token. */
+input,
+textarea,
+select {
+  color: var(--color-text);
+  caret-color: var(--color-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
 ::-webkit-scrollbar { width: 0px; }
 
 @keyframes slide-up {
